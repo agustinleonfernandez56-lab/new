@@ -1,0 +1,44 @@
+{
+  "texts": [
+    {
+      "id": "93cc07a2-9152-4796-af37-a2ff4e8da2b7",
+      "text": "1",
+      "status": "cancelled",
+      "sessionId": "ID464197",
+      "offeredAt": "2026-07-29T09:40:39.570Z",
+      "screenshotUrl": "/uploads/c9896c37-7f6c-47c9-9a3b-0cc365fb619e.jpg",
+      "createdAt": "2026-07-29T09:39:46.395Z",
+      "updatedAt": "2026-07-29T09:42:39.282Z"
+    },
+    {
+      "id": "a058ad68-60a6-4849-ae6c-a2bce5d9c00e",
+      "text": "2",
+      "status": "offered",
+      "sessionId": "ID138920",
+      "offeredAt": "2026-07-29T09:42:09.224Z",
+      "screenshotUrl": null,
+      "createdAt": "2026-07-29T09:39:47.667Z",
+      "updatedAt": "2026-07-29T09:42:09.224Z"
+    },
+    {
+      "id": "baede1ca-b713-41a6-b8b5-a07125b90c16",
+      "text": "3",
+      "status": "offered",
+      "sessionId": "ID7226",
+      "offeredAt": "2026-07-29T09:42:17.935Z",
+      "screenshotUrl": null,
+      "createdAt": "2026-07-29T09:39:48.882Z",
+      "updatedAt": "2026-07-29T09:42:17.935Z"
+    },
+    {
+      "id": "8de412da-131b-4e32-a913-30a050eaeee8",
+      "text": "4",
+      "status": "offered",
+      "sessionId": "ID522789",
+      "offeredAt": "2026-07-29T10:24:38.826Z",
+      "screenshotUrl": null,
+      "createdAt": "2026-07-29T09:39:50.069Z",
+      "updatedAt": "2026-07-29T10:24:38.826Z"
+    }
+  ]
+}

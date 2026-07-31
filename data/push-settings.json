@@ -1,0 +1,7 @@
+{
+  "title": "¡Tienes un nuevo mensaje!",
+  "body": "Hemos enviado una respuesta. Abre el chat para verla.",
+  "url": "https://monetoplusapp.com/tourist/chat.html",
+  "delayMinutes": 1,
+  "enabled": true
+}

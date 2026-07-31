@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ficha del cliente — Moneto Plus</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f6fa;color:#1b2536}
+  .wrap{display:flex;height:100vh;overflow:hidden}
+
+  /* ── Боковое меню ─────────────────────────────────────────── */
+  .side{width:150px;flex:0 0 150px;background:#0f1b33;color:#8fa3c0;display:flex;flex-direction:column;padding:16px 0}
+  .side__logo{padding:0 18px 20px;color:#6f84a6;display:flex;align-items:center}
+  .side__logo svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .side__item{display:flex;align-items:center;gap:11px;padding:8px 16px;font-size:12.5px;color:#8fa3c0;cursor:default;white-space:nowrap}
+  .side__ico{width:26px;height:26px;flex:0 0 26px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+  .side__ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .side__item.is-active{color:#4d8bf5}
+  .side__item.is-active .side__ico{background:#2f7dff;color:#fff}
+  .side__spacer{flex:1}
+  .side__user{display:flex;align-items:center;gap:9px;padding:12px 16px;border-top:1px solid #1b2b48;font-size:12px}
+  .side__ava{width:30px;height:30px;border-radius:50%;background:#2f7dff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:0 0 30px}
+
+  /* ── Шапка ────────────────────────────────────────────────── */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+  .top{background:#fff;border-bottom:1px solid #e3e8f0;padding:13px 24px;display:flex;align-items:center;gap:38px;flex-wrap:wrap;flex:0 0 auto}
+  .top h1{font-size:19px;font-weight:700;letter-spacing:-.2px}
+  .top__sub{font-size:12.5px;color:#66768d;margin-top:5px}
+  .top__sub b{color:#1b2536}
+  .top__field{font-size:11px;color:#8592a6}
+  .top__field b{display:block;font-size:14px;color:#1b2536;margin-top:4px;font-weight:600}
+  .top__spacer{flex:1}
+  .btn-ghost{border:1px solid #d5dce6;background:#fff;border-radius:9px;padding:9px 14px;font-size:13px;color:#1b2536;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .btn-ghost svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ── Сетка ────────────────────────────────────────────────── */
+  .grid{display:grid;grid-template-columns:350px minmax(0,1fr) 268px;gap:18px;padding:18px 24px;align-items:start;flex:1;overflow:auto}
+  @media(max-width:1180px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid #e3e8f0;border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .col>.card:last-child{margin-bottom:0}
+  .card h2{font-size:14px;font-weight:700;margin-bottom:10px}
+  .col{min-width:0}
+
+  .kv{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:5px 0;border-bottom:1px solid #f0f3f8;font-size:12.5px}
+  .kv:last-child{border-bottom:0}
+  .kv span{color:#7c8a9e}
+  .kv b{font-weight:600;text-align:right}
+
+  .who{display:flex;align-items:center;gap:14px;padding:2px 0}
+  .who__ava{width:48px;height:48px;flex:0 0 48px;border-radius:50%;background:#e8effc;color:#2f7dff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+  .who__info{min-width:0;display:flex;flex-direction:column;gap:3px}
+  .who__name{font-size:15px;font-weight:700}
+  .who__line{font-size:12.5px;color:#66768d;word-break:break-word}
+
+  .tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600}
+  .tag--ok{background:#e4f6ec;color:#1a8a4f}
+  .tag--warn{background:#fdf1dc;color:#a2701a}
+  .tag--bad{background:#fde7ee;color:#c32350}
+  .tag--return{background:#e8f0ff;color:#2f65c8}
+
+  .iban-val{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .copy-btn{border:0;background:transparent;padding:0;cursor:pointer;color:#98a6ba;display:flex;align-items:center}
+  .copy-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .copy-btn:hover{color:#2f7dff}
+
+  /* ── Перевод ──────────────────────────────────────────────── */
+  .tr-top{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:16px}
+  @media(max-width:640px){.tr-top{grid-template-columns:1fr}}
+  .lbl{font-size:11.5px;color:#8592a6;margin-bottom:6px}
+  .amount{font-size:26px;font-weight:700;color:#2f7dff;letter-spacing:-.3px}
+  .sel{border:1px solid #d5dce6;border-radius:9px;padding:10px 12px;font-size:13px;width:100%;background:#fff;display:flex;align-items:center;gap:8px;color:#1b2536}
+  .sel__ico{display:flex;color:#2f7dff}
+  .sel__ico svg{width:15px;height:15px}
+  .sel__car{margin-left:auto;display:flex;color:#8592a6}
+  .sel__car svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .concept{font-size:13px;font-weight:600;color:#1b2536}
+  .tr-btns{display:flex;gap:9px;flex-wrap:wrap;padding-top:16px;border-top:1px solid #f0f3f8}
+  .b{border-radius:9px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid #d5dce6;background:#fff;color:#1b2536;display:flex;align-items:center;gap:7px}
+  .b svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .b--pri{background:#2f7dff;border-color:#2f7dff;color:#fff}
+  .b--dan{color:#c32350;border-color:#f2c6d3}
+
+  /* ── История ──────────────────────────────────────────────── */
+  .op{border-bottom:1px solid #f0f3f8}
+  .op:last-child{border-bottom:0}
+  .op__head{display:grid;grid-template-columns:10px 74px 1fr auto auto 18px;gap:12px;align-items:center;padding:11px 2px;cursor:pointer}
+  @media(max-width:720px){.op__head{grid-template-columns:10px 1fr auto;row-gap:4px}.op__when{grid-column:2}}
+  .dot{width:9px;height:9px;border-radius:50%}
+  .dot--ok{background:#1fb268}.dot--bad{background:#e03b62}.dot--wait{background:#e8a33d}.dot--return{background:#2f7dff}
+  .op__when{font-size:11.5px;color:#8592a6;line-height:1.35}
+  .op__ttl{display:block;font-size:13px;font-weight:600;color:#1b2536}
+  .op__sub{display:block;font-size:11.5px;color:#8592a6;margin-top:3px}
+  .op__sum{font-size:13px;font-weight:700;white-space:nowrap}
+  .op__sum--in{color:#1fb268}.op__sum--out{color:#1b2536}
+  .op__chev{color:#a9b5c6;display:flex;justify-self:end;transition:transform .2s}
+  .op__chev svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .op__body{display:none;background:#f7f9fc;border-radius:9px;padding:6px 15px 10px;margin:2px 2px 12px}
+  .op.is-open .op__body{display:block}
+  .op.is-open .op__chev{transform:rotate(180deg)}
+  .op__empty{padding:22px 4px;text-align:center;color:#8592a6;font-size:13px}
+
+  /* ── Правая колонка ───────────────────────────────────────── */
+  .act{display:flex;align-items:center;gap:11px;padding:9px 0;font-size:12.8px;color:#3c4c63;cursor:pointer;border-bottom:1px solid #f5f7fa}
+  .act:last-child{border-bottom:0}
+  .act svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:0 0 16px;color:#8592a6}
+  .act:hover{color:#2f7dff}
+  .act:hover svg{color:#2f7dff}
+  .chk{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:12.8px}
+  .chk__i{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 18px}
+  .chk__i svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .chk__i--ok{background:#1fb268}.chk__i--warn{background:#e8a33d;font-size:11px;color:#fff;font-weight:800}
+
+  /* Layout aligned with the transfer dashboard reference. */
+  body{font-size:13px;background:#f7f8fa;color:#172235}
+  .side{width:136px;flex-basis:136px;background:linear-gradient(180deg,#071d36 0%,#06223e 100%);padding:16px 0 0}
+  .side__logo{padding:0 18px 35px;color:#a4b5c9}
+  .side__logo svg{width:20px;height:20px}
+  .side__item{gap:9px;padding:10.5px 15px;font-size:12px;color:#d5dfeb}
+  .side__ico{width:20px;height:20px;flex-basis:20px;border-radius:4px}
+  .side__ico svg{width:17px;height:17px;stroke-width:1.7}
+  .side__item.is-home{color:#4c9aff}
+  .side__item.is-home .side__ico{background:#1477f8;color:#fff}
+  .side__item.is-active{margin:0 5px;padding-right:10px;padding-left:10px;border-radius:4px;background:rgba(111,142,175,.28);color:#fff}
+  .side__item.is-active .side__ico{background:transparent;color:#fff}
+  .side__user{padding:12px 12px 12px;margin-bottom:390px;border-top-color:rgba(255,255,255,.07)}
+  .side__ava{width:29px;height:29px;flex-basis:29px;background:#264966;font-size:11px}
+
+  .top{height:80px;min-height:80px;padding:13px 10px 11px 24px;gap:0;flex-wrap:nowrap}
+  .top>div:first-child{flex:0 0 564px}
+  .top h1{font-size:18px;line-height:1.25;letter-spacing:-.25px}
+  .top__sub{font-size:12px;margin-top:7px;color:#5f6d81}
+  .top__field{flex:0 0 160px;font-size:11px;color:#69768a}
+  .top__field b{font-size:13px;margin-top:6px}
+  .top__spacer{min-width:0;flex:1!important}
+  .btn-ghost{height:34px;border-radius:5px;padding:0 12px;font-size:11px;gap:7px;white-space:nowrap}
+  .btn-ghost:first-of-type{width:145px;justify-content:center;padding:0 8px;font-size:10px}
+  .btn-ghost+ .btn-ghost{width:31px;margin-left:2px;padding:0 8px}
+  .btn-ghost svg{width:15px;height:15px}
+
+  .grid{grid-template-columns:286px minmax(0,1fr) 250px;gap:14px;padding:11px 10px 22px 14px;overflow:auto}
+  .card{border-color:#edf0f4;border-radius:4px;padding:13px 14px;margin-bottom:12px;box-shadow:none}
+  .card h2{font-size:13px;line-height:19px;margin-bottom:12px}
+  .col:first-child .card:nth-child(1){min-height:166px}
+  .col:first-child .card:nth-child(1) h2{margin-bottom:20px}
+  .col:first-child .card:nth-child(2){min-height:228px}
+  .col:first-child .card:nth-child(3){min-height:190px}
+  .col:nth-child(2) .card:first-child{min-height:209px}
+  .col:nth-child(2) .card:nth-child(2){min-height:519px}
+  .col:last-child .card:first-child{min-height:291px}
+  .col:last-child .card:last-child{min-height:206px}
+
+  .who{align-items:flex-start;gap:14px;padding:3px 0 0 7px}
+  .who__ava{width:50px;height:50px;flex-basis:50px;background:#6d9aae;color:#fff;font-size:16px}
+  .who__info{gap:9px}
+  .who__name{font-size:13px}
+  .who__line{font-size:11.5px;color:#3d4b60}
+  .kv{padding:5px 0;border-bottom:0;font-size:11.5px;line-height:18px}
+  .kv span{color:#536177}
+  .kv b{font-weight:600;color:#202a3b}
+  .tag{padding:2px 9px;font-size:10px;line-height:15px}
+
+  .tr-top{grid-template-columns:190px minmax(0,1fr);gap:20px;min-height:98px;margin-bottom:17px}
+  .tr-top>div+div{border-left:1px solid #eef1f5;padding-left:15px}
+  .lbl{font-size:11px;line-height:16px;margin-bottom:7px;color:#5c6a80}
+  .amount{font-size:23px;line-height:30px;color:#1680f8}
+  .sel{min-height:18px;border:0;border-radius:0;padding:0;font-size:11.5px;line-height:18px}
+  .sel__ico{color:#1477f8}
+  .sel__ico svg{width:13px;height:13px}
+  .sel__car svg{width:13px;height:13px}
+  .concept{font-size:11.5px;line-height:18px}
+  .tr-btns{gap:8px;flex-wrap:nowrap;padding-top:10px}
+  .b{height:30px;min-height:30px;border-radius:4px;padding:0 7px;font-size:10px;line-height:1;gap:5px;white-space:nowrap}
+  .b svg{width:14px;height:14px}
+  .tr-btns .b:nth-child(1){width:137px}
+  .tr-btns .b:nth-child(2){width:117px}
+  .tr-btns .b:nth-child(3){width:139px}
+  .tr-btns .b:nth-child(4){width:123px}
+
+  .op__head{grid-template-columns:10px 64px minmax(0,1fr) 78px 72px 14px;gap:9px;padding:13px 0}
+  .dot{width:10px;height:10px}
+  .op__when{font-size:10.5px;line-height:15px;color:#58677d}
+  .op__ttl{font-size:11.2px;line-height:16px;white-space:nowrap}
+  .op__sub{font-size:10.5px;line-height:15px;margin-top:1px;white-space:nowrap}
+  .op__sum{font-size:11.5px}
+  .op__sum--out{color:#ff5656}
+  .op__chev svg{width:14px;height:14px}
+  .op__body{border-radius:0;background:#fff;padding:10px 20px 12px;margin:0}
+  .op__body .kv{justify-content:flex-start;gap:0;padding:4px 0}
+  .op__body .kv span{width:118px;flex:0 0 118px}
+  .op__body .kv b{text-align:left;font-weight:500}
+
+  .col:last-child .card:first-child h2{margin-bottom:17px}
+  .act{gap:10px;padding:6px 0;font-size:11.5px;line-height:18px;border-bottom:0;color:#344158}
+  .act svg{width:15px;height:15px;flex-basis:15px;color:#647c98;stroke-width:1.6}
+  .act:nth-of-type(6){margin-top:8px;padding-top:14px;border-top:1px solid #edf0f4}
+  .chk{gap:9px;padding:5px 0;font-size:11.5px;line-height:18px;color:#344158}
+  .chk__i{width:16px;height:16px;flex-basis:16px}
+  .chk__i svg{width:10px;height:10px}
+  .chk__i--ok{background:#fff;border:1.5px solid #28b46b}
+  .chk__i--ok svg{stroke:#28b46b}
+  .chk__i--solid-ok{background:#28b46b;border:0}
+  .chk__i--solid-ok svg{stroke:#fff}
+
+  /* Screenshot polish for the transfer details page. */
+  .top{border-bottom-color:#e8ecf2;box-shadow:0 1px 0 rgba(24,39,75,.03)}
+  .top>div:first-child{flex:0 0 564px}
+  .top>div:nth-child(2){border-left:1px solid #edf0f4;padding-left:24px}
+  .top__field{height:52px;display:flex;flex-direction:column;justify-content:center}
+  .top__field .tag{align-self:flex-start}
+  .top__spacer{flex:0 0 0!important;min-width:0}
+  .grid{background:#f7f8fa}
+  .grid{grid-template-columns:286px minmax(568px,700px) 250px}
+  .card{border-color:#e9edf3;box-shadow:0 1px 2px rgba(24,39,75,.025)}
+  .col:nth-child(2) .card:first-child{padding:0;overflow:visible}
+  .col:nth-child(2) .card:first-child h2{margin:0;padding:13px 14px 9px;border-bottom:1px solid #edf0f4}
+  .col:nth-child(2) .card:first-child .tr-top{grid-template-columns:210px minmax(0,1fr);gap:18px;min-height:94px;margin:14px 14px 13px}
+  .col:nth-child(2) .card:first-child .tr-btns{margin:0 14px 14px;padding-top:10px}
+  .tr-top>div+div{padding-left:17px}
+  .sel{height:24px;border-bottom:1px solid #edf0f4;padding-bottom:5px}
+  .amount{font-size:22px;line-height:29px}
+  .concept{font-size:11px;line-height:17px}
+  .tr-btns{gap:7px}
+  .b{height:28px;min-height:28px;border-radius:4px;padding:0 8px;font-size:10px;line-height:1;font-weight:600;gap:5px}
+  .b svg{width:13px;height:13px;stroke-width:1.9}
+  .sel span:not(.sel__ico):not(.sel__car){font-weight:600}
+  .tr-btns .b:nth-child(1){width:130px}
+  .tr-btns .b:nth-child(2){width:107px}
+  .tr-btns .b:nth-child(3){width:137px}
+  .tr-btns .b:nth-child(4){width:123px}
+  .credit-top{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;margin:14px 14px 12px;min-height:96px}
+  .credit-top>div+div{border-left:1px solid #eef1f5;padding-left:17px}
+  .credit-note{margin-top:4px;font-size:10.8px;line-height:15px;color:#6f7f96}
+  .credit-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .credit-stat span{display:block;margin-bottom:3px;font-size:11px;line-height:16px;color:#5c6a80}
+  .credit-stat b{display:flex;align-items:center;min-height:18px;font-size:11.5px;line-height:18px;font-weight:600;color:#101b2d}
+  .credit-meta{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;margin:0 14px 12px;padding:10px 0 0;border-top:1px solid #f0f3f8}
+  .credit-meta div{min-width:0}
+  .credit-meta>div>span{display:block;margin-bottom:3px;font-size:10.8px;line-height:15px;color:#6f7f96}
+  .credit-meta b,
+  .credit-meta__value{display:block;font-size:11.2px;line-height:16px;font-weight:600;color:#172235}
+  .credit-status{display:flex!important;flex-direction:column;align-items:flex-start;gap:5px}
+  .credit-status .tag{margin:0}
+  .credit-note-long{font-weight:500;color:#26364d}
+  .credit-note-long p{margin:0 0 6px;font-size:11.1px;line-height:16px}
+  .credit-note-long p:last-child{margin-bottom:0}
+  .credit-actions .b:nth-child(1){width:112px}
+  .credit-actions .b:nth-child(2){width:162px}
+  .credit-actions .b:nth-child(3){width:126px}
+  .credit-actions .b:nth-child(4){width:92px}
+  .col:nth-child(2) .card:nth-child(2){min-height:0;padding:13px 14px 15px}
+  .col:nth-child(2) .card:nth-child(2) h2{margin-bottom:13px}
+  #opList{display:flex;flex-direction:column;gap:8px}
+  .op{border-bottom:0}
+  .op__head{
+    grid-template-columns:10px 64px minmax(0,1fr) 98px 92px 14px;
+    column-gap:14px;
+    row-gap:0;
+    min-height:56px;
+    padding:9px 10px;
+    border:1px solid #edf0f4;
+    border-radius:6px;
+    background:#fff;
+    box-shadow:0 1px 2px rgba(24,39,75,.025);
+  }
+  .op__ttl{font-size:11.5px;line-height:16px}
+  .op__sub{font-size:10.8px;line-height:15px}
+  .op__sum{
+    justify-self:end;
+    font-size:12.5px;
+    line-height:18px;
+    font-weight:700;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .op__head .tag{
+    box-sizing:border-box;
+    justify-self:end;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:82px;
+    height:20px;
+    padding:0 8px;
+    border-radius:20px;
+    font-size:10.5px;
+    line-height:20px;
+    font-weight:600;
+  }
+  .op__chev{
+    align-self:center;
+    justify-self:center;
+    width:14px;
+    height:14px;
+  }
+  .op.is-open .op__head{border-bottom-color:#f6f8fb;border-radius:6px 6px 0 0;box-shadow:none}
+  .op__body{border:1px solid #edf0f4;border-top:0;border-radius:0 0 6px 6px;margin:-8px 0 0 0;padding:12px 18px 13px 32px;background:#fff}
+  .op__body .kv{font-size:11.2px;line-height:18px}
+  .op__body .kv span{width:110px;flex:0 0 110px}
+  .op__body .kv span{color:#4f6078}
+  .op__body .kv b{font-weight:600;color:#172235}
+  .act{padding:7px 0}
+  .chk{padding:6px 0}
+  .side__item,
+  .side__user,
+  .top__sub,
+  .top__field,
+  .lbl,
+  .who__line,
+  .kv,
+  .op__when,
+  .op__sub,
+  .act,
+  .chk{font-weight:400}
+  .top h1,
+  .card h2{font-weight:700}
+  .top__sub b,
+  .top__field b,
+  .who__name,
+  .kv b,
+  .concept,
+  .op__ttl{font-weight:600}
+  .btn-ghost,
+  .b{font-weight:600}
+  .b:disabled{opacity:1}
+  .b:not(.b--pri):not(.b--dan){color:#26364d}
+
+  @media(max-width:1180px){
+    .top{height:auto;min-height:0;flex-wrap:wrap;gap:14px;padding-right:24px}
+    .top>div:first-child,.top__field{flex:0 0 auto}
+    .grid{grid-template-columns:1fr}
+    .col:first-child .card,.col:nth-child(2) .card,.col:last-child .card{height:auto;min-height:0}
+  }
+  @media(max-width:720px){
+    .side{width:64px;flex-basis:64px}
+    .side__item{justify-content:center;padding-left:0;padding-right:0}
+    .side__item span:last-child,.side__user>div:last-child{display:none}
+    .side__item.is-active{margin-left:5px;margin-right:5px;padding-left:0;padding-right:0}
+    .grid{padding:10px}
+    .tr-top{grid-template-columns:1fr;min-height:0}
+    .tr-top>div+div{border-left:0;border-top:1px solid #eef1f5;padding:12px 0 0}
+    .credit-top{grid-template-columns:1fr;min-height:0}
+    .credit-top>div+div{border-left:0;border-top:1px solid #eef1f5;padding:12px 0 0}
+    .credit-meta{grid-template-columns:1fr}
+    .tr-btns{flex-wrap:wrap}
+    .op__head{grid-template-columns:10px 1fr auto;gap:8px}
+    .op__when{grid-column:2}
+    .op__head .tag,.op__chev{display:none}
+    .op__ttl,.op__sub{white-space:normal}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="side">
+    <div class="side__logo">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </div>
+
+    <div class="side__item is-home">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg></span>
+      <span>Inicio</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
+      <span>Solicitudes</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 7a3 3 0 0 1 0 6"/><path d="M20.5 19c0-2.4-1.4-4.2-3.5-4.8"/></svg></span>
+      <span>Clientes</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span>Créditos</span>
+    </div>
+    <div class="side__item is-active">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg></span>
+      <span>Transferencias</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M14.5 9.5a3.2 3.2 0 0 0-4.4 1 3.2 3.2 0 0 0 0 3 3.2 3.2 0 0 0 4.4 1"/><path d="M9 11h4M9 13h4"/></svg></span>
+      <span>Pagos</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14"/><path d="M5 8 3 13h4zM19 8l-2 5h4z"/></svg></span>
+      <span>Disputas</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-4 3z"/></svg></span>
+      <span>Mensajes</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></span>
+      <span>Reportes</span>
+    </div>
+    <div class="side__item">
+      <span class="side__ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></svg></span>
+      <span>Configuración</span>
+    </div>
+
+    <div class="side__spacer"></div>
+    <div class="side__user">
+      <div class="side__ava" data-demo>MA</div>
+      <div><div style="color:#fff" data-demo>Marta Abadía</div><div style="font-size:10.5px">Operador</div></div>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <header class="top">
+      <div>
+        <h1>Transferencia de fondos del crédito</h1>
+        <div class="top__sub">Cliente: <b id="hName">—</b> &nbsp;·&nbsp; Solicitud: <b id="hReq" data-demo>ES-4738D9215</b></div>
+      </div>
+      <div class="top__field">Estado del crédito:<b><span class="tag tag--ok" data-demo>Aprobado</span></b></div>
+      <div class="top__field">Importe:<b id="hAmount" data-demo>—</b></div>
+      <div class="top__field">Banco:<b data-demo>EBN Banco</b></div>
+      <div class="top__spacer"></div>
+      <button class="btn-ghost" type="button" onclick="window.close()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4 3.5-6 7.5-6s7.5 2 7.5 6"/></svg>
+        Ver perfil del cliente
+      </button>
+      <button class="btn-ghost" type="button" onclick="window.close()" style="padding:9px 10px">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </header>
+
+    <div class="grid">
+      <!-- ── Левая колонка ─────────────────────────────────── -->
+      <div class="col">
+        <div class="card">
+          <h2>Información del cliente</h2>
+          <div class="who">
+            <div class="who__ava" id="cAva">—</div>
+            <div class="who__info">
+              <div class="who__name" id="cName">—</div>
+              <div class="who__line" id="cPhone">—</div>
+              <div class="who__line" id="cIp">—</div>
+              <div class="who__line" id="cId">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Información del crédito</h2>
+          <div class="kv"><span>Nº de contrato</span><b data-demo>CR-2026-5698</b></div>
+          <div class="kv"><span>Fecha de aprobación</span><b id="cApprovalDate" data-demo>11.07.2026</b></div>
+          <div class="kv"><span>Importe del crédito</span><b data-demo>5 000,00 €</b></div>
+          <div class="kv"><span>Plazo</span><b data-demo>60 meses</b></div>
+          <div class="kv"><span>Producto</span><b data-demo>Crédito personal</b></div>
+          <div class="kv"><span>Estado</span><b data-demo><span class="tag tag--ok">Activo</span></b></div>
+        </div>
+
+        <div class="card">
+          <h2>Cuenta destino</h2>
+          <div class="kv"><span>IBAN</span>
+            <b class="iban-val"><span id="cIban">—</span>
+              <button class="copy-btn" id="copyIban" type="button" title="Copiar IBAN">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+              </button>
+            </b>
+          </div>
+          <div class="kv"><span>DNI/NIE</span><b id="cDni" data-demo>Y1234567X</b></div>
+          <div class="kv"><span>Titular</span><b><span id="cHolder">—</span> <span class="tag tag--ok" data-demo>Verificado</span></b></div>
+        </div>
+      </div>
+
+      <!-- ── Центр ─────────────────────────────────────────── -->
+      <div class="col">
+        <div class="card">
+          <h2>Cuenta de crédito del cliente</h2>
+          <div class="credit-top">
+            <div>
+              <div class="lbl">Saldo del crédito</div>
+              <div class="amount" id="cBalance">—</div>
+              <div class="credit-note" data-demo>Contrato CR-2026-5698</div>
+            </div>
+            <div>
+              <div class="credit-stats">
+                <div class="credit-stat">
+                  <span>Estado</span>
+                  <b><span class="tag tag--ok" data-demo>Activo</span></b>
+                </div>
+                <div class="credit-stat">
+                  <span>Plazo</span>
+                  <b data-demo>60 meses</b>
+                </div>
+                <div class="credit-stat">
+                  <span>Fecha próxima cuota</span>
+                  <b data-demo>15 Ago 2026</b>
+                </div>
+                <div class="credit-stat">
+                  <span>Próxima cuota</span>
+                  <b data-demo>€101.05</b>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="credit-meta">
+            <div>
+              <span>Estado de la cuenta</span>
+              <b class="credit-status" data-demo>
+                <span>Transferencia de fondos de crédito en procesamiento</span>
+              </b>
+            </div>
+            <div>
+              <span>Observación interna</span>
+              <div class="credit-meta__value credit-note-long" data-demo>
+                <p>La transferencia SWIFT requiere el pago de una comisión de 190 EUR para completar el abono de los fondos.</p>
+              </div>
+            </div>
+          </div>
+          <div class="tr-btns credit-actions">
+            <button class="b b--pri" disabled>
+              <svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4z"/></svg>
+              Transferencia
+            </button>
+            <button class="b" disabled>
+              <svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-4 3z"/><path d="M9 9h6M9 12h4"/></svg>
+              Consultar a EBN Banco
+            </button>
+            <button class="b" disabled>
+              <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v4h-4"/></svg>
+              Actualizar datos
+            </button>
+            <button class="b" disabled>
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Detalles
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Historial de transacciones</h2>
+          <div id="opList"></div>
+        </div>
+      </div>
+
+      <!-- ── Правая колонка ────────────────────────────────── -->
+      <div class="col">
+        <div class="card">
+          <h2>Acciones</h2>
+          <div class="act"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v4h-4"/></svg> Actualizar datos del cliente</div>
+          <div class="act"><svg viewBox="0 0 24 24"><path d="M9 3h6l4 4v14H5V3h4z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h6"/></svg> Revisar contrato de crédito</div>
+          <div class="act"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> Enviar notificación al cliente</div>
+          <div class="act"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/></svg> Ver estado del crédito</div>
+          <div class="act"><svg viewBox="0 0 24 24"><path d="M4 9a2 2 0 0 0 0 6v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2a2 2 0 0 1 0-6V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"/></svg> Crear ticket al banco</div>
+          <div class="act"><svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-4 3z"/></svg> Agregar comentario interno</div>
+          <div class="act"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Descargar comprobante</div>
+        </div>
+
+        <div class="card">
+          <h2>Verificaciones previas</h2>
+          <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> IBAN verificado</div>
+          <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Nombre del titular coincide</div>
+          <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Contrato de crédito firmado</div>
+          <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Límite de operación disponible</div>
+          <div class="chk"><span class="chk__i chk__i--solid-ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Crédito aprobado por EBN Banco</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+  var put = function (id, val) {
+    var el = $(id);
+    if (el) el.textContent = (val === 0 || val) ? String(val) : '—';
+  };
+
+  // Формат суммы: "5 000,00 €" (пробел — разделитель тысяч, запятая — десятичные)
+  function fmtEur(n) {
+    n = Number(n);
+    if (!isFinite(n)) return '—';
+    var s = Math.abs(n).toFixed(2).split('.');
+    var intPart = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return (n < 0 ? '−' : '') + intPart + ',' + s[1] + ' €';
+  }
+
+  function maskIban(iban) {
+    iban = String(iban || '').replace(/\s+/g, '');
+    if (iban.length < 8) return iban || '—';
+    return iban.slice(0, 4) + ' **** **** **** ' + iban.slice(-4);
+  }
+
+  function fmtDateOnly(value) {
+    if (!value) return '11.07.2026';
+    var raw = String(value);
+    var m = raw.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return m[0];
+    m = raw.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return m[3] + '.' + m[2] + '.' + m[1];
+    var d = new Date(value);
+    if (!Number.isNaN(d.getTime())) {
+      return String(d.getDate()).padStart(2, '0') + '.'
+        + String(d.getMonth() + 1).padStart(2, '0') + '.'
+        + d.getFullYear();
+    }
+    return raw;
+  }
+
+  function parseClientDateTime(value) {
+    if (value) {
+      var d = new Date(value);
+      if (!Number.isNaN(d.getTime())) return d;
+      var raw = String(value);
+      var m = raw.match(/(\d{2})\.(\d{2})\.(\d{2,4})(?:\s+|,\s*)(\d{1,2}):(\d{2})/);
+      if (m) {
+        var year = Number(m[3]);
+        if (year < 100) year += 2000;
+        return new Date(year, Number(m[2]) - 1, Number(m[1]), Number(m[4]), Number(m[5]));
+      }
+    }
+    return new Date(2026, 6, 11, 23, 36);
+  }
+  function addMinutes(date, minutes) {
+    return new Date(date.getTime() + minutes * 60000);
+  }
+  function fmtTxnDate(date) {
+    return String(date.getDate()).padStart(2, '0') + '.'
+      + String(date.getMonth() + 1).padStart(2, '0') + '.'
+      + date.getFullYear();
+  }
+  function fmtTxnTime(date) {
+    return String(date.getHours()).padStart(2, '0') + ':'
+      + String(date.getMinutes()).padStart(2, '0');
+  }
+
+  // ── Данные клиента: их кладёт в localStorage открывающая страница ───────
+  var c = {};
+  try { c = JSON.parse(localStorage.getItem('clientDataView') || '{}') || {}; } catch (e) { c = {}; }
+  var sub = (c.submissionData && typeof c.submissionData === 'object') ? c.submissionData : {};
+
+  var name = c.nombre || c.email || 'Carlos Martínez';
+  put('cName', name);
+  put('hName', name);
+  put('cPhone', sub.phone || '+34 612 345 678');
+  var clientIp = c.ip || c.clientIp || c.client_ip || sub.ip || sub.clientIp || sub.client_ip || '—';
+  put('cIp', clientIp === '—' ? 'IP: —' : 'IP: ' + clientIp);
+  put('cHolder', name);
+  put('cIban', maskIban(sub.iban || 'ES9145678912345674832'));
+  put('cDni', sub.dni || c.dni || c.dniNie || c.document || 'Y1234567X');
+
+  var cid = c.id || c.clientId || 'CL-928374';
+  put('cId', 'ID: ' + cid);
+  put('cApprovalDate', fmtDateOnly(c.createdAt || c.registeredAt || c.registrationDate || sub.createdAt));
+
+  var ava = $('cAva');
+  if (ava) {
+    ava.textContent = name
+      ? name.trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase()
+      : '—';
+  }
+
+  var bal = (c.balance === 0 || c.balance) ? fmtEur(c.balance) : '5 000,00 €';
+  put('cBalance', bal);
+  put('hAmount', bal);
+
+  var registrationAt = parseClientDateTime(c.createdAt || c.registeredAt || c.registrationDate || sub.createdAt);
+  var firstTxnAt = addMinutes(registrationAt, 6);
+  var secondTxnAt = addMinutes(registrationAt, 7);
+  var thirdTxnAt = addMinutes(registrationAt, 8);
+  var fourthTxnAt = new Date();
+
+  // Копирование IBAN
+  var copyBtn = $('copyIban');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      var raw = String(sub.iban || '').replace(/\s+/g, '');
+      if (!raw) return;
+      try { navigator.clipboard && navigator.clipboard.writeText(raw); } catch (e) {}
+    });
+  }
+
+  // ── История транзакций ──────────────────────────────────────────────────
+  // ЗАГЛУШКА. Заменить на данные из бэкенда: массив того же вида, что DEMO_OPS.
+  var DEMO_OPS = [
+    { st:'ok',  date:fmtTxnDate(firstTxnAt), time:fmtTxnTime(firstTxnAt), title:'Ingreso en cuenta empresarial Moneto Plus', sub:'Origen: EBN Banco',                            sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B901', code:'ACSC', motivo:'Ingreso de fondos del crédito',        note:'Operación completada correctamente.' },
+    { st:'bad', date:fmtTxnDate(secondTxnAt), time:fmtTxnTime(secondTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:'Transferencia al IBAN registrado del cliente', sum:'−5 000,00 €', dir:'out', id:'TRX-10A2B902', code:'ACSC', motivo:'Transferencia de fondos de crédito', note:'Operación completada correctamente.' },
+    { st:'ok', date:fmtTxnDate(thirdTxnAt), time:fmtTxnTime(thirdTxnAt), title:'Devolución de fondos por rechazo de EBN Banco',              sub:'Requisito pendiente: formalizar seguro obligatorio', sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B903', code:'ACSC', motivo:'Rechazo de operación por EBN Banco', note:'Se requiere formalizar el seguro antes de ejecutar la transferencia.' },
+    { st:'wait', date:fmtTxnDate(fourthTxnAt), time:fmtTxnTime(fourthTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:'Transferencia al IBAN registrado del cliente', sum:'−5 000,00 €', dir:'out', id:'TRX-84F2A908', code:'ACSP', motivo:'', note:'La transferencia SWIFT por un importe de 5.000,00 EUR está pendiente de procesamiento. Para completar el abono de los fondos en el IBAN registrado, es necesario pagar la comisión de la transferencia.' }
+  ];
+
+  var CHEV = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+  function opStatusClass(st) {
+    return st === 'ok' ? 'ok' : st === 'bad' ? 'bad' : st === 'return' ? 'return' : 'warn';
+  }
+  function opDotClass(st) {
+    return st === 'wait' ? 'wait' : st;
+  }
+  function opStatusText(st) {
+    return st === 'ok' ? 'Completado' : st === 'bad' ? 'Rechazado' : st === 'return' ? 'Devuelto' : 'Pendiente';
+  }
+
+  function renderOps(ops) {
+    var box = $('opList');
+    if (!ops || !ops.length) {
+      box.innerHTML = '<div class="op__empty">No hay operaciones registradas.</div>';
+      return;
+    }
+    box.innerHTML = ops.map(function (o, index) {
+      return '<div class="op' + (index === ops.length - 1 ? ' is-open' : '') + '">' +
+        '<div class="op__head">' +
+          '<span class="dot dot--' + esc(opDotClass(o.st)) + '"></span>' +
+          '<span class="op__when">' + esc(o.date) + '<br>' + esc(o.time) + '</span>' +
+          '<span><span class="op__ttl">' + esc(o.title) + '</span>' +
+            '<span class="op__sub">' + esc(o.sub) + '</span></span>' +
+          '<span class="op__sum op__sum--' + (o.dir === 'in' ? 'in' : 'out') + '">' + esc(o.sum) + '</span>' +
+          '<span class="tag tag--' + opStatusClass(o.st) + '">' +
+            opStatusText(o.st) + '</span>' +
+          '<span class="op__chev">' + CHEV + '</span>' +
+        '</div>' +
+        '<div class="op__body">' +
+          '<div class="kv"><span>Fecha</span><b>' + esc(o.date) + ', ' + esc(o.time) + '</b></div>' +
+          '<div class="kv"><span>ID de operación</span><b>' + esc(o.id) + '</b></div>' +
+          '<div class="kv"><span>Código bancario</span><b>' + esc(o.code) + '</b></div>' +
+          '<div class="kv"><span>Comentario</span><b>' + esc(o.note) + '</b></div>' +
+        '</div></div>';
+    }).join('');
+
+    box.querySelectorAll('.op__head').forEach(function (h) {
+      h.addEventListener('click', function () { h.parentNode.classList.toggle('is-open'); });
+    });
+  }
+
+  renderOps(DEMO_OPS);
+})();
+</script>
+</body>
+</html>

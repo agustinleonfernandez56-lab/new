@@ -1,0 +1,1 @@
+ALTER TABLE "BotConfig" ADD COLUMN "tgRequestLogging" BOOLEAN NOT NULL DEFAULT false;

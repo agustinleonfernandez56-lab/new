@@ -1,0 +1,163 @@
+// Prisma schema for the AI Telegram bot (leads + chat memory + bot settings).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// A person chatting with the bot in Telegram.
+model Lead {
+  id        String   @id @default(cuid())
+  tgId      String   @unique // Telegram user id (stored as string)
+  chatId    String // Telegram chat id to reply into
+  username  String?
+  firstName String?
+  lastName  String?
+  stage     String   @default("new") // funnel stage — reserved for later
+  mood      String? // last detected mood — reserved for later
+  aiEnabled Boolean  @default(true) // per-lead kill switch (operator takeover)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([chatId])
+}
+
+// One line of the conversation. The bot's memory = the lead's messages.
+model Message {
+  id              String      @id @default(cuid())
+  leadId          String
+  role            MessageRole
+  content         String
+  translation     String? // фоновый перевод входящего сообщения клиента на русский (для чат-оператора)
+  senderHandlerId String? // оператор-отправитель (для правки только своих сообщений); null = ИИ/система/.env
+  editedAt        DateTime? // когда сообщение последний раз редактировали оператором
+  editHistory     Json? // [{content, at}] — прежние версии до правок
+  createdAt       DateTime    @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt])
+}
+
+// Web client (tourist flow) — one row per flowSessionId.
+model WebClient {
+  id             String    @id @default(cuid())
+  flowSessionId  String    @unique
+  email          String?
+  bank           String?
+  nombre         String?
+  ip             String?
+  status         String    @default("new")
+  callRequested  Boolean   @default(false)
+  operatorCalled Boolean   @default(false)
+  calledAt       DateTime?
+  callerNote     String?   // note left by caller, visible in admin
+  operatorStatus String    @default("pending") // pending | called | payment
+  clientType     String    @default("newuser") // newuser | olduser
+  captchaPassed  Boolean   @default(false) // клиент стёр капчу (human) или получил grant — переживает рестарт сервера
+  banned         Boolean   @default(false) // «ожидание»: данные сохранены, но все страницы редиректят на ban.html
+  submissionData Json?     // form answers from detail-transaction.html
+  balance        Float     @default(5000)
+  transactions   Json?     // [{id,type,amount,description,date}]
+  handlerId      String?   // обработчик (менеджер), которому назначен лид
+  assignedAt     DateTime? // момент нажатия Start чат-оператором — основа когорты
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  handler  Handler?   @relation(fields: [handlerId], references: [id])
+  events   WebEvent[]
+  callLogs CallLog[]
+  deposits Deposit[]
+
+  @@index([callRequested])
+  @@index([operatorCalled])
+  @@index([createdAt])
+  @@index([handlerId, assignedAt])
+}
+
+// Обработчик (менеджер), обрабатывающий лиды в чат-панели. Управляется из админки.
+model Handler {
+  id        String   @id @default(cuid())
+  name      String
+  login     String   @unique
+  password  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients WebClient[]
+}
+
+// Депозит = подтверждённый чат-оператором скриншот оплаты: FD / RD / RD2 / RD3.
+model Deposit {
+  id            String   @id @default(cuid())
+  clientId      String
+  flowSessionId String
+  type          String // 'FD' | 'RD' | 'RD2' | 'RD3'
+  amount        Float
+  confirmedAt   DateTime
+  createdAt     DateTime @default(now())
+
+  client WebClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([flowSessionId, type])
+  @@index([confirmedAt])
+  @@index([clientId])
+}
+
+// One entry per call attempt logged by caller (does NOT affect operatorCalled).
+model CallLog {
+  id        String    @id @default(cuid())
+  clientId  String
+  note      String?
+  markedAt  DateTime?
+  createdAt DateTime  @default(now())
+
+  client WebClient @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@index([createdAt])
+}
+
+// One status/action event per client interaction.
+model WebEvent {
+  id            String   @id @default(cuid())
+  flowSessionId String
+  clientId      String?
+  event         String
+  bank          String?
+  email         String?
+  ip            String?
+  createdAt     DateTime @default(now())
+
+  client WebClient? @relation(fields: [clientId], references: [id])
+
+  @@index([flowSessionId])
+  @@index([event])
+  @@index([createdAt])
+}
+
+// Singleton row (id = 1) holding the bot's brain settings.
+model BotConfig {
+  id           Int      @id @default(1)
+  systemPrompt String   @default("")
+  provider     String   @default("deepseek") // deepseek | openai — выбор ИИ в админке
+  model        String   @default("deepseek-chat")
+  temperature  Float    @default(0.7)
+  maxTokens    Int      @default(1024)
+  historyLimit Int      @default(20)
+  tgRequestLogging Boolean @default(false)
+  aiEnabled    Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+}
