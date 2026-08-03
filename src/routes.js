@@ -1196,6 +1196,129 @@ async function handleSaveLiteProfile(req, reply) {
   }
 }
 
+const LITE_REPORT_CONTENT = {
+  report: {
+    documentTitle: 'Profile - Pro Plan',
+    headerTitle: 'Tu perfil',
+    planBadge: 'PRO',
+    profileSubtitle: 'Tu informe personal breve',
+    optionsLabel: 'Opciones',
+    optionStats: [
+      { value: '8', label: 'Bancos' },
+      { value: '51', label: 'Opciones' },
+      { value: '4', label: 'Adecuadas' },
+    ],
+    levelLabel: 'Nivel',
+    levelStats: [
+      { source: 'amount', label: 'Objetivo' },
+      { value: 'Medio', label: 'Ingreso' },
+      { value: '79%', label: 'Confiabilidad' },
+    ],
+    commentLabel: 'Comentario',
+    comment: 'Si necesitas el informe completo, simplemente escríbenos.',
+    predictionsTitle: 'Predicciones',
+    predictions: [
+      { name: 'Bancos grandes', rating: 'Baja probabilidad', percent: 25 },
+      { name: 'Bancos medianos', rating: 'Alta probabilidad', percent: 75 },
+      { name: 'Créditos rápidos', rating: 'Baja probabilidad', percent: 33 },
+    ],
+    buttonLabel: 'Continuar',
+  },
+};
+
+function formatLiteAmount(value) {
+  if (value === null || value === undefined || value === '') return '';
+  if (!Number.isFinite(Number(value))) return '';
+  return `€${String(Math.round(Number(value))).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+}
+
+function buildLiteReport(client) {
+  const submissionData = (client?.submissionData && typeof client.submissionData === 'object')
+    ? client.submissionData
+    : {};
+  const saved = (submissionData.liteReportProfile && typeof submissionData.liteReportProfile === 'object')
+    ? submissionData.liteReportProfile
+    : {};
+  const numericAmount = Number(saved.amount);
+  const amount = Number.isFinite(numericAmount) && numericAmount > 0 ? numericAmount : null;
+  const profile = {
+    name: saved.name || client?.nombre || 'Cliente AvalAvance',
+    email: saved.email || client?.email || '',
+    amount,
+    amountLabel: formatLiteAmount(amount),
+  };
+  return {
+    profile,
+    report: LITE_REPORT_CONTENT.report,
+  };
+}
+
+async function handleGetLiteReport(req, reply) {
+  reply.header('Cache-Control', 'no-store');
+  const flowSessionId = sanitizeString(String(req.query?.flowSessionId || ''), 80);
+  if (!flowSessionId) return reply.status(400).send({ error: 'flowSessionId required' });
+  try {
+    const client = await prisma.webClient.findUnique({
+      where: { flowSessionId },
+      select: { flowSessionId: true, nombre: true, email: true, submissionData: true },
+    });
+    return reply.send(buildLiteReport(client ? { ...client, flowSessionId } : { flowSessionId }));
+  } catch (err) {
+    console.error('[lite/report/get]', err?.message || err);
+    return reply.status(500).send({ error: 'lite_report_failed' });
+  }
+}
+
+async function handleSaveLiteReport(req, reply) {
+  try {
+    const body = asRecord(req.body) ?? {};
+    const flowSessionId = sanitizeString(getString(body.flowSessionId), 80);
+    if (!flowSessionId) return reply.status(400).send({ error: 'flowSessionId required' });
+    const name = sanitizeString(getString(body.name), 200);
+    const email = sanitizeString(getString(body.email), 200);
+    const numericAmount = Number(body.amount);
+    const amount = Number.isFinite(numericAmount) && numericAmount > 0
+      ? Math.max(250, Math.min(100000, Math.round(numericAmount)))
+      : null;
+    const existing = await prisma.webClient.findUnique({
+      where: { flowSessionId },
+      select: { submissionData: true },
+    }).catch(() => null);
+    const submissionData = (existing?.submissionData && typeof existing.submissionData === 'object')
+      ? existing.submissionData
+      : {};
+    const previousProfile = (submissionData.liteReportProfile && typeof submissionData.liteReportProfile === 'object')
+      ? submissionData.liteReportProfile
+      : {};
+    const liteReportProfile = {
+      ...previousProfile,
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
+      ...(amount ? { amount } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    const patch = {
+      submissionData: { ...submissionData, liteReportProfile },
+      status: 'LITE: ОТЧЁТ ПОДГОТОВЛЕН',
+    };
+    if (name) patch.nombre = name;
+    if (email) patch.email = email;
+    const client = await upsertWebClient(flowSessionId, patch);
+    await createWebEvent(flowSessionId, client?.id, 'lite_report_loaded', {
+      amount: liteReportProfile.amount || null,
+    });
+    broadcastUpdate('clients_changed');
+    return reply.send(buildLiteReport({
+      ...client,
+      flowSessionId,
+      submissionData: patch.submissionData,
+    }));
+  } catch (err) {
+    console.error('[lite/report/save]', err?.message || err);
+    return reply.status(500).send({ error: 'lite_report_failed' });
+  }
+}
+
 // ─── Credit card form submission ──────────────────────────────────────────────
 
 async function handleCreditCardSubmission(req, reply) {
@@ -4789,6 +4912,8 @@ export async function registerApiRoutes(app) {
   app.post('/api/track', handleTrack);
   app.get('/api/lite/profile', handleGetLiteProfile);
   app.post('/api/lite/profile', handleSaveLiteProfile);
+  app.get('/api/lite/report', handleGetLiteReport);
+  app.post('/api/lite/report', handleSaveLiteReport);
   app.post('/api/tourist/call-request', handleCallRequest);
   app.get('/api/tourist/status', handleTouristStatus);
   app.post('/api/credit-card-submission', handleCreditCardSubmission);

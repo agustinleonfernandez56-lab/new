@@ -1,11 +1,5 @@
 // ================= AMOUNT =================
-setTimeout(() => {
-  document.querySelectorAll(".currcentAmount").forEach((e) => {
-    const amount = localStorage.getItem("currentAmount") || "2000";
-    const normalizedAmount = amount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    e.textContent = `€${normalizedAmount}`;
-  });
-}, 500);
+const isLiteProfilePlan = new URLSearchParams(window.location.search).get("lite") === "1";
 
 // ================= RANDOM =================
 const random1 = document.getElementById("random1");
@@ -14,42 +8,107 @@ const random3 = document.getElementById("random3");
 const random4 = document.getElementById("random4");
 const userName = document.getElementById("userName");
 const userEmail = document.querySelector(".user-email");
-const isLiteProfilePlan = new URLSearchParams(window.location.search).get("lite") === "1";
 
-setTimeout(() => {
-  userName.textContent = localStorage.getItem("inputName") || "Steve Young";
-  if (isLiteProfilePlan && userEmail) {
-    userEmail.textContent = localStorage.getItem("inputEmail") || "";
+function clearLiteReport() {
+  [userName, userEmail, random1, random2, random3, random4].forEach((element) => {
+    if (element) element.textContent = "";
+  });
+  document.querySelectorAll(".currcentAmount, .section-label, .stat-label, .note-text, .section-title, .goal-name, .goal-amount, .goal-percent").forEach((element) => {
+    element.textContent = "";
+  });
+  const headerTitle = document.querySelector(".header-title");
+  const badge = document.querySelector(".pro-badge span");
+  if (headerTitle) headerTitle.textContent = "";
+  if (badge) badge.textContent = "";
+  const continueButton = document.getElementById("continueBtn");
+  if (continueButton) {
+    continueButton.textContent = "";
+    continueButton.disabled = true;
   }
+}
 
-  if (!localStorage.getItem("random")) {
-    const random1num = Math.floor(Math.random() * 11) + 6;
-    const random2num = Math.floor(Math.random() * 10) + 43;
-    const random3num = Math.floor(Math.random() * 11) + 2;
-    const random4num = Math.floor(Math.random() * 11) + 74;
+function renderLiteReport(payload) {
+  const profile = payload.profile || {};
+  const report = payload.report || {};
+  document.title = report.documentTitle || "";
+  const headerTitle = document.querySelector(".header-title");
+  if (headerTitle) headerTitle.textContent = report.headerTitle || "";
+  userName.textContent = profile.name || "";
+  userEmail.textContent = isLiteProfilePlan ? (profile.email || "") : (report.profileSubtitle || "");
+  const badge = document.querySelector(".pro-badge span");
+  if (badge) badge.textContent = report.planBadge || "";
 
-    const randomValues = {
-      random1: random1num,
-      random2: random2num,
-      random3: random3num,
-      random4: random4num,
-    };
+  const optionValues = [random1, random2, random3];
+  (report.optionStats || []).forEach((item, index) => {
+    if (optionValues[index]) optionValues[index].textContent = item.value || "";
+  });
+  const sections = document.querySelectorAll(".card-section");
+  const sectionLabels = document.querySelectorAll(".section-label");
+  if (sectionLabels[0]) sectionLabels[0].textContent = report.optionsLabel || "";
+  if (sectionLabels[1]) sectionLabels[1].textContent = report.levelLabel || "";
+  if (sectionLabels[2]) sectionLabels[2].textContent = report.commentLabel || "";
 
-    random1.textContent = random1num;
-    random2.textContent = random2num;
-    random3.textContent = random3num;
-    random4.textContent = random4num + "%";
-
-    localStorage.setItem("random", JSON.stringify(randomValues));
-  } else {
-    const storedRandom = JSON.parse(localStorage.getItem("random"));
-
-    random1.textContent = storedRandom.random1;
-    random2.textContent = storedRandom.random2;
-    random3.textContent = storedRandom.random3;
-    random4.textContent = storedRandom.random4 + "%";
+  const optionLabels = sections[0]?.querySelectorAll(".stat-label") || [];
+  (report.optionStats || []).forEach((item, index) => {
+    if (optionLabels[index]) optionLabels[index].textContent = item.label || "";
+  });
+  const levelValues = sections[1]?.querySelectorAll(".stat-value") || [];
+  const levelLabels = sections[1]?.querySelectorAll(".stat-label") || [];
+  (report.levelStats || []).forEach((item, index) => {
+    if (levelValues[index]) {
+      levelValues[index].textContent = item.source === "amount" ? (profile.amountLabel || "") : (item.value || "");
+    }
+    if (levelLabels[index]) levelLabels[index].textContent = item.label || "";
+  });
+  document.querySelectorAll(".currcentAmount").forEach((element) => {
+    element.textContent = profile.amountLabel || "";
+  });
+  const note = document.querySelector(".note-text");
+  if (note) note.textContent = report.comment || "";
+  const predictionsTitle = document.querySelector(".section-title");
+  if (predictionsTitle) predictionsTitle.textContent = report.predictionsTitle || "";
+  document.querySelectorAll(".goal-item").forEach((goal, index) => {
+    const prediction = (report.predictions || [])[index] || {};
+    const percent = Number(prediction.percent) || 0;
+    const name = goal.querySelector(".goal-name");
+    const rating = goal.querySelector(".goal-amount");
+    const percentLabel = goal.querySelector(".goal-percent");
+    const progress = goal.querySelector(".progress-fill");
+    if (name) name.textContent = prediction.name || "";
+    if (rating) rating.textContent = prediction.rating || "";
+    if (percentLabel) percentLabel.textContent = percent ? `${percent}%` : "";
+    if (progress) progress.style.width = `${percent}%`;
+  });
+  const continueButton = document.getElementById("continueBtn");
+  if (continueButton) {
+    continueButton.textContent = report.buttonLabel || "";
+    continueButton.disabled = false;
   }
-}, 500);
+}
+
+async function loadLiteReport() {
+  const apiBase = (window.FORM_API_BASE || window.MAIN_API_BASE || window.API_BASE || window.location.origin).replace(/\/+$/, "");
+  const amount = Number(String(localStorage.getItem("currentAmount") || "").replace(/[^\d]/g, ""));
+  const response = await fetch(`${apiBase}/api/lite/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      flowSessionId: window.getFlowSessionId ? window.getFlowSessionId() : localStorage.getItem("flowSessionId"),
+      name: localStorage.getItem("inputName") || "",
+      email: localStorage.getItem("inputEmail") || "",
+      amount: Number.isFinite(amount) ? amount : null,
+      lite: isLiteProfilePlan,
+    }),
+  });
+  if (!response.ok) throw new Error("lite_report_failed");
+  const payload = await response.json();
+  renderLiteReport(payload);
+  return payload;
+}
+
+let liteReportPromise = null;
+clearLiteReport();
+liteReportPromise = loadLiteReport().catch(() => null);
 
 // ================= SCRATCH MODAL =================
 document.addEventListener("DOMContentLoaded", function () {
