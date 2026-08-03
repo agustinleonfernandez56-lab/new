@@ -13,9 +13,14 @@ const random2 = document.getElementById("random2");
 const random3 = document.getElementById("random3");
 const random4 = document.getElementById("random4");
 const userName = document.getElementById("userName");
+const userEmail = document.querySelector(".user-email");
+const isLiteProfilePlan = new URLSearchParams(window.location.search).get("lite") === "1";
 
 setTimeout(() => {
   userName.textContent = localStorage.getItem("inputName") || "Steve Young";
+  if (isLiteProfilePlan && userEmail) {
+    userEmail.textContent = localStorage.getItem("inputEmail") || "";
+  }
 
   if (!localStorage.getItem("random")) {
     const random1num = Math.floor(Math.random() * 11) + 6;
@@ -352,6 +357,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ================= MODAL =================
   continueBtn.addEventListener("click", function () {
+    if (isLiteProfilePlan) {
+      window.location.replace("/lite/consultation.html");
+      return;
+    }
     // profile-plan1.html — в конце опроса только WhatsApp с уникальным ID
     if (window.location.pathname.indexOf("profile-plan1") >= 0 && window.getWhatsAppCompletedUrl) {
       window.location.replace(window.getWhatsAppCompletedUrl());
