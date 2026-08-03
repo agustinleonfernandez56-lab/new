@@ -1,0 +1,21 @@
+<svg width="950" height="255" viewBox="0 0 950 255" fill="none" xmlns="http://www.w3.org/2000/svg">
+<text x="286" y="168" font-family="Segoe UI, Arial, sans-serif" font-size="108" font-weight="700" letter-spacing="-4" fill="var(--interface-accent, #066EC0)">AvalAvance</text>
+<mask id="mask0_30846_11094" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="255" height="255">
+<g clip-path="url(#clip0_30846_11094)">
+<g clip-path="url(#clip1_30846_11094)">
+<path d="M223.297 161.301L151.847 114.901L122.385 160.269C100.994 150.16 83.5729 133.224 72.8637 112.127L60.7122 88.2686M114.725 105.82L60.7122 88.2686L43.1604 142.282" stroke="black" stroke-width="13.387" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</mask>
+<g mask="url(#mask0_30846_11094)">
+<rect x="254.07" y="209.512" width="214.215" height="214.194" transform="rotate(168 254.07 209.512)" fill="var(--interface-accent, #066EC0)"/>
+</g>
+<defs>
+<clipPath id="clip0_30846_11094">
+<rect width="214.215" height="214.194" fill="white" transform="translate(254.07 209.512) rotate(168)"/>
+</clipPath>
+<clipPath id="clip1_30846_11094">
+<rect width="214.192" height="214.192" fill="white" transform="translate(254.07 209.504) rotate(168)"/>
+</clipPath>
+</defs>
+</svg>

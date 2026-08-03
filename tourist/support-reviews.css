@@ -35,7 +35,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 18px;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-review-compose__title,
@@ -100,7 +100,7 @@
 
 .tourist-review-form__field input:focus-visible,
 .tourist-review-form__field textarea:focus-visible {
-  border-color: #fa6c12;
+  border-color: var(--interface-accent);
   background: #ffffff;
 }
 
@@ -120,7 +120,7 @@
   padding: 0 14px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
   font-family: "DM Sans", sans-serif;
   font-size: 14px;
   font-weight: 600;
@@ -233,7 +233,7 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-reviews__count::after {
@@ -272,7 +272,7 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -405,9 +405,9 @@
 }
 
 .tourist-reviews__page.is-active {
-  border-color: #fde9de;
-  background: #fde9de;
-  color: #f26a21;
+  border-color: var(--interface-accent-soft-strong);
+  background: var(--interface-accent-soft-strong);
+  color: var(--interface-accent);
 }
 
 .tourist-reviews__page:active {

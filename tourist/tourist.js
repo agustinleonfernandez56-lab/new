@@ -645,7 +645,7 @@
     startChatBadgePoller();
     registerFcmToken();
 
-    // Веб-конверсия входа (разово). Активация лида в APK (moneto.activeLead)
+    // Веб-конверсия входа (разово). Активация лида через нативный APK-мост.
     // вынесена в tourist/index.html (до 3 раз, счётчик в localStorage).
     if (!localStorage.getItem("activeLeadFired")) {
       localStorage.setItem("activeLeadFired", "1");

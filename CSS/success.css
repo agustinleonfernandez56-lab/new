@@ -417,14 +417,14 @@ body {
     font-size: 16px;
     font-weight: 600;
     color: #FFFFFF;
-    background: linear-gradient(90deg, #FF761F 0%, #FF77D7 100%);
+    background: linear-gradient(90deg, var(--primary-button-start) 0%, #FF77D7 100%);
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .got-it-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 118, 31, 0.3);
+    box-shadow: var(--primary-button-shadow);
 }
 
 .got-it-btn:active {
@@ -483,4 +483,3 @@ body {
     font-weight: 500;
     padding: 15.5px 166px;
 }
-

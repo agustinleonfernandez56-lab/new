@@ -34,7 +34,7 @@
       .tx-upload-btn--disabled { opacity: 0.5; cursor: default; pointer-events: none; }
       .tx-upload-hint {
         margin: 8px 2px 0;
-        color: #fa6c12;
+        color: var(--interface-accent);
         font-size: 13px;
         font-weight: 500;
         line-height: 18px;
@@ -86,6 +86,8 @@
     </script>
       <script src="/js/ban-guard.js?v=20260708-1"></script>
       <script src="/js/review-guard.js?v=20260729-1"></script>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
   </head>
 
   <body>
@@ -98,14 +100,14 @@
     >
       <div class="tourist-boot-spinner" aria-hidden="true">
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path opacity="0.4" d="M15 3C15 1.34315 16.3431 0 18 0C19.6569 0 21 1.34315 21 3V5C21 6.65685 19.6569 8 18 8C16.3431 8 15 6.65685 15 5V3Z" fill="#F06005"/>
-          <path opacity="0.8" d="M15 31C15 29.3431 16.3431 28 18 28C19.6569 28 21 29.3431 21 31V33C21 34.6569 19.6569 36 18 36C16.3431 36 15 34.6569 15 33V31Z" fill="#F06005"/>
-          <path opacity="0.2" d="M33 15C34.6569 15 36 16.3431 36 18C36 19.6569 34.6569 21 33 21L31 21C29.3431 21 28 19.6569 28 18C28 16.3431 29.3431 15 31 15L33 15Z" fill="#F06005"/>
-          <path opacity="0.6" d="M5 15C6.65685 15 8 16.3431 8 18C8 19.6569 6.65685 21 5 21L3 21C1.34315 21 -2.03558e-07 19.6569 -1.31134e-07 18C-5.87108e-08 16.3431 1.34315 15 3 15L5 15Z" fill="#F06005"/>
-          <path opacity="0.3" d="M26.4881 5.27366C27.6596 4.10209 29.5591 4.10209 30.7307 5.27366C31.9023 6.44524 31.9023 8.34473 30.7307 9.5163L29.3165 10.9305C28.1449 12.1021 26.2454 12.1021 25.0738 10.9305C23.9023 9.75895 23.9023 7.85945 25.0738 6.68788L26.4881 5.27366Z" fill="#F06005"/>
-          <path opacity="0.7" d="M6.68337 25.0705C7.85494 23.899 9.75444 23.899 10.926 25.0705C12.0976 26.2421 12.0976 28.1416 10.926 29.3132L9.51179 30.7274C8.34022 31.899 6.44073 31.899 5.26915 30.7274C4.09758 29.5558 4.09758 27.6563 5.26915 26.4848L6.68337 25.0705Z" fill="#F06005"/>
-          <path opacity="0.1" d="M30.7302 26.4841C31.9018 27.6557 31.9018 29.5552 30.7302 30.7268C29.5587 31.8984 27.6592 31.8984 26.4876 30.7268L25.0734 29.3126C23.9018 28.141 23.9018 26.2415 25.0734 25.0699C26.245 23.8984 28.1445 23.8984 29.316 25.0699L30.7302 26.4841Z" fill="#F06005"/>
-          <path opacity="0.5" d="M10.9256 6.68727C12.0971 7.85885 12.0971 9.75834 10.9256 10.9299C9.75398 12.1015 7.85449 12.1015 6.68291 10.9299L5.2687 9.5157C4.09713 8.34413 4.09713 6.44463 5.2687 5.27306C6.44027 4.10149 8.33977 4.10149 9.51134 5.27306L10.9256 6.68727Z" fill="#F06005"/>
+          <path opacity="0.4" d="M15 3C15 1.34315 16.3431 0 18 0C19.6569 0 21 1.34315 21 3V5C21 6.65685 19.6569 8 18 8C16.3431 8 15 6.65685 15 5V3Z" fill="var(--interface-accent)"/>
+          <path opacity="0.8" d="M15 31C15 29.3431 16.3431 28 18 28C19.6569 28 21 29.3431 21 31V33C21 34.6569 19.6569 36 18 36C16.3431 36 15 34.6569 15 33V31Z" fill="var(--interface-accent)"/>
+          <path opacity="0.2" d="M33 15C34.6569 15 36 16.3431 36 18C36 19.6569 34.6569 21 33 21L31 21C29.3431 21 28 19.6569 28 18C28 16.3431 29.3431 15 31 15L33 15Z" fill="var(--interface-accent)"/>
+          <path opacity="0.6" d="M5 15C6.65685 15 8 16.3431 8 18C8 19.6569 6.65685 21 5 21L3 21C1.34315 21 -2.03558e-07 19.6569 -1.31134e-07 18C-5.87108e-08 16.3431 1.34315 15 3 15L5 15Z" fill="var(--interface-accent)"/>
+          <path opacity="0.3" d="M26.4881 5.27366C27.6596 4.10209 29.5591 4.10209 30.7307 5.27366C31.9023 6.44524 31.9023 8.34473 30.7307 9.5163L29.3165 10.9305C28.1449 12.1021 26.2454 12.1021 25.0738 10.9305C23.9023 9.75895 23.9023 7.85945 25.0738 6.68788L26.4881 5.27366Z" fill="var(--interface-accent)"/>
+          <path opacity="0.7" d="M6.68337 25.0705C7.85494 23.899 9.75444 23.899 10.926 25.0705C12.0976 26.2421 12.0976 28.1416 10.926 29.3132L9.51179 30.7274C8.34022 31.899 6.44073 31.899 5.26915 30.7274C4.09758 29.5558 4.09758 27.6563 5.26915 26.4848L6.68337 25.0705Z" fill="var(--interface-accent)"/>
+          <path opacity="0.1" d="M30.7302 26.4841C31.9018 27.6557 31.9018 29.5552 30.7302 30.7268C29.5587 31.8984 27.6592 31.8984 26.4876 30.7268L25.0734 29.3126C23.9018 28.141 23.9018 26.2415 25.0734 25.0699C26.245 23.8984 28.1445 23.8984 29.316 25.0699L30.7302 26.4841Z" fill="var(--interface-accent)"/>
+          <path opacity="0.5" d="M10.9256 6.68727C12.0971 7.85885 12.0971 9.75834 10.9256 10.9299C9.75398 12.1015 7.85449 12.1015 6.68291 10.9299L5.2687 9.5157C4.09713 8.34413 4.09713 6.44463 5.2687 5.27306C6.44027 4.10149 8.33977 4.10149 9.51134 5.27306L10.9256 6.68727Z" fill="var(--interface-accent)"/>
         </svg>
       </div>
       <p class="tourist-page-boot-loader__text">Preparando página de pago</p>
@@ -131,8 +133,8 @@
           <div class="tourist-person">
             <div class="tourist-person__avatar" aria-hidden="true">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="8" cy="5" r="3" fill="#FA6C12"/>
-                <path d="M2.5 14c0-2.76 2.46-5 5.5-5s5.5 2.24 5.5 5" stroke="#FA6C12" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="8" cy="5" r="3" fill="var(--interface-accent)"/>
+                <path d="M2.5 14c0-2.76 2.46-5 5.5-5s5.5 2.24 5.5 5" stroke="var(--interface-accent)" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
             </div>
             <div class="tourist-person__text">
@@ -162,11 +164,11 @@
                 <defs>
                   <linearGradient id="detailLockG0" x1="8" y1="9.4" x2="8" y2="11.6" gradientUnits="userSpaceOnUse">
                     <stop stop-color="#FF77D7" />
-                    <stop offset="1" stop-color="#FA6C12" />
+                    <stop offset="1" stop-color="var(--interface-accent)" />
                   </linearGradient>
                   <linearGradient id="detailLockG1" x1="1.3" y1="8" x2="14.7" y2="8" gradientUnits="userSpaceOnUse">
                     <stop stop-color="#FF77D7" />
-                    <stop offset="1" stop-color="#FA6C12" />
+                    <stop offset="1" stop-color="var(--interface-accent)" />
                   </linearGradient>
                 </defs>
               </svg>

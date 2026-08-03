@@ -131,7 +131,7 @@
     for (var i = 0; i <= 6; i++) {
       var btn = document.createElement("button");
       btn.textContent = "S" + (i + 1);
-      btn.style.cssText = "padding:4px 10px;font-size:12px;background:#FA6C12;color:#fff;border:none;border-radius:4px;cursor:pointer;";
+      btn.style.cssText = "padding:4px 10px;font-size:12px;background:var(--interface-accent);color:#fff;border:none;border-radius:4px;cursor:pointer;";
       btn.setAttribute("data-step", String(i));
       btn.addEventListener("click", function () { fillStep(parseInt(this.getAttribute("data-step"))); });
       bar.appendChild(btn);

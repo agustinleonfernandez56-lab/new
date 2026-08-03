@@ -135,11 +135,11 @@
 
 /* Заполненный dropdown — оранжевая рамка и текст */
 .credit-form__dropdown:has(.credit-form__value[data-empty="false"]) .credit-form__input-wrap:not(.credit-form__input-wrap--error) {
-  border-color: #FA6C12;
+  border-color: var(--interface-accent);
 }
 
 .credit-form__dropdown .credit-form__value[data-empty="false"] {
-  color: #FA6C12;
+  color: var(--interface-accent);
 }
 
 /* Обычные поля: при фокусе/заполнении такая же оранжевая рамка и текст, как у dropdown */
@@ -147,14 +147,14 @@
   .credit-form__input-wrap:has(input:focus),
 .credit-form__field:not(.credit-form__dropdown)
   .credit-form__input-wrap:has(input:not(:placeholder-shown)) {
-  border-color: #FA6C12;
+  border-color: var(--interface-accent);
 }
 
 .credit-form__field:not(.credit-form__dropdown)
   .credit-form__input-wrap input:focus,
 .credit-form__field:not(.credit-form__dropdown)
   .credit-form__input-wrap input:not(:placeholder-shown) {
-  color: #FA6C12;
+  color: var(--interface-accent);
 }
 
 /* Стиль незаполненного обязательного поля — красная рамка + "Campo obligatorio" */
@@ -314,9 +314,9 @@
   border-top: none;
   /* рамка по бокам и снизу у всего списка,
      чтобы углы снизу слева/справа были закрашены */
-  border-left: 1px solid #FA6C12;
-  border-right: 1px solid #FA6C12;
-  border-bottom: 1px solid #FA6C12;
+  border-left: 1px solid var(--interface-accent);
+  border-right: 1px solid var(--interface-accent);
+  border-bottom: 1px solid var(--interface-accent);
   border-radius: 0 0 14px 14px;
   margin-top: -1px;
   /* ширина как у поля + высота под ровно 5 пунктов (5 * 52px) */
@@ -354,7 +354,7 @@
 }
 
 .credit-form__dropdown.is-open .credit-form__input-wrap {
-  border: 1px solid #FA6C12;
+  border: 1px solid var(--interface-accent);
   border-bottom: none;
   border-radius: 14px 14px 0 0;
 }
@@ -394,7 +394,7 @@
 
 .credit-form__dropdown-option.is-selected {
   background: #F4F4F4;
-  color: #FA6C12;
+  color: var(--interface-accent);
 }
 
 .bank__update {
@@ -404,6 +404,6 @@
 }
 
 .bank__update-link {
-  color: #FA6C12;
+  color: var(--interface-accent);
   text-decoration: underline;
 }

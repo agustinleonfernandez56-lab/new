@@ -10,7 +10,7 @@
   --blue: #274eda;
   --blue-2: #19336f;
   --green: #22c45e;
-  --orange: #ff7b00;
+  --orange: var(--interface-accent);
   --yellow: #f1d10d;
   --pink: #f20b5d;
   --chat-row-height: 72px;

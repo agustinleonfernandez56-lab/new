@@ -1,0 +1,830 @@
+/*
+ * Global project theme.
+ * Buttons and interface accents are intentionally controlled separately.
+ */
+:root {
+  /* Primary buttons. */
+  --primary-button-color: #066EC0;
+  --primary-button-start: var(--primary-button-color);
+  --primary-button-middle: var(--primary-button-color);
+  --primary-button-end: var(--primary-button-color);
+
+  /* Backward-compatible name: this is deliberately a solid colour now. */
+  --primary-button-gradient: var(--primary-button-color);
+  --primary-button-shadow: 0 10px 22px rgba(6, 110, 192, 0.22);
+
+  /* Icons, links, active states, borders and other interface accents. */
+  --interface-accent: #066EC0;
+  --interface-accent-rgb: 6, 110, 192;
+  --active-control-background: #F4F8FC;
+  --disabled-button-background: var(--active-control-background);
+  --back-control-background: var(--active-control-background);
+  --back-control-slot-size: 48px;
+  --back-control-pad-size: 38px;
+  --interface-icon-background: var(--back-control-background);
+  --interface-icon-color: var(--interface-accent);
+  --back-chevron-mask: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUwMDUgMTYuNTk4NEw3LjA2NzE5IDExLjE2NTFDNi40MjU1MiAxMC41MjM0IDYuNDI1NTIgOS40NzM0NCA3LjA2NzE5IDguODMxNzdMMTIuNTAwNSAzLjM5ODQ0IiBzdHJva2U9IiMwRjBGMEYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K");
+  --lock-icon-mask: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjE4OTMgNi4zNTIwM1Y1LjUxODdDMTIuMTg5MyAzLjcxODcgMTEuNzU1OSAxLjMzMjAzIDguMDAyNiAxLjMzMjAzQzQuMjQ5MjcgMS4zMzIwMyAzLjgxNTk0IDMuNzE4NyAzLjgxNTk0IDUuNTE4N1Y2LjM1MjAzQzEuOTQ5MjcgNi41ODUzNiAxLjMzNTk0IDcuNTMyMDMgMS4zMzU5NCA5Ljg1ODdWMTEuMDk4N0MxLjMzNTk0IDEzLjgzMiAyLjE2OTI3IDE0LjY2NTQgNC45MDI2IDE0LjY2NTRIMTEuMTAyNkMxMy44MzU5IDE0LjY2NTQgMTQuNjY5MyAxMy44MzIgMTQuNjY5MyAxMS4wOTg3VjkuODU4N0MxNC42NjkzIDcuNTMyMDMgMTQuMDU1OSA2LjU4NTM2IDEyLjE4OTMgNi4zNTIwM1pNOC4wMDI2IDEyLjQ5MkM2Ljg4OTI3IDEyLjQ5MiA1Ljk4OTI3IDExLjU4NTQgNS45ODkyNyAxMC40Nzg3QzUuOTg5MjcgOS4zNjUzNiA2Ljg5NTk0IDguNDY1MzYgOC4wMDI2IDguNDY1MzZDOS4xMDkyNyA4LjQ2NTM2IDEwLjAxNTkgOS4zNzIwMyAxMC4wMTU5IDEwLjQ3ODdDMTAuMDE1OSAxMS41OTIgOS4xMTU5NCAxMi40OTIgOC4wMDI2IDEyLjQ5MlpNNC45MDI2IDYuMjkyMDNDNC44NDkyNyA2LjI5MjAzIDQuODAyNiA2LjI5MjAzIDQuNzQ5MjcgNi4yOTIwM1Y1LjUxODdDNC43NDkyNyAzLjU2NTM2IDUuMzAyNiAyLjI2NTM2IDguMDAyNiAyLjI2NTM2QzEwLjcwMjYgMi4yNjUzNiAxMS4yNTU5IDMuNTY1MzYgMTEuMjU1OSA1LjUxODdWNi4yOTg3QzExLjIwMjYgNi4yOTg3IDExLjE1NTkgNi4yOTg3IDExLjEwMjYgNi4yOTg3SDQuOTAyNlY2LjI5MjAzWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==");
+
+  /* Cold visual system. */
+  --ui-page: #EFF4F8;
+  --ui-canvas: #F8FAFC;
+  --ui-surface: #FFFFFF;
+  --ui-soft-surface: #EEF5F9;
+  --ui-surface-soft: var(--ui-soft-surface);
+  --ui-surface-strong: #E7F0F6;
+  --ui-border: #E0E8EE;
+  --ui-border-strong: #CFDDE7;
+  --ui-text: #102A43;
+  --ui-text-muted: #6D8293;
+  --ui-placeholder-text: #9A9A9A;
+  --ui-navy: #0C2F4D;
+  --ui-navy-soft: #153F62;
+  --ui-card-shadow: 0 5px 18px rgba(19, 62, 92, 0.045);
+  --ui-feature-dark: #164B6D;
+  --ui-feature-dark-soft: #216A90;
+  --ui-feature-surface: var(--ui-soft-surface);
+  --ui-callout-surface: var(--ui-soft-surface);
+  --interface-accent-soft: var(--ui-soft-surface);
+  --interface-accent-soft-strong: var(--active-control-background);
+}
+
+/* Every primary action that previously used the orange/pink gradient. */
+.btn-primary,
+.footer__btn,
+.balance__btn,
+.connect__btn,
+.verify__btn,
+.form__btn,
+.waiting-modal__btn,
+.got-it-btn,
+.tourist-btn--gradient,
+.tourist-btn--credit-pay,
+.transfer-modal__btn,
+.tourist-contract-card__button,
+.tourist-sheet__btn-call,
+.tourist-demo-modal__btn,
+.tourist-review-form__submit,
+.assistant-action-btn,
+.caller-action-btn--primary,
+.link-benefit-btn {
+  background: var(--primary-button-gradient) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--primary-button-shadow);
+}
+
+.btn-primary:disabled,
+.footer__btn:disabled,
+.balance__btn:disabled,
+.connect__btn:disabled,
+.verify__btn:disabled,
+.form__btn:disabled,
+.waiting-modal__btn:disabled,
+.got-it-btn:disabled,
+.tourist-btn--gradient:disabled,
+.tourist-btn--credit-pay:disabled,
+.transfer-modal__btn:disabled,
+.tourist-contract-card__button:disabled,
+.tourist-sheet__btn-call:disabled,
+.tourist-demo-modal__btn:disabled,
+.tourist-review-form__submit:disabled,
+.assistant-action-btn:disabled,
+.caller-action-btn--primary:disabled,
+.link-benefit-btn:disabled {
+  background: var(--disabled-button-background) !important;
+  border: 1px solid var(--ui-border-strong) !important;
+  color: #6D8496 !important;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Non-button branded surfaces belong to the interface colour family. */
+.pro-badge,
+.tourist-eta-banner,
+.tourist-credit-card__stripe {
+  background: var(--interface-accent);
+  background-image: none;
+}
+
+/* Functional icons use a pale-blue surface with a blue glyph. */
+.link-benefit-icon,
+.tourist-sheet__icon,
+.tourist-stats__icon {
+  background: var(--interface-icon-background);
+  background-image: none;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.link-benefit-icon svg path {
+  fill: none;
+  stroke: var(--interface-icon-color);
+}
+
+.tourist-sheet__icon svg rect,
+.tourist-eta-banner__icon svg rect {
+  fill: var(--interface-icon-background);
+}
+
+.tourist-sheet__icon svg path,
+.tourist-stats__icon svg path,
+.tourist-eta-banner__icon svg path {
+  fill: var(--interface-icon-color);
+}
+
+.tourist-sheet__icon stop,
+.tourist-stats__icon stop {
+  stop-color: var(--interface-icon-color);
+}
+
+.pro-badge svg path:first-of-type {
+  fill: #FFFFFF;
+}
+
+.pro-badge svg path:last-of-type {
+  fill: var(--interface-accent);
+}
+
+.pro-badge stop {
+  stop-color: var(--interface-accent);
+}
+
+.tourist-eta-banner__icon {
+  background: var(--interface-icon-background);
+  border-radius: 50%;
+}
+
+.tourist-stats__icon {
+  width: 36px;
+  height: 36px;
+  margin-inline: auto;
+}
+
+.tourist-stats__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Selected answers and focused fields on profile-plan.html. */
+.purpose__choose.active {
+  background-image:
+    linear-gradient(#ffffff, #ffffff),
+    linear-gradient(var(--interface-accent), var(--interface-accent));
+}
+
+.main__form.active {
+  border-color: var(--interface-accent);
+}
+
+/* The selected checkmark follows the same central colour token. */
+.purpose__choose.active .purpose__img {
+  display: none;
+}
+
+.purpose__choose.active::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  background: var(--interface-accent);
+  -webkit-mask: url("../assets/Choose.svg") center / contain no-repeat;
+  mask: url("../assets/Choose.svg") center / contain no-repeat;
+}
+
+/* Shared non-button accents shown throughout the client interface. */
+.bank__update-link,
+.bank__actualizar-btn,
+.tourist-plan__link,
+.tourist-section-head__link,
+.tourist-update-line__btn,
+.tourist-tabbar__item.is-active {
+  color: var(--interface-accent);
+}
+
+.assistant-input-wrap,
+.chat-input-wrap {
+  height: 44px;
+  border-color: var(--interface-accent);
+}
+
+.assistant-send,
+.chat-send {
+  background: var(--interface-accent);
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.chat-send__icon {
+  width: 20px;
+  height: 20px;
+  transform: translateX(1px);
+}
+
+.assistant-send__icon {
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%) translateX(1px);
+}
+
+.benefit-check--active svg path {
+  fill: var(--interface-accent);
+}
+
+/* Branded text keeps the blue accent without the old pink gradient. */
+.card-title,
+.tourist-gradient-text {
+  color: var(--interface-accent);
+  background: none;
+  -webkit-text-fill-color: var(--interface-accent);
+}
+
+/* Currency symbols read as part of the amount, not as an interface action. */
+.amount-form__value .amount-form__euro,
+.euro,
+.main__content-2 .balance__amount span:first-child,
+.main__content-7 .balance__amount span:first-child,
+.card-price .currency,
+.tourist-plan__next-currency,
+.tourist-balance__currency,
+.tourist-amount-block__currency {
+  color: #0F0F0F;
+  background: none;
+  -webkit-text-fill-color: #0F0F0F;
+}
+
+/* Lock icons on account cards and transaction details. */
+.tourist-bank__lock stop {
+  stop-color: var(--interface-accent);
+}
+
+/* Small lock displayed directly after the bank name on the home page. */
+#homeMainBank .tourist-bank__title::after {
+  background: var(--interface-accent);
+  -webkit-mask: var(--lock-icon-mask) center / contain no-repeat;
+  mask: var(--lock-icon-mask) center / contain no-repeat;
+}
+
+/* Initial-based avatars in review cards. */
+.tourist-review-card__avatar {
+  background: var(--interface-icon-background);
+  color: var(--interface-accent);
+}
+
+.tourist-reviews__page.is-active {
+  background: var(--active-control-background);
+  border-color: var(--interface-accent);
+  color: var(--interface-accent);
+}
+
+/* ===== Cold blue visual direction ===== */
+
+body {
+  background-color: var(--ui-page);
+  color: var(--ui-text);
+}
+
+body.profile-plan-page {
+  background-color: var(--ui-canvas);
+}
+
+body.tourist-review-page {
+  background: var(--ui-canvas);
+}
+
+.tourist-review-page .rv-summary,
+.tourist-review-page .rv-upload {
+  box-shadow: none;
+}
+
+.tourist-shell,
+.tourist-shell--assistant,
+.tourist-shell--chat,
+.tourist-shell--faq,
+.final-shell {
+  background: var(--ui-canvas);
+}
+
+.btn,
+.assistant-chat,
+.chat-inputbar,
+.assistant-inputbar {
+  background: var(--ui-canvas) !important;
+}
+
+/* White surfaces float softly above the cold canvas. */
+.tourist-card,
+.tourist-bank,
+.tourist-input-field__box,
+.tourist-rows,
+.tourist-faq-item,
+.tourist-review-form,
+.tourist-review-card,
+.assistant-specialist,
+.benefit-card,
+.contrato-card {
+  background: var(--ui-surface) !important;
+  border: none !important;
+  box-shadow: var(--ui-card-shadow);
+}
+
+.tourist-plan,
+.rd2-transfer-info {
+  background: var(--ui-surface-soft) !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none;
+}
+
+.tourist-bank,
+.tourist-input-field__box,
+.tourist-rows,
+.tourist-faq-item,
+.contrato-card {
+  box-shadow: none;
+}
+
+/* Home screen cards stay flat against the page canvas. */
+.tourist-home-page .tourist-card,
+.tourist-home-page .tourist-plan,
+.tourist-home-page .tourist-plan__content,
+.tourist-home-page .tourist-bank {
+  box-shadow: none !important;
+}
+
+.tourist-history-page .tourist-record {
+  background: var(--ui-soft-surface);
+}
+
+.tourist-history-page .tourist-record__card b {
+  color: inherit;
+  font-weight: 400;
+}
+
+.tourist-history-page .tourist-record__amount {
+  color: var(--interface-accent) !important;
+  font-weight: 700;
+}
+
+/* Primary and secondary text use blue-based neutrals instead of black/grey. */
+.main__text-title,
+.tourist-header__title,
+.tourist-topbar__title,
+.tourist-hero__title,
+.tourist-section-head__title,
+.tourist-plan__title,
+.tourist-plan__head,
+.tourist-bank__title,
+.tourist-list-item__name,
+.tourist-notif__title,
+.tourist-faq-item__question,
+.assistant-specialist__name,
+.benefit-card__title,
+.tourist-review-card__name,
+.contrato-card__title {
+  color: var(--ui-text);
+}
+
+.main__text-desc,
+.tourist-header__subtitle,
+.tourist-hero__subtitle,
+.tourist-list-item__note,
+.tourist-notif__desc,
+.tourist-faq-item__panel,
+.assistant-specialist__desc,
+.benefit-specialist__desc,
+.link-benefit-desc,
+.tourist-review-form__field label,
+.tourist-review-card__meta,
+.contrato-card__sub {
+  color: var(--ui-text-muted);
+}
+
+/* Forms are white, airy and receive a clean blue focus ring. */
+.main__form,
+.tourist-form-field__input,
+.tourist-form-field__box,
+.tourist-review-form__field input,
+.tourist-review-form__field textarea,
+.assistant-input-wrap,
+.chat-input-wrap {
+  background: var(--ui-surface) !important;
+  border-color: transparent !important;
+  box-shadow: none;
+  transition: box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.main__form.active,
+.main__form:focus-within,
+.tourist-form-field__input:focus-visible,
+.tourist-form-field__box:focus-within,
+.tourist-review-form__field input:focus-visible,
+.tourist-review-form__field textarea:focus-visible,
+.assistant-input-wrap:focus-within,
+.chat-input-wrap:focus-within {
+  border-color: transparent !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--interface-accent-rgb), 0.18),
+    0 3px 10px rgba(var(--interface-accent-rgb), 0.04);
+  outline: none;
+}
+
+.main__input,
+.tourist-form-field__input,
+.tourist-form-field__select,
+.assistant-input,
+.chat-input {
+  color: var(--ui-text);
+}
+
+.main__input::placeholder,
+.tourist-form-field__input::placeholder,
+.assistant-input::placeholder,
+.chat-input::placeholder {
+  color: var(--ui-placeholder-text);
+  opacity: 1;
+}
+
+.privacy-link {
+  color: var(--ui-placeholder-text);
+}
+
+.purpose__choose {
+  background: var(--ui-surface);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.purpose__choose.active {
+  background: var(--ui-surface-soft);
+  background-image: none;
+  border-color: transparent;
+  box-shadow: inset 3px 0 0 var(--interface-accent);
+}
+
+/* Back controls stay light so they do not compete with primary actions. */
+.tourist-topbar {
+  --tourist-header-control: var(--back-control-slot-size);
+  --tourist-topbar-back-pad: var(--back-control-pad-size);
+}
+
+.tourist-topbar__back::before {
+  background: var(--back-control-background);
+}
+
+.tourist-header__avatar,
+.benefit-specialist__avatar,
+.assistant-specialist__avatar,
+.goal-icon {
+  background: var(--interface-icon-background);
+}
+
+.goal-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: invert(32%) sepia(93%) saturate(1517%) hue-rotate(178deg) brightness(88%) contrast(101%);
+}
+
+.tourist-topbar__back svg path {
+  stroke: var(--interface-accent);
+}
+
+.header__back {
+  position: relative;
+  width: var(--back-control-slot-size);
+  height: var(--back-control-slot-size);
+  flex: 0 0 var(--back-control-slot-size);
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.header__back img,
+.header-back img {
+  opacity: 0;
+}
+
+.header__back::before,
+.header-back::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--back-control-pad-size);
+  height: var(--back-control-pad-size);
+  border-radius: 12px;
+  background: var(--back-control-background);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.header__back::after,
+.header-back::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 14px;
+  width: 20px;
+  height: 20px;
+  background: var(--interface-accent);
+  -webkit-mask: var(--back-chevron-mask) center / contain no-repeat;
+  mask: var(--back-chevron-mask) center / contain no-repeat;
+  pointer-events: none;
+}
+
+.header-back {
+  width: var(--back-control-slot-size);
+  height: var(--back-control-slot-size);
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.header:has(> .header__back) {
+  margin-top: 16px;
+}
+
+.privacy-policy-page .header-bar {
+  height: 80px;
+}
+
+.privacy-policy-page .header-back {
+  left: 16px;
+  top: 16px;
+}
+
+.privacy-policy-page .content-container {
+  top: 80px;
+  height: calc(100vh - 80px);
+}
+
+.header__bar,
+.progress-bar {
+  background-color: var(--ui-surface-strong);
+}
+
+.progress-fill[style*="#ff77d7"],
+.progress-fill[style*="#FF77D7"] {
+  background: var(--interface-accent) !important;
+}
+
+.tourist-tabbar {
+  background: rgba(255, 255, 255, 0.97);
+  border-top: none;
+  box-shadow: 0 -12px 30px rgba(19, 62, 92, 0.08);
+}
+
+.tourist-tabbar__item {
+  color: var(--ui-text-muted);
+}
+
+.tourist-tabbar__item.is-active {
+  background: var(--active-control-background);
+  border-top-color: transparent;
+  border-radius: 14px 14px 0 0;
+}
+
+/* Supporting icons follow the same pale-blue-and-blue convention. */
+.tourist-list-item__icon:not(.tourist-list-item__icon--success),
+.tourist-notif__icon:not(.tourist-notif__icon--success),
+.contrato-card__icon,
+.rd2-transfer-document__icon,
+.chat-img-btn {
+  background: var(--interface-icon-background) !important;
+  border-color: transparent;
+  color: var(--interface-icon-color);
+}
+
+.tourist-list-item__icon:not(.tourist-list-item__icon--success) svg [fill]:not([fill="none"]),
+.tourist-notif__icon:not(.tourist-notif__icon--success) svg [fill]:not([fill="none"]),
+.contrato-card__icon svg [fill]:not([fill="none"]),
+.chat-img-btn svg [fill]:not([fill="none"]),
+.goal-icon svg [fill]:not([fill="none"]) {
+  fill: var(--interface-icon-color);
+}
+
+.tourist-list-item__icon:not(.tourist-list-item__icon--success) svg [stroke]:not([stroke="none"]),
+.tourist-notif__icon:not(.tourist-notif__icon--success) svg [stroke]:not([stroke="none"]),
+.contrato-card__icon svg [stroke]:not([stroke="none"]),
+.chat-img-btn svg [stroke]:not([stroke="none"]),
+.goal-icon svg [stroke]:not([stroke="none"]) {
+  stroke: var(--interface-icon-color);
+}
+
+/* Notification badges contain their own circular background inside the SVG.
+   Keep that surface light so the blue pictogram does not disappear into it. */
+.tourist-notif__icon--badge {
+  background: transparent !important;
+  align-self: center;
+}
+
+/* Centre every notification pictogram against its complete text block. */
+.tourist-notif__item:not(.tourist-notif__item--with-pdf),
+.tourist-notif__link {
+  align-items: center;
+}
+
+.tourist-notif__icon--badge svg > rect:first-child {
+  fill: var(--interface-icon-background) !important;
+}
+
+.tourist-notif__icon--badge svg > path {
+  fill: var(--interface-icon-color) !important;
+}
+
+.tourist-notif__icon--badge svg > path[stroke]:not([stroke="none"]) {
+  stroke: var(--interface-icon-color) !important;
+}
+
+/* PDF notifications: neutral notification surface, blue document card. */
+.tourist-notif__item--unread.tourist-notif__item--with-pdf {
+  background: #FFFFFF;
+}
+
+.tourist-notif-pdf {
+  background: rgba(var(--interface-accent-rgb), 0.10);
+  border-color: rgba(var(--interface-accent-rgb), 0.12);
+}
+
+.tourist-notif-pdf__icon {
+  background: var(--interface-accent);
+}
+
+.tourist-notif-pdf__icon svg path[stroke]:not([stroke="none"]) {
+  stroke: #FFFFFF;
+}
+
+.tourist-notif-pdf__icon svg text,
+.tourist-notif-pdf__icon svg [fill]:not([fill="none"]) {
+  fill: #FFFFFF;
+}
+
+.tourist-notif-pdf__button {
+  background: var(--primary-button-color);
+  color: #FFFFFF;
+}
+
+/* Chat attachment is an action, so it matches the send button. */
+.chat-img-btn {
+  background: var(--primary-button-color) !important;
+  color: #FFFFFF;
+}
+
+.chat-img-btn svg [fill]:not([fill="none"]) {
+  fill: #FFFFFF;
+}
+
+.chat-img-btn svg [stroke]:not([stroke="none"]) {
+  stroke: #FFFFFF;
+}
+
+/* Premium cards keep depth, but all warm/pink light is removed. */
+.tourist-credit-card,
+.tourist-contract-card {
+  background: var(--ui-navy);
+  box-shadow: 0 18px 38px rgba(12, 47, 77, 0.2);
+}
+
+.tourist-credit-card::before,
+.tourist-contract-card::before {
+  background:
+    radial-gradient(circle at 14% 12%, rgba(var(--interface-accent-rgb), 0.28), transparent 34%),
+    radial-gradient(circle at 88% 86%, rgba(115, 194, 235, 0.16), transparent 38%),
+    linear-gradient(135deg, var(--ui-navy) 0%, var(--ui-navy-soft) 100%);
+}
+
+/* Remaining legacy pink text is pulled into the interface accent. */
+.main__end-text span,
+.footer__text span,
+.privacy-link a,
+.balance__amount span,
+.rd2-transfer-info__icon {
+  color: var(--interface-accent);
+}
+
+.link-benefit-btn,
+.link-benefit-btn.is-ready {
+  background: var(--primary-button-color);
+  box-shadow: var(--primary-button-shadow);
+}
+
+/* Contract screen: a light document card with a restrained blue accent. */
+.tourist-contract-card {
+  background: var(--ui-soft-surface);
+  color: var(--ui-text);
+  box-shadow: 0 8px 24px rgba(19, 62, 92, 0.08);
+}
+
+.tourist-detail-transaction-page .tourist-contract-card {
+  box-shadow: none;
+}
+
+.tourist-contract-card::before {
+  background: var(--ui-soft-surface);
+}
+
+.tourist-contract-card__grid {
+  display: none;
+}
+
+.tourist-contract-card__stripe {
+  width: 6px;
+  background: var(--interface-accent);
+  border-radius: 0 6px 6px 0;
+}
+
+.tourist-contract-card__title,
+.tourist-contract-card__bank-text strong {
+  color: var(--ui-text);
+}
+
+.tourist-contract-card__bank-text strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+}
+
+.tourist-contract-card__bank-text strong::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  background: var(--interface-accent);
+  -webkit-mask: var(--lock-icon-mask) center / contain no-repeat;
+  mask: var(--lock-icon-mask) center / contain no-repeat;
+}
+
+.tourist-contract-card__desc,
+.tourist-contract-card__bank-text span {
+  color: var(--ui-text-muted);
+}
+
+.tourist-contract-card__pdf {
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--interface-icon-background);
+}
+
+.tourist-contract-card__pdf svg {
+  width: 23px;
+  height: 23px;
+}
+
+.tourist-contract-card__pdf svg path {
+  fill: var(--interface-accent);
+}
+
+.tourist-stats {
+  background: var(--ui-surface);
+}
+
+.tourist-stats__title {
+  color: var(--ui-text);
+}
+
+.tourist-stats__sub {
+  color: var(--ui-text-muted);
+}
+
+.tourist-stats__divider {
+  background: rgba(109, 130, 147, 0.16);
+}
+
+.tourist-eta-banner {
+  background: var(--ui-surface);
+  background-image: none;
+  color: var(--ui-text);
+}
+
+.tourist-stats__icon,
+.tourist-eta-banner__icon {
+  background: var(--ui-soft-surface);
+}
+
+.tourist-eta-banner__icon svg rect {
+  fill: var(--ui-soft-surface);
+}
+
+.tourist-eta-banner__title {
+  color: var(--ui-text);
+}
+
+.tourist-eta-banner__caption {
+  color: var(--ui-text-muted);
+}
+
+/* One shared pale surface for informational groups across the project. */
+.tourist-plan,
+.rd2-creditors,
+.rd2-transfer-info {
+  background: var(--ui-soft-surface) !important;
+  background-image: none !important;
+}

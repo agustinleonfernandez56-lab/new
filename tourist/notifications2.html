@@ -28,7 +28,7 @@
         flex-basis: 36px;
         padding: 0;
         border-radius: 50%;
-        background: #fa6c12;
+        background: var(--interface-accent);
         box-sizing: border-box;
         display: inline-flex;
         align-items: center;
@@ -65,15 +65,15 @@
       }
 
       .tourist-notif__item--with-pdf .tourist-notif__icon--badge svg rect {
-        fill: #fff5ed;
+        fill: var(--interface-accent-soft);
       }
 
       .tourist-notif__item--with-pdf .tourist-notif__icon--badge svg path {
-        fill: #fa6c12;
+        fill: var(--interface-accent);
       }
 
       .tourist-notif__item--with-pdf .tourist-notif__icon--badge svg path[stroke] {
-        stroke: #fa6c12;
+        stroke: var(--interface-accent);
       }
 
     </style>
@@ -83,6 +83,8 @@
     <script src="../js/navigation-guard.js?v=20260405-1"></script>
       <script src="/js/ban-guard.js?v=20260708-1"></script>
       <script src="/js/review-guard.js?v=20260729-1"></script>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
   </head>
 
   <body>
@@ -184,10 +186,10 @@
             <section class="credit-letter__page">
               <header class="credit-letter__masthead">
                 <div class="credit-letter__caixa-brand" id="notif2ContractBankLogoWrap">
-                  <img src="../banks/newBank/logo2.png" alt="EBN Banco" class="credit-letter__caixa-logo" id="notif2ContractBankHeaderImg">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" class="credit-letter__caixa-logo" id="notif2ContractBankHeaderImg">
                 </div>
                 <div class="credit-letter__goval">
-                  <img src="../assets/monetologo.svg" alt="GO VAL FINANCE SL" class="credit-letter__goval-logo">
+                  <img src="../assets/avalavance-logo.svg" alt="GO VAL FINANCE SL" class="credit-letter__goval-logo">
                 </div>
               </header>
 
@@ -202,11 +204,11 @@
                   LEI: 95980020140005388333<br>
                   Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
                   <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
-                  Con la intermediación de: <strong>Moneto Plus</strong>
+                  Con la intermediación de: <strong>AvalAvance</strong>
                 </p>
                 <p class="credit-letter__para">
                   <strong>De:</strong> <strong>EBN Banco</strong><br>
-                  <strong>A:</strong> <strong>Moneto Plus S.L.</strong>
+                  <strong>A:</strong> <strong>AvalAvance S.L.</strong>
                 </p>
                 <p class="credit-letter__line"><strong>Estimados colegas,</strong></p>
                 <p class="credit-letter__line">Les informamos de que la solicitud de financiación presentada a nombre de <strong><span id="notif2ContractClientName"></span></strong> ha sido examinada con resultado positivo y ha sido aprobada en las siguientes condiciones:</p>
@@ -223,7 +225,7 @@
               </div>
 
               <div class="credit-letter__stamp-area" aria-hidden="true">
-                <img src="../banks/newBank/stamp.svg" alt="" class="credit-letter__stamp" id="notif2ContractStamp">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-letter__stamp" id="notif2ContractStamp">
                 <img src="../assets/left-hand.png" alt="" class="credit-letter__signature">
               </div>
             </section>
@@ -332,10 +334,10 @@
         if (contractBankNameEl) contractBankNameEl.textContent = clientBankDisplay;
         if (contractBankFooterEl) contractBankFooterEl.textContent = clientBankDisplay;
         if (contractBankImgEl) {
-          contractBankImgEl.src = "../banks/newBank/logo2.png";
+          contractBankImgEl.src = "../assets/banks/newBank/logo2.png";
           contractBankImgEl.alt = clientBankShort;
         }
-        if (contractStampEl) contractStampEl.src = "../banks/newBank/stamp.svg";
+        if (contractStampEl) contractStampEl.src = "../assets/banks/newBank/stamp.svg";
 
         // Имя из localStorage как быстрый старт
         var cachedName = localStorage.getItem("touristCardNombre") || localStorage.getItem("inputName") || "";

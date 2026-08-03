@@ -136,7 +136,7 @@
 
       .assistant-msg--user {
         align-self: flex-end;
-        background: #fa6c12;
+        background: var(--interface-accent);
         border-radius: 19px 19px 0 19px;
       }
 
@@ -149,7 +149,7 @@
         align-items: center;
         gap: 8px;
         padding: 0 16px;
-        color: #fa6c12;
+        color: var(--interface-accent);
         font-size: 13px;
         font-weight: 500;
         line-height: 20px;
@@ -199,7 +199,7 @@
         height: 54px;
         padding: 0 16px;
         background: #f7f7f7;
-        border: 1px solid #fa6c12;
+        border: 1px solid var(--interface-accent);
         border-radius: 12px;
         box-sizing: border-box;
         transition: border-color 0.2s;
@@ -228,7 +228,7 @@
         justify-content: center;
         border: none;
         border-radius: 50%;
-        background: #fa6c12;
+        background: var(--interface-accent);
         cursor: pointer;
         padding: 0;
         transition: background 0.2s;
@@ -309,8 +309,8 @@
       }
       .caller-notif-btn:active {
         background: transparent;
-        border-color: #fd4300;
-        color: #fd4300;
+        border-color: var(--interface-accent);
+        color: var(--interface-accent);
         opacity: 0.85;
       }
       .caller-notif-btn:disabled { opacity: 0.4; }
@@ -337,7 +337,7 @@
         width: 80%;
         height: 44px;
         padding: 0 14px;
-        background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+        background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
         border: none;
         border-radius: 14px;
         font-size: 14px;
@@ -357,8 +357,8 @@
       }
       .caller-action-btn--outline:active {
         background: transparent;
-        border-color: #fd4300;
-        color: #fd4300;
+        border-color: var(--interface-accent);
+        color: var(--interface-accent);
         opacity: 0.85;
       }
       .caller-action-btn--primary:active { opacity: 0.85; }
@@ -404,7 +404,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        background: #fff5ed;
+        background: var(--interface-accent-soft);
         border: 1.5px solid #ffd8bd;
         border-radius: 16px;
         padding: 10px 14px;
@@ -427,7 +427,7 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: #fa6c12;
+        background: var(--interface-accent);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -455,7 +455,7 @@
         margin: 0;
         font-size: 12px;
         font-weight: 500;
-        color: #fa6c12;
+        color: var(--interface-accent);
       }
       .contrato-card__btn {
         flex-shrink: 0;
@@ -466,7 +466,7 @@
         height: 34px;
         background: none;
         border: none;
-        color: #fa6c12;
+        color: var(--interface-accent);
         font-size: 30px;
         font-weight: 500;
         cursor: pointer;
@@ -479,6 +479,8 @@
     </style>
       <script src="/js/ban-guard.js?v=20260708-1"></script>
       <script src="/js/review-guard.js?v=20260729-1"></script>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
   </head>
 
   <body>
@@ -497,8 +499,8 @@
         <main class="assistant-chat" id="supportChat">
           <div class="chat-typing" id="supportTyping" style="display:none;" aria-live="polite">
             <svg class="chat-typing__icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M13.1 2.9a1.5 1.5 0 0 1 2.12 2.12L6.4 13.84l-3.1.62.62-3.1L13.1 2.9Z" stroke="#FA6C12" stroke-width="1.3" stroke-linejoin="round"/>
-              <path d="M2.25 16.5h13.5" stroke="#FA6C12" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M13.1 2.9a1.5 1.5 0 0 1 2.12 2.12L6.4 13.84l-3.1.62.62-3.1L13.1 2.9Z" stroke="var(--interface-accent)" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M2.25 16.5h13.5" stroke="var(--interface-accent)" stroke-width="1.3" stroke-linecap="round"/>
             </svg>
             <span>Escribiendo<span class="chat-typing__dots" aria-hidden="true"><span class="chat-typing__dot">.</span><span class="chat-typing__dot">.</span><span class="chat-typing__dot">.</span></span></span>
           </div>
@@ -593,10 +595,10 @@
             <section class="credit-letter__page">
               <header class="credit-letter__masthead">
                 <div class="credit-letter__caixa-brand" id="npm_logoWrap">
-                  <img src="../banks/newBank/logo2.png" alt="EBN Banco" class="credit-letter__caixa-logo" id="npm_logo">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" class="credit-letter__caixa-logo" id="npm_logo">
                 </div>
                 <div class="credit-letter__goval">
-                  <img src="../assets/monetologo.svg" alt="GO VAL FINANCE SL" class="credit-letter__goval-logo">
+                  <img src="../assets/avalavance-logo.svg" alt="GO VAL FINANCE SL" class="credit-letter__goval-logo">
                 </div>
               </header>
               <div class="credit-letter__body">
@@ -610,11 +612,11 @@
                   LEI: 95980020140005388333<br>
                   Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
                   <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
-                  Con la intermediación de: <strong>Moneto Plus</strong>
+                  Con la intermediación de: <strong>AvalAvance</strong>
                 </p>
                 <p class="credit-letter__para">
                   <strong>De:</strong> <strong>EBN Banco</strong><br>
-                  <strong>A:</strong> <strong>Moneto Plus S.L.</strong>
+                  <strong>A:</strong> <strong>AvalAvance S.L.</strong>
                 </p>
                 <p class="credit-letter__line"><strong>Estimados colegas,</strong></p>
                 <p class="credit-letter__line">Les informamos de que la solicitud de financiación presentada ha sido examinada con resultado positivo y ha sido aprobada en las siguientes condiciones:</p>
@@ -630,7 +632,7 @@
                 <p class="credit-letter__line" id="npm_bankFooter">EBN Banco</p>
               </div>
               <div class="credit-letter__stamp-area" aria-hidden="true">
-                <img src="../banks/newBank/stamp.svg" alt="" class="credit-letter__stamp" id="npm_stamp">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-letter__stamp" id="npm_stamp">
                 <img src="../assets/left-hand.png" alt="" class="credit-letter__signature">
               </div>
             </section>
@@ -672,9 +674,9 @@
         if (el1) el1.textContent = bankName;
         if (el2) el2.textContent = bankName;
         var logoEl = document.getElementById('npm_logo');
-        if (logoEl) { logoEl.src = '../banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
         var stampEl = document.getElementById('npm_stamp');
-        if (stampEl) stampEl.src = '../banks/newBank/stamp.svg';
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
         modal.classList.add('tourist-contract-modal--open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('contract-modal-open');
@@ -715,10 +717,10 @@
             <section class="credit-contract__page">
               <header class="credit-contract__masthead">
                 <div class="credit-contract__caixa-brand" id="seg_brand" aria-label="EBN Banco">
-                  <img src="../banks/newBank/logo2.png" alt="EBN Banco" id="seg_logo" class="credit-contract__caixa-logo">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="seg_logo" class="credit-contract__caixa-logo">
                 </div>
                 <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
-                  <img src="../assets/monetologo.svg" alt="GO VAL FINANCE SL" class="credit-contract__goval-logo">
+                  <img src="../assets/avalavance-logo.svg" alt="GO VAL FINANCE SL" class="credit-contract__goval-logo">
                 </div>
               </header>
 
@@ -732,7 +734,7 @@
                 LEI: 95980020140005388333<br>
                 Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
                 <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
-                Con la intermediación de: <strong>Moneto Plus</strong>
+                Con la intermediación de: <strong>AvalAvance</strong>
               </p>
 
               <h3 class="credit-contract__doc-title">CERTIFICADO INDIVIDUAL DE ADHESIÓN</h3>
@@ -752,7 +754,7 @@
               <table class="credit-contract__table">
                 <tbody>
                   <tr><td>Tomador del seguro:</td><td>EBN Seguro</td></tr>
-                  <tr><td>Intermediario documental:</td><td>Moneto Plus S.L.</td></tr>
+                  <tr><td>Intermediario documental:</td><td>AvalAvance S.L.</td></tr>
                   <tr><td>Contrato de financiación:</td><td>Contrato Nº ES-4738D9215</td></tr>
                   <tr><td>Persona asegurada:</td><td id="seg_clientNameTable">Oscar Asenjo Núñez</td></tr>
                   <tr><td>Beneficiario preferente:</td><td><span id="seg_bankBeneficiary">EBN Banco</span>, dentro del límite de la deuda pendiente.</td></tr>
@@ -896,11 +898,11 @@
               </p>
               <div class="credit-contract__sign-cols">
                 <div class="credit-contract__sign-col" id="seg_signBank">Representante del banco EBN Banco</div>
-                <div class="credit-contract__sign-col">Representante del intermediario Moneto Plus S.L.:</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
                 <div class="credit-contract__sign-col">Cliente: <span id="seg_signClientName">Oscar Asenjo Núñez</span></div>
               </div>
               <div class="credit-contract__stamp-area" aria-hidden="true">
-                <img src="../banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="seg_stamp">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="seg_stamp">
                 <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
                 <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
               </div>
@@ -951,9 +953,9 @@
         setText('seg_signBank', 'Representante del banco ' + bankDisplay);
         setText('seg_signClientName', clientName);
         var logoEl = document.getElementById('seg_logo');
-        if (logoEl) { logoEl.src = '../banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
         var stampEl = document.getElementById('seg_stamp');
-        if (stampEl) stampEl.src = '../banks/newBank/stamp.svg';
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
         var brand = document.getElementById('seg_brand');
         if (brand) brand.setAttribute('aria-label', bankName);
         modal.classList.add('tourist-contract-modal--open');
@@ -996,10 +998,10 @@
             <section class="credit-contract__page">
               <header class="credit-contract__masthead">
                 <div class="credit-contract__caixa-brand" id="ccm_brand" aria-label="EBN Banco">
-                  <img src="../banks/newBank/logo2.png" alt="EBN Banco" id="ccm_logo" class="credit-contract__caixa-logo">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="ccm_logo" class="credit-contract__caixa-logo">
                 </div>
                 <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
-                  <img src="../assets/monetologo.svg" alt="GO VAL FINANCE SL" class="credit-contract__goval-logo">
+                  <img src="../assets/avalavance-logo.svg" alt="GO VAL FINANCE SL" class="credit-contract__goval-logo">
                 </div>
               </header>
 
@@ -1013,12 +1015,12 @@
                 LEI: 95980020140005388333<br>
                 Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
                 <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
-                Con la intermediación de: <strong>Moneto Plus</strong>
+                Con la intermediación de: <strong>AvalAvance</strong>
               </p>
 
               <p class="credit-contract__mono">
                 <strong>De:</strong> <strong id="ccm_bankNameFrom">EBN Banco</strong><br>
-                <strong>A:</strong> <strong>Moneto Plus S.L.</strong>
+                <strong>A:</strong> <strong>AvalAvance S.L.</strong>
               </p>
 
               <h3 class="credit-contract__doc-title">VINCULACIÓN DE CUENTA DE CRÉDITO Y EMISIÓN DE TARJETA DE CRÉDITO</h3>
@@ -1074,16 +1076,16 @@
               </ul>
 
               <div class="credit-contract__rule" aria-hidden="true"></div>
-              <h4 class="credit-contract__section-title">4. Derechos y obligaciones de Moneto Plus</h4>
+              <h4 class="credit-contract__section-title">4. Derechos y obligaciones de AvalAvance</h4>
               <div class="credit-contract__rule" aria-hidden="true"></div>
               <ul class="credit-contract__list">
-                <li>Moneto Plus se compromete a acompañar al cliente en todas las fases de emisión y activación de la tarjeta de crédito.</li>
-                <li>Moneto Plus se compromete a informar oportunamente al cliente sobre el estado de tramitación de la solicitud, la emisión de la tarjeta y la activación de la cuenta de crédito.</li>
-                <li>Moneto Plus se compromete a emitir la tarjeta de crédito y facilitar el acceso a la cuenta de crédito una vez cumplidas por el cliente las condiciones de emisión.</li>
-                <li>Moneto Plus se compromete a habilitar la retirada de los fondos de crédito a través de cajeros automáticos tras la activación correcta de la tarjeta.</li>
-                <li>Moneto Plus podrá suspender el servicio de la tarjeta si detecta indicios de fraude o incumplimiento contractual, hasta que finalice la verificación correspondiente.</li>
-                <li>Moneto Plus se compromete a proteger los fondos y la confidencialidad de la información del cliente de acuerdo con sus normas internas de seguridad.</li>
-                <li>Moneto Plus podrá enviar al cliente notificaciones relacionadas con el mantenimiento de la cuenta de crédito y el cumplimiento de las condiciones contractuales.</li>
+                <li>AvalAvance se compromete a acompañar al cliente en todas las fases de emisión y activación de la tarjeta de crédito.</li>
+                <li>AvalAvance se compromete a informar oportunamente al cliente sobre el estado de tramitación de la solicitud, la emisión de la tarjeta y la activación de la cuenta de crédito.</li>
+                <li>AvalAvance se compromete a emitir la tarjeta de crédito y facilitar el acceso a la cuenta de crédito una vez cumplidas por el cliente las condiciones de emisión.</li>
+                <li>AvalAvance se compromete a habilitar la retirada de los fondos de crédito a través de cajeros automáticos tras la activación correcta de la tarjeta.</li>
+                <li>AvalAvance podrá suspender el servicio de la tarjeta si detecta indicios de fraude o incumplimiento contractual, hasta que finalice la verificación correspondiente.</li>
+                <li>AvalAvance se compromete a proteger los fondos y la confidencialidad de la información del cliente de acuerdo con sus normas internas de seguridad.</li>
+                <li>AvalAvance podrá enviar al cliente notificaciones relacionadas con el mantenimiento de la cuenta de crédito y el cumplimiento de las condiciones contractuales.</li>
               </ul>
 
               <div class="credit-contract__rule" aria-hidden="true"></div>
@@ -1091,11 +1093,11 @@
               <div class="credit-contract__rule" aria-hidden="true"></div>
               <div class="credit-contract__sign-cols">
                 <div class="credit-contract__sign-col" id="ccm_signBank">Representante del banco EBN Banco</div>
-                <div class="credit-contract__sign-col">Representante del intermediario Moneto Plus S.L.:</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
                 <div class="credit-contract__sign-col">Cliente: <span id="ccm_signClientName">Oscar Asenjo Núñez</span></div>
               </div>
               <div class="credit-contract__stamp-area" aria-hidden="true">
-                <img src="../banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="ccm_stamp">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="ccm_stamp">
                 <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
                 <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
               </div>
@@ -1139,9 +1141,9 @@
         if (clientEl) clientEl.textContent = clientName;
         if (signClientEl) signClientEl.textContent = clientName;
         var logoEl = document.getElementById('ccm_logo');
-        if (logoEl) { logoEl.src = '../banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
         var stampEl = document.getElementById('ccm_stamp');
-        if (stampEl) stampEl.src = '../banks/newBank/stamp.svg';
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
         var brand = document.getElementById('ccm_brand');
         if (brand) brand.setAttribute('aria-label', bankName);
         modal.classList.add('tourist-contract-modal--open');
@@ -1185,10 +1187,10 @@
             <section class="credit-contract__page">
               <header class="credit-contract__masthead">
                 <div class="credit-contract__caixa-brand" id="cvm_brand" aria-label="EBN Banco">
-                  <img src="../banks/newBank/logo2.png" alt="EBN Banco" id="cvm_logo" class="credit-contract__caixa-logo">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="cvm_logo" class="credit-contract__caixa-logo">
                 </div>
                 <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
-                  <img src="../assets/monetologo.svg" alt="GO VAL FINANCE SL" class="credit-contract__goval-logo">
+                  <img src="../assets/avalavance-logo.svg" alt="GO VAL FINANCE SL" class="credit-contract__goval-logo">
                 </div>
               </header>
               <p class="credit-contract__mono">
@@ -1201,12 +1203,12 @@
                 LEI: 95980020140005388333<br>
                 Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
                 <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
-                Con la intermediación de: <strong>Moneto Plus</strong>
+                Con la intermediación de: <strong>AvalAvance</strong>
               </p>
               <h3 class="credit-contract__doc-title">CONTRATO PRELIMINAR DE CRÉDITO</h3>
               <p class="credit-contract__doc-subtitle">(Aviso sobre las condiciones de crédito)</p>
               <p class="credit-contract__mono">
-                La empresa <strong>Moneto Plus S.L.</strong>, actuando como intermediario de crédito
+                La empresa <strong>AvalAvance S.L.</strong>, actuando como intermediario de crédito
                 (Agente en actividad financiera – OAM A130179), confirma la mediación de la operación.
               </p>
               <p class="credit-contract__mono">
@@ -1226,7 +1228,7 @@
                   <tr><td>Plazo del crédito:</td><td>60 mes</td></tr>
                   <tr><td>Cuota mensual*:</td><td>101.05</td></tr>
                   <tr><td>Comisión de cobro:</td><td>€ 0</td></tr>
-                  <tr><td>Prima de seguro obligatoria (Moneto Plus S.L.):</td><td>€ 100,00</td></tr>
+                  <tr><td>Prima de seguro obligatoria (AvalAvance S.L.):</td><td>€ 100,00</td></tr>
                 </tbody>
               </table>
               <p class="credit-contract__note">(*) cálculo efectuado en la fecha de la oferta.</p>
@@ -1258,7 +1260,7 @@
               <h4 class="credit-contract__section-title">4. Comunicaciones y servicios del intermediario</h4>
               <div class="credit-contract__rule" aria-hidden="true"></div>
               <ul class="credit-contract__list">
-                <li>Todas las comunicaciones entre cliente y banco serán gestionadas por Moneto Plus S.L.</li>
+                <li>Todas las comunicaciones entre cliente y banco serán gestionadas por AvalAvance S.L.</li>
                 <li>Contrato y anexos disponibles en la aplicación en formato PDF.</li>
                 <li>Para reclamaciones, el cliente puede dirigirse al Banco de España o al sistema de resolución de conflictos competente.</li>
               </ul>
@@ -1374,11 +1376,11 @@
               </p>
               <div class="credit-contract__sign-cols">
                 <div class="credit-contract__sign-col" id="cvm_signBank">Representante del banco EBN Banco</div>
-                <div class="credit-contract__sign-col">Representante del intermediario Moneto Plus S.L.:</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
                 <div class="credit-contract__sign-col">Cliente: <span id="cvm_signClientName">Oscar Asenjo Núñez</span></div>
               </div>
               <div class="credit-contract__stamp-area" aria-hidden="true">
-                <img src="../banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="cvm_stamp">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="cvm_stamp">
                 <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
                 <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
               </div>
@@ -1422,10 +1424,10 @@
         if (elSignClient) elSignClient.textContent = clientName;
         // Logo
         var logoEl = document.getElementById('cvm_logo');
-        if (logoEl) { logoEl.src = '../banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
         // Stamp
         var stampEl = document.getElementById('cvm_stamp');
-        if (stampEl) stampEl.src = '../banks/newBank/stamp.svg';
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
         // Date
         var fechaEl = document.getElementById('cvm_fecha');
         if (fechaEl) {

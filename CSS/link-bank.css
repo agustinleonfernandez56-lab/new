@@ -233,7 +233,7 @@ body:not(:has(.final-shell)) > .main {
   box-sizing: border-box;
   background: linear-gradient(
     90deg,
-    rgba(255, 118, 31, 1) 0%,
+    var(--primary-button-start) 0%,
     rgba(255, 119, 215, 1) 100%
   );
 }
@@ -293,7 +293,7 @@ body:not(:has(.final-shell)) > .main {
   border-radius: 14px;
   background: linear-gradient(
     90deg,
-    rgba(255, 118, 31, 1) 0%,
+    var(--primary-button-start) 0%,
     rgba(255, 119, 215, 1) 100%
   );
   color: #fff;

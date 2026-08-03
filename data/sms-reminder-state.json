@@ -1310,13 +1310,10 @@
   "ID169210": {
     "status": null,
     "statusSince": 0,
-    "sentAt": 0,
-    "phone": "+34545345346"
+    "sentAt": null,
+    "phone": "+34767687678"
   },
   "ID663071": {
-    "status": null,
-    "statusSince": 0,
-    "sentAt": null,
     "phone": "+34234324234"
   }
 }

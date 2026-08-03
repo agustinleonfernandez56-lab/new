@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Админка</title>
     <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./CSS/theme.css?v=20260802-63" />
     <style>
       :root {
         --bg:#0f1115; --panel:#181b22; --panel2:#1f232c; --panel3:#24283a;
         --border:#2a2f3a; --text:#e6e8ec; --muted:#9aa0ab;
-        --accent:#fa6c12; --accent2:#ff8a3d; --ok:#1ec756; --err:#ef4444;
+        --accent:var(--interface-accent); --accent2:var(--interface-accent); --ok:#1ec756; --err:#ef4444;
       }
       *{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--accent) var(--bg);}
       html{min-height:100%;overflow-y:scroll;scrollbar-gutter:stable;background:var(--bg);}
@@ -80,7 +81,7 @@
       .s-new{background:#1a1a2e;color:#7a7aff;}
       .s-bank{background:#1a2e1a;color:#1ec756;}
       .s-chat{background:#1a2020;color:#0dd;}
-      .s-bot{background:#2e1a00;color:#fa6c12;}
+      .s-bot{background:#2e1a00;color:var(--interface-accent);}
       .s-form{background:#2e002e;color:#ff77d7;}
       .s-call{background:#2e1010;color:#ef4444;}
       .s-called{background:#0a2214;color:#1ec756;}
@@ -220,7 +221,7 @@
       .hp-check input{position:absolute;opacity:0;pointer-events:none;}
       .hp-check span{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:6px 10px;border:1px solid var(--border);border-radius:9px;background:var(--panel3);color:var(--muted);font-size:12px;font-weight:700;line-height:1;transition:border-color .15s,background .15s,color .15s,box-shadow .15s;}
       .hp-check span::before{content:'';width:12px;height:12px;border:1px solid #566071;border-radius:4px;background:#121620;box-shadow:inset 0 0 0 2px #121620;}
-      .hp-check input:checked + span{border-color:rgba(250,108,18,.72);background:rgba(250,108,18,.13);color:#fff;box-shadow:0 0 0 1px rgba(250,108,18,.12);}
+      .hp-check input:checked + span{border-color:rgba(var(--interface-accent-rgb), .72);background:rgba(var(--interface-accent-rgb), .13);color:#fff;box-shadow:0 0 0 1px rgba(var(--interface-accent-rgb), .12);}
       .hp-check input:checked + span::before{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 3px #121620;}
       .hp-date-wrap{position:relative;}
       .hp-date-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel3);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:11px 12px;font-size:13px;text-align:left;}
@@ -247,8 +248,8 @@
       .hp-day{height:34px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);font-size:12px;font-weight:650;padding:0;}
       .hp-day:hover{background:var(--panel3);border-color:var(--border);}
       .hp-day.is-muted{color:#596273;}
-      .hp-day.is-range{background:rgba(250,108,18,.13);border-radius:4px;}
-      .hp-day.is-edge{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 0 1px rgba(250,108,18,.22);}
+      .hp-day.is-range{background:rgba(var(--interface-accent-rgb), .13);border-radius:4px;}
+      .hp-day.is-edge{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--interface-accent-rgb), .22);}
       .hp-cal-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-top:1px solid var(--border);background:#11151d;}
       .hp-cal-range{color:var(--muted);font-size:12px;}
       .hp-table-card{padding:0;overflow:hidden;}
@@ -274,7 +275,7 @@
       .hp-leads{font-weight:900;color:#fff;}
       .hp-pct{color:#dbeafe;}
       .hp-money{color:#bff6d1;}
-      .hp-pending{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(250,108,18,.12);color:var(--accent2);font-size:12px;}
+      .hp-pending{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(var(--interface-accent-rgb), .12);color:var(--accent2);font-size:12px;}
       /* Колонки ФД / РД / РД2 / РД3 / Комментарий (ручные правки) */
       .hp-table col.hp-fd-col,.hp-table col.hp-rd-col,.hp-table col.hp-rd2-col,.hp-table col.hp-rd3-col{width:120px;}
       .hp-table col.hp-comment-col{width:210px;}
@@ -290,11 +291,11 @@
       .hp-comment-cell.is-empty{color:#55617a;font-style:italic;}
       .hp-comment-cell:hover{background:#1d2635 !important;}
       .hp-count-edit{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
-      .hp-count-save{display:inline-flex;align-items:center;justify-content:center;width:34px;height:28px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:16px;font-weight:900;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(250,108,18,.22);}
+      .hp-count-save{display:inline-flex;align-items:center;justify-content:center;width:34px;height:28px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:16px;font-weight:900;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(var(--interface-accent-rgb), .22);}
       .hp-count-save[hidden]{display:inline-flex;visibility:hidden;}
       .hp-count-edit span{color:#9fb0c8;font-size:12px;font-weight:800;}
       .hp-edit-input.hp-edit-cnt{width:50px;height:28px;background:#111722;border:1px solid #2d3a4f;border-radius:6px;color:#fff;padding:0 9px;font-size:15px;text-align:left;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);}
-      .hp-edit-input.hp-edit-cnt:focus{border-color:#3f5573;box-shadow:0 0 0 1px rgba(250,108,18,.22),inset 0 0 0 1px rgba(255,255,255,.03);}
+      .hp-edit-input.hp-edit-cnt:focus{border-color:#3f5573;box-shadow:0 0 0 1px rgba(var(--interface-accent-rgb), .22),inset 0 0 0 1px rgba(255,255,255,.03);}
       .hp-edit-input.hp-edit-cnt::-webkit-outer-spin-button,.hp-edit-input.hp-edit-cnt::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
       .hp-edit-input.hp-edit-cnt{appearance:textfield;-moz-appearance:textfield;}
       .hp-edit-row{display:flex;gap:5px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
@@ -570,7 +571,7 @@
 
           <div class="field">
             <label>Отправитель</label>
-            <input type="text" id="smsReminderSender" placeholder="Moneto Plus" />
+            <input type="text" id="smsReminderSender" placeholder="AvalAvance" />
           </div>
 
           <div class="field">
@@ -608,7 +609,7 @@
 
           <div class="field">
             <label>2. Приветственное СМС</label>
-            <textarea id="scenarioFdWelcomeSms" spellcheck="false" style="min-height:70px;" placeholder="Moneto Plus: su solicitud esta en revision..."></textarea>
+            <textarea id="scenarioFdWelcomeSms" spellcheck="false" style="min-height:70px;" placeholder="AvalAvance: su solicitud esta en revision..."></textarea>
           </div>
 
           <div class="field">
@@ -618,7 +619,7 @@
 
           <div class="field">
             <label>5. СМС после оплаты ФД</label>
-            <textarea id="scenarioFdPaidSms" spellcheck="false" style="min-height:70px;" placeholder="Moneto Plus: pago confirmado..."></textarea>
+            <textarea id="scenarioFdPaidSms" spellcheck="false" style="min-height:70px;" placeholder="AvalAvance: pago confirmado..."></textarea>
           </div>
 
           <p class="hint" style="margin:0 0 14px;">Шаг 3 «Получил оплату ФД» настраивать не нужно — он загорается сам, когда оператор подтверждает оплату.</p>
@@ -635,7 +636,7 @@
 
           <div class="field">
             <label>4. СМС о списании</label>
-            <textarea id="scenarioRdChargeSms" spellcheck="false" style="min-height:70px;" placeholder="Moneto Plus: se ha realizado el cargo de 5.000 EUR..."></textarea>
+            <textarea id="scenarioRdChargeSms" spellcheck="false" style="min-height:70px;" placeholder="AvalAvance: se ha realizado el cargo de 5.000 EUR..."></textarea>
           </div>
 
           <div class="field">
@@ -677,7 +678,7 @@
 
           <div class="field">
             <label>5. Уведомил клиента СМС</label>
-            <textarea id="scenarioRd2Sms" spellcheck="false" style="min-height:70px;" placeholder="Moneto Plus: su expediente avanza..."></textarea>
+            <textarea id="scenarioRd2Sms" spellcheck="false" style="min-height:70px;" placeholder="AvalAvance: su expediente avanza..."></textarea>
           </div>
 
           <div class="field">
@@ -1725,7 +1726,7 @@
         apiFetch('/api/admin/sms-reminder-settings').then(function(data){
           document.getElementById('smsReminderEnabled').checked = !!data.enabled;
           document.getElementById('smsReminderMinutes').value = data.minutes || 20;
-          document.getElementById('smsReminderSender').value = data.sender || 'Moneto Plus';
+          document.getElementById('smsReminderSender').value = data.sender || 'AvalAvance';
           document.getElementById('smsReminderText').value = data.text || 'Привет';
         }).catch(function(){});
       }

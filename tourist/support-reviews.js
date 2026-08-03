@@ -24,7 +24,7 @@
                     },
                     {
                               "name": "PEDRO CHAVEZ PACENCIA",
-                              "text": "MonetoPlus pelea bastante por el cliente, eso se nota. En mi caso el banco al principio no lo veía claro, pero ellos siguieron con la solicitud hasta que salió aprobada. La única pega es que tuve que contratar un seguro, pero después de eso el dinero llegó sin problema."
+                              "text": "AvalAvance pelea bastante por el cliente, eso se nota. En mi caso el banco al principio no lo veía claro, pero ellos siguieron con la solicitud hasta que salió aprobada. La única pega es que tuve que contratar un seguro, pero después de eso el dinero llegó sin problema."
                     },
                     {
                               "name": "Alfonso Pérez Coll",
@@ -64,11 +64,11 @@
                     },
                     {
                               "name": "Maria Vasquez Sánchez",
-                              "text": "MonetoPlus insistió bastante con mi caso. Yo ya pensaba dejarlo, pero ellos siguieron revisando opciones con bancos colaboradores hasta que encontraron una salida. Muy agradecida."
+                              "text": "AvalAvance insistió bastante con mi caso. Yo ya pensaba dejarlo, pero ellos siguieron revisando opciones con bancos colaboradores hasta que encontraron una salida. Muy agradecida."
                     },
                     {
                               "name": "Angel Matamoros ferrando",
-                              "text": "Con MonetoPlus pude conseguir 6.000 € para terminar unos pagos pendientes. La gestión fue online y bastante cómoda, aunque tuve que revisar bien los documentos antes de firmar."
+                              "text": "Con AvalAvance pude conseguir 6.000 € para terminar unos pagos pendientes. La gestión fue online y bastante cómoda, aunque tuve que revisar bien los documentos antes de firmar."
                     },
                     {
                               "name": "Angel Garcia Garcia",
@@ -80,7 +80,7 @@
                     },
                     {
                               "name": "Jose Pellicer",
-                              "text": "No conocía MonetoPlus y entré con bastante desconfianza, pero me explicaron el proceso paso a paso. El banco tardó un poco en revisar, aunque al final salió aprobado."
+                              "text": "No conocía AvalAvance y entré con bastante desconfianza, pero me explicaron el proceso paso a paso. El banco tardó un poco en revisar, aunque al final salió aprobado."
                     },
                     {
                               "name": "Aimar Etxeberria",
@@ -92,7 +92,7 @@
                     },
                     {
                               "name": "sergio taboada",
-                              "text": "Al principio me pidieron más información y pensé que se iba a caer todo. MonetoPlus siguió revisando con el banco y finalmente me aprobaron."
+                              "text": "Al principio me pidieron más información y pensé que se iba a caer todo. AvalAvance siguió revisando con el banco y finalmente me aprobaron."
                     },
                     {
                               "name": "José A Vázquez",
@@ -108,7 +108,7 @@
                     },
                     {
                               "name": "Gorge Petrov",
-                              "text": "Me aprobaron 12.000 € cuando ya pensaba que no iba a salir. MonetoPlus movió la solicitud con el banco y me fueron avisando de cada paso. Muy buena experiencia."
+                              "text": "Me aprobaron 12.000 € cuando ya pensaba que no iba a salir. AvalAvance movió la solicitud con el banco y me fueron avisando de cada paso. Muy buena experiencia."
                     },
                     {
                               "name": "arif rasheed",
@@ -120,11 +120,11 @@
                     },
                     {
                               "name": "Razak Kadiri IBRAHIM",
-                              "text": "MonetoPlus no solo manda la solicitud y ya está, hacen seguimiento. En mi caso eso marcó la diferencia. El banco pidió seguro para terminar de aprobar, lo hice y al poco tiempo tenía el préstamo ingresado."
+                              "text": "AvalAvance no solo manda la solicitud y ya está, hacen seguimiento. En mi caso eso marcó la diferencia. El banco pidió seguro para terminar de aprobar, lo hice y al poco tiempo tenía el préstamo ingresado."
                     },
                     {
                               "name": "Doris Imasuen",
-                              "text": "MonetoPlus me ayudó cuando ya pensaba que ningún banco iba a aprobar mi solicitud."
+                              "text": "AvalAvance me ayudó cuando ya pensaba que ningún banco iba a aprobar mi solicitud."
                     },
                     {
                               "name": "Michael Jorge Casuga Godoy",
@@ -176,7 +176,7 @@
                     },
                     {
                               "name": "Ricard Casadevall Pla",
-                              "text": "La primera respuesta llegó en minutos, pero luego el banco pidió revisar algo más. MonetoPlus siguió pendiente y al final se aprobó."
+                              "text": "La primera respuesta llegó en minutos, pero luego el banco pidió revisar algo más. AvalAvance siguió pendiente y al final se aprobó."
                     },
                     {
                               "name": "Eric Ros",
@@ -192,7 +192,7 @@
                     },
                     {
                               "name": "Jonathan Acosta",
-                              "text": "No estaba muy convencida al principio, porque mi banco ya me había puesto varias pegas. En MonetoPlus me ayudaron a ordenar la solicitud y al final salió aprobada. Lo que más agradezco es que no tuve que ir a ninguna oficina."
+                              "text": "No estaba muy convencida al principio, porque mi banco ya me había puesto varias pegas. En AvalAvance me ayudaron a ordenar la solicitud y al final salió aprobada. Lo que más agradezco es que no tuve que ir a ninguna oficina."
                     },
                     {
                               "name": "Juan jose Romero amate",
@@ -200,7 +200,7 @@
                     },
                     {
                               "name": "ANWARE AMACHTEH",
-                              "text": "MonetoPlus me pareció útil porque no tuve que ir banco por banco. Ellos canalizaron la solicitud y yo solo fui enviando lo que pedían."
+                              "text": "AvalAvance me pareció útil porque no tuve que ir banco por banco. Ellos canalizaron la solicitud y yo solo fui enviando lo que pedían."
                     },
                     {
                               "name": "Amalfy Vanegas",
@@ -264,7 +264,7 @@
                     },
                     {
                               "name": "David Sanchez Garcia",
-                              "text": "Necesitaba juntar pagos pequeños y quedarme con una cuota más ordenada. MonetoPlus me orientó y el banco aceptó la propuesta."
+                              "text": "Necesitaba juntar pagos pequeños y quedarme con una cuota más ordenada. AvalAvance me orientó y el banco aceptó la propuesta."
                     },
                     {
                               "name": "David SS",
@@ -292,7 +292,7 @@
                     },
                     {
                               "name": "Jesus Gonzalez Langa",
-                              "text": "Me gustó que explicaran qué parte dependía de MonetoPlus y qué parte revisaba el banco. Eso evita confusiones."
+                              "text": "Me gustó que explicaran qué parte dependía de AvalAvance y qué parte revisaba el banco. Eso evita confusiones."
                     },
                     {
                               "name": "Arturo Vivó",
@@ -368,7 +368,7 @@
                     },
                     {
                               "name": "Rafael Bergillos Rivert",
-                              "text": "MonetoPlus me ayudó a presentar mejor la solicitud. No sé si solo habría conseguido la aprobación, sinceramente."
+                              "text": "AvalAvance me ayudó a presentar mejor la solicitud. No sé si solo habría conseguido la aprobación, sinceramente."
                     },
                     {
                               "name": "YHAN BARREIROS",
@@ -409,12 +409,12 @@
           ];
           var cities = ["Valencia", "Madrid", "Sevilla", "Malaga", "Alicante", "Zaragoza", "Bilbao", "Murcia", "Granada", "Valladolid", "Cordoba", "Oviedo", "Toledo", "Pamplona", "San Sebastian", "Barcelona", "Santander", "Almeria", "Logrono", "Girona", "Tarragona", "Vigo", "Burgos", "Leon", "Cadiz", "Huelva", "Badajoz", "Salamanca", "Getafe", "Lleida"];
           var imagesByIndex = {
-            0: "./rewscreen/review.png",
-            2: "./rewscreen/review2.png",
-            4: "./rewscreen/review3.png",
-            7: "./rewscreen/review4.png",
-            10: "./rewscreen/review5.png",
-            13: "./rewscreen/review6.png"
+            0: "../assets/tourist/rewscreen/review.png",
+            2: "../assets/tourist/rewscreen/review2.png",
+            4: "../assets/tourist/rewscreen/review3.png",
+            7: "../assets/tourist/rewscreen/review4.png",
+            10: "../assets/tourist/rewscreen/review5.png",
+            13: "../assets/tourist/rewscreen/review6.png"
           };
           var reviews = [];
           var limit = Math.min(total, reviewContent.length);

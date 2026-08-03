@@ -2,8 +2,8 @@
 """Генерация конверта Correos Express с адресом клиента.
 
 Читает из stdin JSON: {"text": "строка1\nстрока2", "out": "/path/out.jpg"}
-Накладывает адрес получателя на шаблон chat/envelope-template.png в область
-смарт-слоя «Text Edit» (из макета MonetoPlusFinal3.psd) и сохраняет JPEG.
+Накладывает адрес получателя на шаблон assets/chat/envelope-template.png в область
+смарт-слоя «Text Edit» (из макета AvalAvanceFinal3.psd) и сохраняет JPEG.
 Печатает в stdout JSON: {"ok": true, "out": "..."}.
 
 Верхняя строка — до 45 символов, нижняя — до 15 (как в макете).
@@ -14,7 +14,7 @@ import json
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE = os.path.join(BASE_DIR, 'chat', 'envelope-template.png')
+TEMPLATE = os.path.join(BASE_DIR, 'assets', 'chat', 'envelope-template.png')
 
 # Геометрия текста замерена по оригинальному рендеру макета (2896×2172):
 # строка 1 — верх ~y1458, строка 2 — на +31px; левый край ~x877; шрифт ~19px.

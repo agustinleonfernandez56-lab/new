@@ -249,7 +249,7 @@ body {
   align-items: stretch;
   gap: 16px;
   padding: 16px 16px 16px;
-  background: linear-gradient(90deg, #f4eef9 0.07%, #f7f1f7 50%, #f9eee9 99.93%);
+  background: linear-gradient(90deg, #f4eef9 0.07%, #f7f1f7 50%, var(--interface-accent-soft) 99.93%);
   border-radius: 16px;
 }
 
@@ -291,7 +291,7 @@ body {
   font-weight: 500;
   line-height: 21px;
   text-align: right;
-  color: #fa6c12;
+  color: var(--interface-accent);
   cursor: pointer;
 }
 
@@ -335,7 +335,7 @@ body {
 }
 
 .tourist-plan__next-currency {
-  background: linear-gradient(360deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(360deg, #ff77d7 0%, var(--interface-accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -503,7 +503,7 @@ body {
   font-size: 14px;
   font-weight: 400;
   line-height: 21px;
-  color: #fa6c12;
+  color: var(--interface-accent);
   text-decoration: none;
   background: none;
   border: none;
@@ -540,7 +540,7 @@ body {
 
 .tourist-balance__currency,
 .tourist-gradient-text {
-  background: linear-gradient(90deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(90deg, #ff77d7 0%, var(--interface-accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -737,7 +737,7 @@ body {
   font-size: 10px;
   font-weight: 500;
   line-height: 15px;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-bank__principal-slot {
@@ -828,7 +828,7 @@ body {
 }
 
 .tourist-btn--gradient {
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
   color: #ffffff;
 }
 
@@ -918,7 +918,7 @@ body {
   font-size: 12px;
   font-weight: 700;
   line-height: 18px;
-  color: #fa6c12;
+  color: var(--interface-accent);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -1023,16 +1023,16 @@ body {
 }
 
 .tourist-list-item__icon--alert {
-  background: #fde5dd;
+  background: var(--interface-accent-soft-strong);
 }
 
 .tourist-list-item__icon--debit {
-  background: #fff0e4 !important;
-  color: #fa6c12;
+  background: var(--interface-accent-soft) !important;
+  color: var(--interface-accent);
 }
 
 .tourist-list-item__icon--debit svg path {
-  fill: #fa6c12;
+  fill: var(--interface-accent);
 }
 
 .tourist-list-item__icon svg {
@@ -1171,7 +1171,7 @@ body {
 
 /* ===== Алерт (notificación banner) ===== */
 .tourist-alert {
-  background: #fdecdf;
+  background: var(--interface-accent-soft-strong);
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -1179,7 +1179,7 @@ body {
   font-size: 14px;
   font-weight: 500;
   line-height: 21px;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 /* ===== Notifications list ===== */
@@ -1426,7 +1426,7 @@ body {
   padding: 0 16px;
 }
 .tourist-warning-msg__accent {
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-withdrawal-status {
@@ -1493,7 +1493,7 @@ body {
   width: 2px;
   height: calc(100% + var(--timeline-step-gap));
   border-radius: 999px;
-  background: #fa6c12;
+  background: var(--interface-accent);
 }
 
 .tourist-withdrawal-status__node {
@@ -1515,14 +1515,14 @@ body {
 .tourist-withdrawal-status__step--done .tourist-withdrawal-status__node {
   border-color: transparent;
   color: #ffffff;
-  background: #fa6c12;
-  box-shadow: 0 0 0 6px rgba(250, 108, 18, 0.12);
+  background: var(--interface-accent);
+  box-shadow: 0 0 0 6px rgba(var(--interface-accent-rgb), 0.12);
 }
 
 .tourist-withdrawal-status__step--active .tourist-withdrawal-status__node {
-  border-color: #fa6c12;
+  border-color: var(--interface-accent);
   background: #ffffff;
-  box-shadow: 0 0 0 6px rgba(250, 108, 18, 0.12);
+  box-shadow: 0 0 0 6px rgba(var(--interface-accent-rgb), 0.12);
   animation: tourist-status-pulse 1.2s ease-in-out infinite;
 }
 
@@ -1531,7 +1531,7 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #fa6c12;
+  background: var(--interface-accent);
 }
 
 .tourist-withdrawal-status__step--pending .tourist-withdrawal-status__copy h2,
@@ -1557,11 +1557,11 @@ body {
 @keyframes tourist-status-pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 6px rgba(250, 108, 18, 0.12);
+    box-shadow: 0 0 0 6px rgba(var(--interface-accent-rgb), 0.12);
   }
   50% {
     transform: scale(0.92);
-    box-shadow: 0 0 0 9px rgba(250, 108, 18, 0.05);
+    box-shadow: 0 0 0 9px rgba(var(--interface-accent-rgb), 0.05);
   }
 }
 
@@ -1595,7 +1595,7 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #fde5dd;
+  background: var(--interface-accent-soft-strong);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1637,10 +1637,10 @@ body {
 
 .tourist-requisites-unavailable {
   padding: 14px 16px;
-  border: 1px solid rgba(250, 108, 18, 0.28);
+  border: 1px solid rgba(var(--interface-accent-rgb), 0.28);
   border-radius: 14px;
-  background: #fff7f2;
-  color: #fa6c12;
+  background: var(--interface-accent-soft);
+  color: var(--interface-accent);
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
@@ -1675,7 +1675,7 @@ body {
 }
 
 .tourist-input-field__box[data-copy]:focus-visible {
-  outline: 2px solid #fa6c12;
+  outline: 2px solid var(--interface-accent);
   outline-offset: 2px;
 }
 
@@ -1879,7 +1879,7 @@ body {
 }
 
 .tourist-amount-block__currency {
-  background: linear-gradient(360deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(360deg, #ff77d7 0%, var(--interface-accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1897,7 +1897,7 @@ body {
   font-weight: 400;
   line-height: 18px;
   text-align: right;
-  color: #fa6c16;
+  color: var(--interface-accent);
   transition: opacity 0.2s ease;
 }
 
@@ -2059,7 +2059,7 @@ a.tourist-faq-hero__accent:active {
 }
 
 a.tourist-faq-hero__accent:focus-visible {
-  outline: 2px solid #fa6c12;
+  outline: 2px solid var(--interface-accent);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -2222,8 +2222,8 @@ a.tourist-faq-hero__accent:focus-visible {
 }
 
 .tourist-tabbar__item.is-active {
-  color: #fa6c12;
-  border-top-color: #fa6c12;
+  color: var(--interface-accent);
+  border-top-color: var(--interface-accent);
   font-weight: 600;
 }
 
@@ -2341,7 +2341,7 @@ a.tourist-faq-hero__accent:focus-visible {
   line-height: 21px;
   color: #ffffff;
   cursor: pointer;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
 }
 
 .transfer-modal__btn svg {
@@ -2383,7 +2383,7 @@ body.transfer-modal-open {
 }
 
 .tourist-hero__accent {
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-hero__subtitle {
@@ -2420,7 +2420,7 @@ body.transfer-modal-open {
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(23.57% 40.41% at 15% 17.14%, rgba(255, 106, 0, 0.18) 0%, rgba(255, 106, 0, 0) 100%),
+    radial-gradient(23.57% 40.41% at 15% 17.14%, rgba(var(--interface-accent-rgb), 0.18) 0%, rgba(var(--interface-accent-rgb), 0) 100%),
     radial-gradient(34.13% 40.97% at 81.67% 82.86%, rgba(248, 87, 193, 0.18) 0%, rgba(248, 87, 193, 0) 100%);
   pointer-events: none;
 }
@@ -2443,7 +2443,7 @@ body.transfer-modal-open {
   top: 0;
   bottom: 0;
   width: 4.71%;
-  background: linear-gradient(360deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(360deg, #ff77d7 0%, var(--interface-accent) 100%);
   border-radius: 0 10px 10px 0;
   pointer-events: none;
 }
@@ -2466,11 +2466,11 @@ body.transfer-modal-open {
   font-size: 22px;
   font-weight: 600;
   line-height: 33px;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-credit-card__brand-suffix {
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-credit-card__network {
@@ -2523,7 +2523,7 @@ body.transfer-modal-open {
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(23.57% 40.41% at 15% 17.14%, rgba(255, 106, 0, 0.18) 0%, rgba(255, 106, 0, 0) 100%),
+    radial-gradient(23.57% 40.41% at 15% 17.14%, rgba(var(--interface-accent-rgb), 0.18) 0%, rgba(var(--interface-accent-rgb), 0) 100%),
     radial-gradient(34.13% 40.97% at 81.67% 82.86%, rgba(248, 87, 193, 0.18) 0%, rgba(248, 87, 193, 0) 100%),
     linear-gradient(120.26deg, #0f0f10 0%, #1b1b1e 100%);
 }
@@ -2545,7 +2545,7 @@ body.transfer-modal-open {
   top: 0;
   width: 16px;
   height: 100%;
-  background: #fa6c12;
+  background: var(--interface-accent);
   border-radius: 0 10px 10px 0;
 }
 
@@ -2660,7 +2660,7 @@ body.transfer-modal-open {
   height: 36px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
   color: #ffffff;
   font-family: "DM Sans", sans-serif;
   font-size: 10px;
@@ -2739,7 +2739,7 @@ body.transfer-modal-open {
   gap: 12px;
   width: 100%;
   padding: 12px 16px;
-  background: linear-gradient(99.29deg, #fa6c12 0.04%, #ff77d7 100%);
+  background: linear-gradient(99.29deg, var(--interface-accent) 0.04%, #ff77d7 100%);
   border-radius: 16px;
   box-sizing: border-box;
   color: #fafafa;
@@ -2834,7 +2834,7 @@ body.transfer-modal-open {
 }
 
 .tourist-form-field__input:focus-visible {
-  border-color: #fa6c12;
+  border-color: var(--interface-accent);
 }
 
 .tourist-form-field--select .tourist-form-field__box {
@@ -2890,7 +2890,7 @@ body.transfer-modal-open {
   border-radius: 14px;
   font-weight: 500;
   line-height: normal;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
 }
 
 .tourist-btn--credit-pay .tourist-btn__default-content {
@@ -3045,7 +3045,7 @@ body.transfer-modal-open {
   height: 44px;
   border: none;
   border-radius: 12px;
-  background: #fa6c12;
+  background: var(--interface-accent);
   color: #ffffff;
   font-family: "DM Sans", sans-serif;
   font-size: 14px;
@@ -3660,7 +3660,7 @@ body.contract-modal-open .tourist-tabbar {
 .tourist-sheet__icon {
   width: 52px;
   height: 52px;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -3765,7 +3765,7 @@ body.contract-modal-open .tourist-tabbar {
   padding: 0 14px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(270deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
   font-family: "DM Sans", sans-serif;
   font-size: 14px;
   font-weight: 400;
@@ -3852,7 +3852,7 @@ body.tourist-sheet-open {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .tourist-demo-modal__title {
@@ -3877,7 +3877,7 @@ body.tourist-sheet-open {
   height: 44px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(90deg, #ff77d7 0%, #fa6c12 100%);
+  background: linear-gradient(90deg, #ff77d7 0%, var(--interface-accent) 100%);
   color: #ffffff;
   font-family: "DM Sans", sans-serif;
   font-size: 14px;

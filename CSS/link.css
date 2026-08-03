@@ -86,7 +86,7 @@ body {
   background: linear-gradient(
     90deg,
     rgba(255, 119, 218, 1) 21%,
-    rgba(250, 108, 18, 1) 100%
+    rgba(var(--interface-accent-rgb), 1) 100%
   );
 }
 
@@ -99,7 +99,7 @@ body {
 
 .balance__update span {
   font-weight: 600;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .last {
@@ -128,7 +128,7 @@ body {
 .last__header-all {
   font-weight: 600;
   font-size: 16px;
-  color: #fa6c12;
+  color: var(--interface-accent);
   font-weight: 400;
 }
 
@@ -473,7 +473,7 @@ body {
   background: linear-gradient(
     90deg,
     rgba(255, 119, 218, 1) 21%,
-    rgba(250, 108, 18, 1) 100%
+    rgba(var(--interface-accent-rgb), 1) 100%
   );
   border: none;
   white-space: nowrap;

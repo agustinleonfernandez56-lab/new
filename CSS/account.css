@@ -83,7 +83,7 @@ body {
   font-weight: 500;
   color: #fff;
   width: 100%;
-  background: linear-gradient(90deg,rgba(255, 119, 218, 1) 21%, rgba(250, 108, 18, 1) 100%);
+  background: linear-gradient(90deg,rgba(255, 119, 218, 1) 21%, rgba(var(--interface-accent-rgb), 1) 100%);
 }
 
 .balance__update {
@@ -94,7 +94,7 @@ body {
 
 .balance__update span {
   font-weight: 600;
-  color: #fa6c12;
+  color: var(--interface-accent);
 }
 
 .last {
@@ -122,7 +122,7 @@ body {
 .last__header-all {
   font-weight: 600;
   font-size: 16px;
-  color: #fa6c12;
+  color: var(--interface-accent);
   font-weight: 400;
 }
 

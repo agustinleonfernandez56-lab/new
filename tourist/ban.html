@@ -6,8 +6,8 @@
   <title>Solicitud finalizada</title>
   <style>
     :root {
-      --accent: #f06005;
-      --accent-soft: #fff0e8;
+      --accent: var(--interface-accent);
+      --accent-soft: var(--interface-accent-soft);
       --text: #111111;
       --muted: #737373;
       --line: #e9e9e9;
@@ -66,7 +66,7 @@
       justify-content: center;
       background: var(--accent-soft);
       color: var(--accent);
-      box-shadow: inset 0 0 0 1px rgba(240, 96, 5, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(var(--interface-accent-rgb), 0.12);
     }
 
     .ban-main-icon svg {
@@ -196,6 +196,8 @@
 
     }
   </style>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
 </head>
 <body>
   <main class="ban-page" aria-labelledby="banTitle">
@@ -209,7 +211,7 @@
           </svg>
         </div>
         <h1 id="banTitle">Servicio no disponible</h1>
-        <p>Estimado cliente, Moneto Plus le informa de que no podrá continuar prestándole servicios relacionados con su solicitud.</p>
+        <p>Estimado cliente, AvalAvance le informa de que no podrá continuar prestándole servicios relacionados con su solicitud.</p>
       </section>
 
       <div class="ban-summary" aria-label="Información de cierre">
@@ -238,7 +240,7 @@
 
     <footer class="ban-footer">
       <div class="ban-logo">
-        <img src="../assets/monetologo.svg" alt="Moneto Plus" />
+        <img src="../assets/avalavance-logo.svg" alt="AvalAvance" />
       </div>
       <p class="ban-kicker">Expediente cerrado</p>
     </footer>

@@ -10,7 +10,7 @@
 <defs>
 <linearGradient id="paint0_linear_30603_14039" x1="52" y1="26" x2="1.13535e-07" y2="26" gradientUnits="userSpaceOnUse">
 <stop stop-color="#FF77D7"/>
-<stop offset="1" stop-color="#FA6C12"/>
+<stop offset="1" stop-color="var(--interface-accent, #066EC0)"/>
 </linearGradient>
 </defs>
 </svg>

@@ -126,7 +126,7 @@ body {
   align-items: center;
   padding: 4px 10px 4px 6px;
   gap: 4px;
-  background: linear-gradient(260.71deg, #fa6c12 0%, #ff77d7 100.22%);
+  background: linear-gradient(260.71deg, var(--interface-accent) 0%, #ff77d7 100.22%);
   border-radius: 360px;
 }
 
@@ -313,7 +313,7 @@ body {
   font-size: 14px;
   line-height: 21px;
   text-align: right;
-  color: #fa6c12;
+  color: var(--interface-accent);
   text-decoration: none;
 }
 
@@ -481,7 +481,7 @@ body {
   box-sizing: border-box;
   background: linear-gradient(
     90deg,
-    rgba(255, 118, 31, 1) 0%,
+    var(--primary-button-start) 0%,
     rgba(255, 119, 215, 1) 100%
   );
 }

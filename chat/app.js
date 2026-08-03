@@ -753,7 +753,7 @@ function renderProfile(c) {
 function renderMessages(messages, callerNote) {
   let html = '';
   if (callerNote) {
-    html += `<div style="align-self:center;background:#1a2a40;border-radius:8px;padding:8px 14px;font-size:12px;color:#fa6c12;text-align:center;max-width:80%;margin-bottom:8px">
+    html += `<div style="align-self:center;background:#1a2a40;border-radius:8px;padding:8px 14px;font-size:12px;color:var(--interface-accent);text-align:center;max-width:80%;margin-bottom:8px">
       <strong style="color:#94a5bd;font-size:11px;display:block;margin-bottom:2px">📞 Комментарий прозвонщика</strong>
       ${formatMessageText(callerNote)}</div>`;
   }

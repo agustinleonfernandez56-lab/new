@@ -213,7 +213,7 @@ body {
   width: 4px;
   left: 0;
   top: 0;
-  background: #fa6c12;
+  background: var(--interface-accent);
   border-radius: 360px;
   transition: top 0.1s ease;
 }

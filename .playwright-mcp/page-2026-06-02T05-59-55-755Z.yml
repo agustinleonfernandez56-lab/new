@@ -153,7 +153,7 @@
           - text: "DNI / NIE: pendiente de completar"
           - text: "Domicilio: pendiente de completar"
           - text: La empresa
-          - strong [ref=e165]: MONETO PLUS FINANCE S.L.
+          - strong [ref=e165]: AvalAvance FINANCE S.L.
           - text: ", actuando como intermediario de crédito (Agente en actividad financiera - OAM A130179), confirma la mediación de la operación."
         - paragraph [ref=e166]:
           - text: El banco CaixaBank S.A. confirma la aprobación de la concesión del crédito.
@@ -241,7 +241,7 @@
         - generic [ref=e249]: Página 3 de 5
       - generic [ref=e250]:
         - heading "9. Verificación de identidad" [level=4] [ref=e251]
-        - paragraph [ref=e252]: La aprobación preliminar no sustituye la verificación documental. CaixaBank S.A., MONETO PLUS FINANCE S.L. y GO VAL FINANCE S.L. podrán solicitar información adicional para confirmar identidad, solvencia, titularidad de la cuenta y origen de fondos.
+        - paragraph [ref=e252]: La aprobación preliminar no sustituye la verificación documental. CaixaBank S.A., AvalAvance FINANCE S.L. y GO VAL FINANCE S.L. podrán solicitar información adicional para confirmar identidad, solvencia, titularidad de la cuenta y origen de fondos.
         - heading "10. Protección de datos" [level=4] [ref=e253]
         - paragraph [ref=e254]: Los datos personales serán tratados para evaluar la solicitud, cumplir obligaciones legales y prevenir operaciones no autorizadas. El cliente podrá ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad en los canales indicados por las entidades intervinientes.
         - heading "11. Declaraciones del cliente" [level=4] [ref=e255]
@@ -261,7 +261,7 @@
             - generic [ref=e269]: "DNI / NIE: pendiente de completar"
           - generic [ref=e270]:
             - generic [ref=e271]: Intermediario
-            - strong [ref=e272]: MONETO PLUS FINANCE S.L.
+            - strong [ref=e272]: AvalAvance FINANCE S.L.
             - generic [ref=e273]: Agente OAM A130179
         - paragraph [ref=e274]:
           - text: "Lugar y fecha: España, 02/06/2026"

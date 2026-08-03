@@ -1,6 +1,6 @@
 # Bank Assets
 
-Each subfolder corresponds to a bank. Place three files in each:
+Each subfolder under `assets/banks/` corresponds to a bank. Place three files in each:
 
 | File | Description | Recommended size |
 |------|-------------|-----------------|

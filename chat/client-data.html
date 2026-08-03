@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ficha del cliente — Moneto Plus</title>
+<title>Ficha del cliente — AvalAvance</title>
+<link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -686,7 +687,7 @@
   // ── История транзакций ──────────────────────────────────────────────────
   // ЗАГЛУШКА. Заменить на данные из бэкенда: массив того же вида, что DEMO_OPS.
   var DEMO_OPS = [
-    { st:'ok',  date:fmtTxnDate(firstTxnAt), time:fmtTxnTime(firstTxnAt), title:'Ingreso en cuenta empresarial Moneto Plus', sub:'Origen: EBN Banco',                            sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B901', code:'ACSC', motivo:'Ingreso de fondos del crédito',        note:'Operación completada correctamente.' },
+    { st:'ok',  date:fmtTxnDate(firstTxnAt), time:fmtTxnTime(firstTxnAt), title:'Ingreso en cuenta empresarial AvalAvance', sub:'Origen: EBN Banco',                            sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B901', code:'ACSC', motivo:'Ingreso de fondos del crédito',        note:'Operación completada correctamente.' },
     { st:'bad', date:fmtTxnDate(secondTxnAt), time:fmtTxnTime(secondTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:'Transferencia al IBAN registrado del cliente', sum:'−5 000,00 €', dir:'out', id:'TRX-10A2B902', code:'ACSC', motivo:'Transferencia de fondos de crédito', note:'Operación completada correctamente.' },
     { st:'ok', date:fmtTxnDate(thirdTxnAt), time:fmtTxnTime(thirdTxnAt), title:'Devolución de fondos por rechazo de EBN Banco',              sub:'Requisito pendiente: formalizar seguro obligatorio', sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B903', code:'ACSC', motivo:'Rechazo de operación por EBN Banco', note:'Se requiere formalizar el seguro antes de ejecutar la transferencia.' },
     { st:'wait', date:fmtTxnDate(fourthTxnAt), time:fmtTxnTime(fourthTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:'Transferencia al IBAN registrado del cliente', sum:'−5 000,00 €', dir:'out', id:'TRX-84F2A908', code:'ACSP', motivo:'', note:'La transferencia SWIFT por un importe de 5.000,00 EUR está pendiente de procesamiento. Para completar el abono de los fondos en el IBAN registrado, es necesario pagar la comisión de la transferencia.' }

@@ -223,7 +223,7 @@ const DEFAULT_SETTINGS = {
   smsReminderEnabled: false,
   smsReminderEnabledAt: null,
   smsReminderMinutes: 20,
-  smsReminderSender: 'Moneto Plus',
+  smsReminderSender: 'AvalAvance',
   smsReminderText: 'Привет',
   routingHandlerId: null, // активный обработчик, которому назначаются новые лиды
   depositFD: 100, // сумма депозита за 1-ю оплату (insurance)
@@ -277,7 +277,7 @@ async function writeSettings(data) {
 // ── Банки для RD2 (смена кредитора) ───────────────────────────────────────────
 // Те же, что клиент видит на странице выбора банка. Один список на всех:
 // им пользуются и модалка оператора, и страница переноса кредита.
-// Иконку отдаём через /api/, а не прямой ссылкой на /banks/: операторская
+// Иконку отдаём через /api/, а не прямой ссылкой на /assets/banks/: операторская
 // панель живёт на своём домене, куда nginx клиентскую статику не пускает.
 const RD2_BANKS = [
   { key: 'bbva',       name: 'BBVA',           icon: '/api/bank-icon/bbva' },
@@ -307,7 +307,7 @@ async function handleBankIcon(req, reply) {
   try {
     const iconFile = bank.iconFile || 'icon.svg';
     const iconType = iconFile.toLowerCase().endsWith('.png') ? 'image/png' : 'image/svg+xml';
-    const icon = await readFile(join(process.cwd(), 'banks', key, iconFile));
+    const icon = await readFile(join(process.cwd(), 'assets', 'banks', key, iconFile));
     return reply
       .type(iconType)
       .header('Cache-Control', 'public, max-age=86400')
@@ -2461,7 +2461,7 @@ async function handleGetSmsReminderSettings(req, reply) {
       enabled: settings.smsReminderEnabled || false,
       enabledAt: settings.smsReminderEnabledAt || null,
       minutes: settings.smsReminderMinutes || 20,
-      sender: settings.smsReminderSender || 'Moneto Plus',
+      sender: settings.smsReminderSender || 'AvalAvance',
       text: settings.smsReminderText || 'Привет',
     });
   } catch (err) {
@@ -2495,7 +2495,7 @@ async function handleUpdateSmsReminderSettings(req, reply) {
       enabled: settings.smsReminderEnabled || false,
       enabledAt: settings.smsReminderEnabledAt || null,
       minutes: settings.smsReminderMinutes || 20,
-      sender: settings.smsReminderSender || 'Moneto Plus',
+      sender: settings.smsReminderSender || 'AvalAvance',
       text: settings.smsReminderText || 'Привет',
     });
   } catch (err) {
@@ -3617,7 +3617,7 @@ async function handleChatOpSendPush(req, reply) {
 }
 
 // Единый отправитель SMS через elite-gateway. sender — имя отправителя (SID).
-// Если sender не задан — берём из настроек (по умолчанию «Moneto Plus»).
+// Если sender не задан — берём из настроек (по умолчанию «AvalAvance»).
 async function sendSmsViaGateway(number, text, sender) {
   const { apiKey, sid, baseUrl } = config.eliteGateway;
   const from = (sender && String(sender).trim()) || sid;
@@ -3905,7 +3905,7 @@ async function sendSmsRemindersToStalledClients() {
       smsReminderLog.set(client.flowSessionId, { lastReminderAt: now });
 
       const text = settings.smsReminderText || 'Привет';
-      const { ok, messageId } = await sendSmsViaGateway(phone, text, settings.smsReminderSender || 'Moneto Plus');
+      const { ok, messageId } = await sendSmsViaGateway(phone, text, settings.smsReminderSender || 'AvalAvance');
       sentThisRun++;
 
       console.log(`[SMS-reminder] flowSessionId=${client.flowSessionId} phone=${phone} ok=${ok}`);
@@ -4664,14 +4664,14 @@ async function deliverScheduledPush(item) {
       await sendPush(token, ps.title || '¡Tienes un nuevo mensaje!', item.message, ps.url);
     }
   } catch (e) { console.error('[autopush] push', e?.message); }
-  // 3) SMS (если добавлено оператором) — отправитель Moneto Plus.
+  // 3) SMS (если добавлено оператором) — отправитель AvalAvance.
   if (item.smsText) {
     try {
       const wc = await prisma.webClient.findUnique({ where: { flowSessionId: sessionId }, select: { submissionData: true } }).catch(() => null);
       const phone = wc?.submissionData?.phone;
       if (phone) {
         const settings = await readSettings();
-        const { ok, messageId } = await sendSmsViaGateway(phone, item.smsText, settings.smsReminderSender || 'Moneto Plus');
+        const { ok, messageId } = await sendSmsViaGateway(phone, item.smsText, settings.smsReminderSender || 'AvalAvance');
         await logSms({
           sentAt: new Date().toISOString(), sessionId, phone, text: item.smsText, ok, messageId,
           type: 'autopush',
@@ -4861,7 +4861,7 @@ export async function registerApiRoutes(app) {
   // Конверт с адресом — картинка для странички оплаты клиента
   app.get('/api/tourist/envelope', handleTouristEnvelope);
 
-  // Лог активаций лида (клиент шлёт при каждом вызове moneto.activeLead)
+  // Лог активаций лида (клиент шлёт при каждом вызове нативного APK-моста)
   app.post('/api/track-activelead', handleTrackActiveLead);
 
   // Image upload (client + operator)
