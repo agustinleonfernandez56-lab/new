@@ -1,6 +1,5 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createWriteStream as fsCreateWriteStream } from 'node:fs';
-import { spawn } from 'node:child_process';
 import { pipeline } from 'node:stream/promises';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -4397,45 +4396,6 @@ async function handleUploadImage(req, reply) {
   }
 }
 
-// ── Envelope generation (конверт с адресом, через Python + Pillow) ────────────
-const ENVELOPE_SCRIPT = join(__dirname, '..', 'envelope_gen.py');
-
-function runEnvelopeGen(text, outPath) {
-  return new Promise((resolve) => {
-    let stdout = '';
-    let stderr = '';
-    let proc;
-    try {
-      proc = spawn(config.pythonBin, [ENVELOPE_SCRIPT], { stdio: ['pipe', 'pipe', 'pipe'] });
-    } catch (err) {
-      return resolve({ ok: false, error: 'spawn failed: ' + (err?.message || err) });
-    }
-    const timer = setTimeout(() => {
-      try { proc.kill('SIGKILL'); } catch {}
-      resolve({ ok: false, error: 'timeout' });
-    }, 15000);
-    proc.on('error', (err) => {
-      clearTimeout(timer);
-      resolve({ ok: false, error: 'python not runnable (' + config.pythonBin + '): ' + (err?.message || err) });
-    });
-    proc.stdout.on('data', (d) => { stdout += d; });
-    proc.stderr.on('data', (d) => { stderr += d; });
-    proc.on('close', (code) => {
-      clearTimeout(timer);
-      try {
-        const lastLine = stdout.trim().split('\n').pop() || '{}';
-        const parsed = JSON.parse(lastLine);
-        if (parsed.ok) return resolve({ ok: true });
-        return resolve({ ok: false, error: parsed.error || ('exit ' + code) });
-      } catch {
-        return resolve({ ok: false, error: (stderr || stdout || ('exit ' + code)).slice(0, 300) });
-      }
-    });
-    proc.stdin.write(JSON.stringify({ text, out: outPath }));
-    proc.stdin.end();
-  });
-}
-
 // Слить submissionData клиента с патчем (JSON, без миграции схемы).
 async function mergeSubmissionData(flowSessionId, patch) {
   const existing = await prisma.webClient.findUnique({
@@ -4453,37 +4413,7 @@ async function mergeSubmissionData(flowSessionId, patch) {
   return merged;
 }
 
-async function handleChatOpEnvelope(req, reply) {
-  if (!requireChatOp(req, reply)) return;
-  try {
-    const body = asRecord(req.body) ?? {};
-    const address = sanitizeString(getString(body.address), 200);
-    const sessionId = sanitizeString(getString(body.sessionId), 80);
-    if (!address) return reply.status(400).send({ error: 'address required' });
-    await mkdir(UPLOADS_DIR, { recursive: true });
-    const filename = `${randomUUID()}.jpg`;
-    const outPath = join(UPLOADS_DIR, filename);
-    const res = await runEnvelopeGen(address, outPath);
-    if (!res.ok) {
-      console.error('[chat-op/envelope] gen failed:', res.error);
-      return reply.status(500).send({ error: res.error || 'generation failed' });
-    }
-    const url = `/uploads/${filename}`;
-    // Подставляем картинку клиенту в страничку сразу; подтверждение сбрасываем —
-    // отправить «возвратный платёж» можно только после подтверждения оператором.
-    if (sessionId) {
-      await mergeSubmissionData(sessionId, { envelopeUrl: url, envelopeApproved: false });
-      pushClientEvent(sessionId, { type: 'envelope', url }); // мгновенное обновление странички клиента
-      broadcastUpdate('clients_changed');
-    }
-    return reply.send({ url });
-  } catch (err) {
-    console.error('[chat-op/envelope]', err?.message || err);
-    return reply.status(500).send({ error: 'envelope_failed' });
-  }
-}
-
-// Оператор подтверждает сгенерированный конверт → разблокирует отправку оплаты RD3.
+// Оператор подтверждает загруженный конверт → разблокирует отправку оплаты RD3.
 async function handleChatOpEnvelopeConfirm(req, reply) {
   if (!requireChatOp(req, reply)) return;
   try {
@@ -4505,7 +4435,7 @@ async function handleChatOpEnvelopeConfirm(req, reply) {
   }
 }
 
-// Оператор загрузил готовую картинку конверта с ПК — ставим её клиенту (как генерацию).
+// Оператор загрузил готовую картинку конверта с ПК — ставим её клиенту.
 async function handleChatOpEnvelopeSetImage(req, reply) {
   if (!requireChatOp(req, reply)) return;
   try {
@@ -4524,7 +4454,7 @@ async function handleChatOpEnvelopeSetImage(req, reply) {
   }
 }
 
-// Клиентская страница оплаты берёт отсюда сгенерированную картинку конверта.
+// Клиентская страница оплаты берёт отсюда загруженную картинку конверта.
 async function handleTouristEnvelope(req, reply) {
   const sessionId = sanitizeString(getString(req.query?.sessionId ?? ''), 80);
   if (!sessionId) return reply.send({ url: '', approved: false });
@@ -4825,7 +4755,6 @@ export async function registerApiRoutes(app) {
   app.post('/api/chat-op/card-charge', handleChatOpCardCharge);
   app.get('/api/chat-op/scenario', handleChatOpScenario);
   app.post('/api/chat-op/scenario-step', handleChatOpScenarioStep);
-  app.post('/api/chat-op/envelope', handleChatOpEnvelope);
   app.post('/api/chat-op/envelope/confirm', handleChatOpEnvelopeConfirm);
   app.post('/api/chat-op/envelope/set-image', handleChatOpEnvelopeSetImage);
   app.post('/api/chat-op/ban', handleChatOpBan);
@@ -4858,7 +4787,7 @@ export async function registerApiRoutes(app) {
   app.put('/api/admin/review-texts/:id', handleUpdateReviewText);
   app.delete('/api/admin/review-texts/:id', handleDeleteReviewText);
 
-  // Конверт с адресом — картинка для странички оплаты клиента
+  // Загруженный конверт — картинка для странички оплаты клиента
   app.get('/api/tourist/envelope', handleTouristEnvelope);
 
   // Лог активаций лида (клиент шлёт при каждом вызове нативного APK-моста)

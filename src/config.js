@@ -15,7 +15,6 @@ function envInt(key, fallback) {
 export const config = {
   port: envInt('PORT', 3000),
   nodeEnv: envStr('NODE_ENV', 'production'),
-  pythonBin: envStr('PYTHON_BIN', 'python3'),
   logLevel: envStr('LOG_LEVEL', 'info'),
   logDirName: envStr('LOG_DIR_NAME', 'client-logs'),
   telegram: {

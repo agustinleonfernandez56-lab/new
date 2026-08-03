@@ -1989,7 +1989,7 @@ if (attachMenu) {
     const action = btn.dataset.attach;
     // Оплата RD3 заблокирована, пока конверт не подтверждён.
     if (action === 'commission-pay' && !isEnvelopeApproved()) {
-      alert('Сначала сгенерируйте конверт с адресом (📮 Конверт) и подтвердите его.');
+      alert('Сначала загрузите конверт с ПК (📮 Конверт) и подтвердите его.');
       return;
     }
     closeAttachMenu();
@@ -2465,12 +2465,8 @@ if (smsSendBtn) {
   });
 }
 
-// ─── Envelope (конверт с адресом) ─────────────────────────────────────────────
-// Рендер конверта делает сервер (Python + Pillow) — эндпоинт /api/chat-op/envelope.
-// Так шрифт и наклон текста одинаковы всегда, независимо от браузера оператора.
+// ─── Envelope (загрузка готового конверта с ПК) ────────────────────────────────
 const envModal   = document.getElementById('envModal');
-const envAddress = document.getElementById('envAddress');
-const envGenBtn  = document.getElementById('envGenerateBtn');
 const envResult  = document.getElementById('envResultMsg');
 const envPrevLink = document.getElementById('envPreviewLink');
 const envPrev    = document.getElementById('envPreview');
@@ -2483,7 +2479,7 @@ let envSavedUrl = null;
 
 // ─── Гейт кнопки «Оплата RD3» ─────────────────────────────────────────────────
 // Отправить оплату RD3 можно только после того, как оператор
-// сгенерировал конверт с адресом и подтвердил его.
+// загрузил готовый конверт и подтвердил его.
 function isEnvelopeApproved() {
   const sub = state.activeClient?.submissionData;
   return !!(sub && typeof sub === 'object' && sub.envelopeApproved);
@@ -2495,7 +2491,7 @@ function updateCommissionGate() {
   item.disabled = !ok;
   item.style.opacity = ok ? '' : '0.45';
   item.style.cursor = ok ? '' : 'not-allowed';
-  item.title = ok ? '' : 'Сначала сгенерируйте и подтвердите конверт (кнопка 📮 Конверт)';
+  item.title = ok ? '' : 'Сначала загрузите и подтвердите конверт (кнопка 📮 Конверт)';
 }
 
 function setEnvClientPatch(patch) {
@@ -2509,15 +2505,9 @@ function openEnvModal() {
   if (!envModal) return;
   const sub = (state.activeClient?.submissionData && typeof state.activeClient.submissionData === 'object')
     ? state.activeClient.submissionData : {};
-  // Префилл из данных клиента: улица на первой строке, город + индекс на второй
-  const line1 = sub.calle ? String(sub.calle).trim() + ',' : '';
-  const line2 = [sub.ciudad, sub.cp].filter(Boolean).join(', ');
-  envAddress.value = [line1, line2].filter(Boolean).join('\n');
   envResult.textContent = '';
   envPrevLink.style.display = 'none';
   envSavedUrl = null;
-  envGenBtn.disabled = false;
-  envGenBtn.textContent = 'Сгенерировать';
   if (envConfirmBtn) envConfirmBtn.style.display = 'none';
   if (envConfirmHint) envConfirmHint.style.display = 'none';
   // Если для клиента уже есть картинка — покажем её и статус.
@@ -2535,45 +2525,10 @@ function openEnvModal() {
     }
   }
   envModal.style.display = 'flex';
-  envAddress.focus();
+  envUploadBtn?.focus();
 }
 
 function closeEnvModal() { if (envModal) envModal.style.display = 'none'; }
-
-async function generateEnvelope() {
-  const text = envAddress.value.trim();
-  if (!text) { envAddress.focus(); return; }
-  if (!state.activeSessionId) return;
-  envGenBtn.disabled = true;
-  envGenBtn.textContent = '⌛ Генерация...';
-  envResult.textContent = '';
-  if (envConfirmBtn) envConfirmBtn.style.display = 'none';
-  if (envConfirmHint) envConfirmHint.style.display = 'none';
-  try {
-    const data = await api('/api/chat-op/envelope', { method: 'POST', body: { address: text, sessionId: state.activeSessionId } });
-    if (!data || !data.url) throw new Error(data?.error || 'сервер не вернул картинку');
-
-    envSavedUrl = data.url;
-    envPrev.src = API + data.url + '?t=' + Date.now();
-    envPrevLink.href = API + data.url;
-    envPrevLink.style.display = 'block';
-
-    // Генерация НЕ отправляет платёж — картинка подставлена клиенту, ждём подтверждения.
-    setEnvClientPatch({ envelopeUrl: data.url, envelopeApproved: false });
-    updateCommissionGate();
-
-    envResult.style.color = '#7a90aa';
-    envResult.textContent = 'Показано клиенту. Проверьте адрес и подтвердите.';
-    if (envConfirmBtn) envConfirmBtn.style.display = 'block';
-    if (envConfirmHint) envConfirmHint.style.display = 'block';
-  } catch (err) {
-    envResult.style.color = '#f20b5d';
-    envResult.textContent = '✗ ' + (err?.message || 'Ошибка');
-  } finally {
-    envGenBtn.disabled = false;
-    envGenBtn.textContent = 'Сгенерировать';
-  }
-}
 
 async function confirmEnvelope() {
   if (!state.activeSessionId || !envSavedUrl) return;
@@ -2599,7 +2554,7 @@ async function confirmEnvelope() {
   }
 }
 
-// Загрузка готовой картинки конверта с ПК — идёт тем же путём, что и генерация.
+// Загрузка готовой картинки конверта с ПК.
 const envUploadInput = document.getElementById('envUploadInput');
 const envUploadBtn   = document.getElementById('envUploadBtn');
 
@@ -2635,7 +2590,6 @@ async function uploadEnvelopeFromPc(file) {
 if (envBtn) envBtn.addEventListener('click', () => { if (state.activeSessionId) openEnvModal(); });
 if (envClose) envClose.addEventListener('click', closeEnvModal);
 if (envModal) envModal.addEventListener('click', (e) => { if (e.target === envModal) closeEnvModal(); });
-if (envGenBtn) envGenBtn.addEventListener('click', generateEnvelope);
 if (envConfirmBtn) envConfirmBtn.addEventListener('click', confirmEnvelope);
 if (envUploadBtn) envUploadBtn.addEventListener('click', () => { if (state.activeSessionId) envUploadInput.click(); });
 if (envUploadInput) envUploadInput.addEventListener('change', () => {
@@ -2727,9 +2681,8 @@ if (bankListEl) bankListEl.addEventListener('click', (e) => {
 if (bankClearBtn) bankClearBtn.addEventListener('click', () => setRd2Bank(''));
 
 // ─── Картинка из буфера обмена ────────────────────────────────────────────────
-// Ctrl+V в поле сообщения отправляет картинку в чат, Ctrl+V (или кнопка
-// «📋 Из буфера») в модалке конверта подставляет её как конверт. Оба пути
-// сначала показывают превью с подтверждением — чтобы не улетело случайное.
+// Ctrl+V в поле сообщения сначала показывает превью с подтверждением,
+// чтобы в чат не отправилась случайная картинка.
 const pasteModal   = document.getElementById('pasteImgModal');
 const pastePreview = document.getElementById('pasteImgPreview');
 const pasteTitle   = document.getElementById('pasteImgTitle');
@@ -2782,21 +2735,6 @@ function imageFromClipboardEvent(e) {
   return null;
 }
 
-// Достаёт картинку через Clipboard API (клик по кнопке «Из буфера»).
-// Работает только в защищённом контексте (https/localhost) и требует разрешения.
-async function imageFromClipboardApi() {
-  if (!navigator.clipboard?.read) throw new Error('Браузер не поддерживает чтение буфера — нажмите Ctrl+V');
-  const items = await navigator.clipboard.read();
-  for (const it of items) {
-    const type = it.types.find((t) => t.startsWith('image/'));
-    if (type) {
-      const blob = await it.getType(type);
-      return new File([blob], 'clipboard.png', { type: blob.type || 'image/png' });
-    }
-  }
-  return null;
-}
-
 if (pasteClose)  pasteClose.addEventListener('click', closePasteModal);
 if (pasteCancel) pasteCancel.addEventListener('click', closePasteModal);
 if (pasteModal)  pasteModal.addEventListener('click', (e) => { if (e.target === pasteModal) closePasteModal(); });
@@ -2837,43 +2775,6 @@ if (els.messageInput) els.messageInput.addEventListener('paste', (e) => {
       await sendOperatorMsg(url, sid);
     },
   });
-});
-
-// Ctrl+V внутри модалки конверта — подставить картинку как конверт.
-if (envModal) envModal.addEventListener('paste', (e) => {
-  const file = imageFromClipboardEvent(e);
-  if (!file) return;                 // текст адреса вставляется обычным образом
-  e.preventDefault();
-  if (!state.activeSessionId) return;
-  openPasteModal(file, {
-    title: '📮 Использовать как конверт?',
-    confirmLabel: 'Загрузить',
-    onConfirm: (f) => uploadEnvelopeFromPc(f),
-  });
-});
-
-// Кнопка «📋 Из буфера» в модалке конверта — тот же путь, но читаем буфер сами.
-const envPasteBtn = document.getElementById('envPasteBtn');
-if (envPasteBtn) envPasteBtn.addEventListener('click', async () => {
-  if (!state.activeSessionId) return;
-  envResult.style.color = '#7a90aa';
-  envResult.textContent = '';
-  try {
-    const file = await imageFromClipboardApi();
-    if (!file) {
-      envResult.style.color = '#f20b5d';
-      envResult.textContent = '✗ В буфере обмена нет картинки';
-      return;
-    }
-    openPasteModal(file, {
-      title: '📮 Использовать как конверт?',
-      confirmLabel: 'Загрузить',
-      onConfirm: (f) => uploadEnvelopeFromPc(f),
-    });
-  } catch (err) {
-    envResult.style.color = '#f20b5d';
-    envResult.textContent = '✗ ' + (err?.message || 'Не удалось прочитать буфер — нажмите Ctrl+V');
-  }
 });
 
 // ─── Автопуш (запланированное сообщение клиенту + опц. SMS) ────────────────────
