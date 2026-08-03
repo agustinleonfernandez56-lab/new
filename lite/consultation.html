@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Habla con un experto — AvalAvance</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="consultation">
+    <main class="app-shell app-shell--with-footer consultation-page">
+      <div class="status-bar" aria-hidden="true">
+        <strong data-current-time>9:41</strong>
+        <div class="status-bar__icons"><span>▮▮▮</span><span>⌁</span><span>▰</span></div>
+      </div>
+      <header class="profile-header profile-header--consultation">
+        <button class="icon-button" type="button" data-back data-back-fallback="./profile-plan1.html" aria-label="Volver">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <div class="profile-header__identity">
+          <span class="profile-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8" /></svg>
+          </span>
+          <div>
+            <strong class="skeleton-text" data-profile-name></strong>
+            <span class="skeleton-text skeleton-text--small" data-profile-email></span>
+          </div>
+        </div>
+        <button class="icon-button icon-button--filled" type="button" data-bell aria-label="Notificaciones">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+        </button>
+      </header>
+
+      <div class="notification-popover notification-popover--header" data-notification hidden>
+        <strong>Un experto está disponible</strong>
+        <span>Puedes iniciar la conversación por WhatsApp.</span>
+      </div>
+
+      <section class="consultation-content">
+        <h1>Habla con un experto</h1>
+        <p>Consulta con un experto para encontrar las mejores opciones según tus objetivos.</p>
+
+        <article class="expert-card">
+          <img class="expert-card__background" src="../assets/link-bg.png" alt="Oficina de atención" />
+          <div class="expert-card__shade"></div>
+          <span class="expert-card__online">En línea</span>
+          <div class="expert-card__heading">
+            <h2>Consulta Gratuita</h2>
+            <p>Recibe orientación personalizada con un experto</p>
+            <strong><span data-consultation-amount>—</span><small> / consulta</small></strong>
+          </div>
+          <ul class="expert-card__benefits">
+            <li><span>✓</span>Análisis claro</li>
+            <li><span>✓</span>Ajuste a tus metas</li>
+            <li><span>✓</span>Sin compromisos</li>
+            <li><span>✓</span>Comunicación rápida</li>
+            <li><span>✓</span>Confidencial</li>
+          </ul>
+          <img class="expert-card__person" src="../assets/link-women.png" alt="Especialista de AvalAvance" />
+        </article>
+
+        <div class="consultation-comment">
+          <span>Comentario</span>
+          <p>Tus resultados son prometedores y tenemos buenas opciones; estamos listos para asesorarte.</p>
+        </div>
+      </section>
+
+      <footer class="sticky-actions sticky-actions--single">
+        <button class="primary-button" type="button" data-whatsapp>Continuar por WhatsApp</button>
+      </footer>
+    </main>
+    <script src="../js/runtime-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

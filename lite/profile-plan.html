@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Solicitud breve — AvalAvance</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-page="form">
+    <main class="app-shell">
+      <header class="lite-header lite-header--compact">
+        <button class="icon-button" type="button" data-back data-back-fallback="./index.html" aria-label="Volver">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <div class="form-progress" aria-label="Progreso"><span data-progress-bar></span></div>
+        <button class="icon-button" type="button" data-bell aria-label="Notificaciones">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+        </button>
+      </header>
+
+      <div class="notification-popover" data-notification hidden>
+        <strong>Sin notificaciones nuevas</strong>
+        <span>Te avisaremos cuando haya una actualización.</span>
+      </div>
+
+      <form class="lite-form" id="liteProfileForm" novalidate>
+        <section class="form-step is-active" data-form-step="0">
+          <span class="step-counter">1 de 3</span>
+          <h1>Cuéntanos sobre ti</h1>
+          <p class="step-description">Usaremos estos datos para preparar tu informe.</p>
+          <label class="field">
+            <span>Nombre completo</span>
+            <input name="name" type="text" autocomplete="name" placeholder="Introduce tu nombre" required />
+          </label>
+          <label class="field">
+            <span>Correo electrónico</span>
+            <input name="email" type="email" autocomplete="email" placeholder="nombre@email.com" required />
+          </label>
+          <label class="field">
+            <span>Teléfono</span>
+            <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+34 600 000 000" required />
+          </label>
+        </section>
+
+        <section class="form-step" data-form-step="1" hidden>
+          <span class="step-counter">2 de 3</span>
+          <h1>Define tu objetivo</h1>
+          <p class="step-description">Selecciona el importe y tus datos de ingresos.</p>
+          <div class="amount-picker">
+            <span>Importe solicitado</span>
+            <div class="amount-picker__controls">
+              <button type="button" data-amount-change="-500" aria-label="Reducir importe">−</button>
+              <strong data-amount-value>5.000 €</strong>
+              <button type="button" data-amount-change="500" aria-label="Aumentar importe">+</button>
+            </div>
+          </div>
+          <fieldset class="choice-fieldset" data-choice-group="incomeSource">
+            <legend>Fuente de ingresos</legend>
+            <div class="choice-grid">
+              <button type="button" data-choice-value="Trabajo fijo">Trabajo fijo</button>
+              <button type="button" data-choice-value="Autónomo">Autónomo</button>
+              <button type="button" data-choice-value="Pensión">Pensión</button>
+              <button type="button" data-choice-value="Otros">Otros</button>
+            </div>
+          </fieldset>
+          <label class="field">
+            <span>Ingresos mensuales</span>
+            <div class="field__money"><span>€</span><input name="monthlyIncome" type="number" inputmode="numeric" min="0" max="100000" placeholder="0" /></div>
+          </label>
+        </section>
+
+        <section class="form-step" data-form-step="2" hidden>
+          <span class="step-counter">3 de 3</span>
+          <h1>Últimos detalles</h1>
+          <p class="step-description">Esto nos ayuda a ordenar las opciones disponibles.</p>
+          <fieldset class="choice-fieldset" data-choice-group="purpose">
+            <legend>¿Para qué necesitas el importe?</legend>
+            <div class="choice-list">
+              <button type="button" data-choice-value="Gastos personales">Gastos personales</button>
+              <button type="button" data-choice-value="Compras importantes">Compras importantes</button>
+              <button type="button" data-choice-value="Reunificar pagos">Reunificar pagos</button>
+              <button type="button" data-choice-value="Otro objetivo">Otro objetivo</button>
+            </div>
+          </fieldset>
+          <fieldset class="choice-fieldset" data-choice-group="urgency">
+            <legend>¿Cuándo lo necesitas?</legend>
+            <div class="choice-grid choice-grid--three">
+              <button type="button" data-choice-value="Hoy">Hoy</button>
+              <button type="button" data-choice-value="1–3 días">1–3 días</button>
+              <button type="button" data-choice-value="Esta semana">Esta semana</button>
+            </div>
+          </fieldset>
+          <div class="amount-picker amount-picker--term">
+            <span>Plazo solicitado</span>
+            <div class="amount-picker__controls">
+              <button type="button" data-term-change="-6" aria-label="Reducir plazo">−</button>
+              <strong><span data-term-value>12</span> meses</strong>
+              <button type="button" data-term-change="6" aria-label="Aumentar plazo">+</button>
+            </div>
+          </div>
+        </section>
+
+        <p class="form-error" data-form-error aria-live="polite"></p>
+        <button class="primary-button form-submit" type="submit" data-form-next>Continuar</button>
+      </form>
+    </main>
+
+    <div class="loading-screen" data-submit-loading hidden>
+      <div class="loading-screen__spinner"></div>
+      <strong>Preparando tu informe</strong>
+      <span>Estamos guardando tus datos de forma segura.</span>
+    </div>
+    <script src="../js/runtime-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

