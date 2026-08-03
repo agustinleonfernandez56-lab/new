@@ -2,76 +2,13 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>Tu informe — AvalAvance</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AvalAvance</title>
+    <script>
+      var params = new URLSearchParams(window.location.search);
+      params.set("lite", "1");
+      location.replace("/profile-plan1.html?" + params.toString());
+    </script>
   </head>
-  <body data-page="profile">
-    <main class="app-shell app-shell--with-footer">
-      <header class="profile-header">
-        <button class="icon-button" type="button" data-back data-back-fallback="./profile-plan.html" aria-label="Volver">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-        </button>
-        <div class="profile-header__identity">
-          <span class="profile-avatar" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8" /></svg>
-          </span>
-          <div>
-            <strong class="skeleton-text" data-profile-name></strong>
-            <span class="skeleton-text skeleton-text--small" data-profile-email></span>
-          </div>
-        </div>
-        <button class="icon-button icon-button--filled" type="button" data-bell aria-label="Notificaciones">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
-        </button>
-      </header>
-
-      <div class="notification-popover notification-popover--header" data-notification hidden>
-        <strong>Tu informe se está actualizando</strong>
-        <span>Los datos se cargan directamente desde el servidor.</span>
-      </div>
-
-      <section class="report-section">
-        <span class="eyebrow">RESUMEN PERSONAL</span>
-        <h1>Tu informe breve</h1>
-        <p>Resumen de los datos recibidos y de tu objetivo seleccionado.</p>
-
-        <div class="server-status" data-server-status>
-          <span class="server-status__dot"></span>
-          <span>Cargando datos del servidor…</span>
-        </div>
-
-        <article class="report-card is-loading" data-report-card>
-          <div class="report-card__hero">
-            <span>Importe seleccionado</span>
-            <strong class="skeleton-text skeleton-text--amount" data-profile-amount></strong>
-          </div>
-          <dl class="report-list">
-            <div><dt>Fuente de ingresos</dt><dd class="skeleton-text" data-profile-income></dd></div>
-            <div><dt>Ingresos mensuales</dt><dd class="skeleton-text" data-profile-monthly-income></dd></div>
-            <div><dt>Objetivo</dt><dd class="skeleton-text" data-profile-purpose></dd></div>
-            <div><dt>Plazo</dt><dd class="skeleton-text" data-profile-term></dd></div>
-          </dl>
-          <div class="report-note">
-            <span>Comentario</span>
-            <p data-profile-comment></p>
-          </div>
-        </article>
-
-        <div class="empty-state" data-profile-empty hidden>
-          <strong>Los datos todavía no están disponibles</strong>
-          <span>Vuelve a la solicitud para completarla o inténtalo de nuevo.</span>
-          <button type="button" class="secondary-button" data-profile-retry>Actualizar</button>
-        </div>
-      </section>
-
-      <footer class="sticky-actions">
-        <button class="secondary-button" type="button" data-open-consultation>Ver consulta con experto</button>
-        <button class="primary-button" type="button" data-whatsapp>Hablar por WhatsApp</button>
-      </footer>
-    </main>
-    <script src="../js/runtime-config.js"></script>
-    <script src="./app.js"></script>
-  </body>
+  <body></body>
 </html>

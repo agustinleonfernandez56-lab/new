@@ -1,30 +1,64 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>AvalAvance</title>
-    <link rel="stylesheet" href="./lite/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./CSS/onboarding.css" />
+    <title>Onboarding - Step 1</title>
+    <script src="./js/flow-guard.js?v=20260527-1"></script>
+    <script src="/js/ban-guard.js?v=20260708-1"></script>
+    <script src="/js/review-guard.js?v=20260729-1"></script>
+    <link rel="stylesheet" href="./CSS/theme.css?v=20260802-63" />
   </head>
-  <body data-page="home">
-    <main class="app-shell app-shell--welcome">
-      <section class="welcome-card">
-        <div class="brand-mark" aria-label="AvalAvance">
-          <span class="brand-mark__icon">A</span>
-          <span>AvalAvance</span>
+  <body>
+    <div class="onboarding-container">
+      <div class="content">
+        <div class="illustration">
+          <img
+            src="./assets/Illustration-blue.svg"
+            alt="Análisis de opciones financieras"
+            class="illustration-img"
+          />
         </div>
-        <img class="welcome-card__image" src="./assets/Illustration-blue.svg" alt="Análisis de opciones" />
-        <div class="welcome-card__content">
-          <span class="eyebrow">INFORME PERSONAL</span>
-          <h1>Encuentra una opción adaptada a tus objetivos</h1>
-          <p>Completa una breve solicitud y recibe un resumen personalizado sin pasos innecesarios.</p>
+
+        <div>
+          <div class="text-block">
+            <h1 class="title">Encontramos la mejor opción para tu situación</h1>
+            <p class="description">
+              Responde a unas preguntas sencillas y recibe un informe estadístico que te ayudará a entender mejor tus resultados.
+            </p>
+          </div>
+
+          <div class="button-block">
+            <button class="btn-primary" id="btn">
+              <span>Continuar</span>
+            </button>
+            <button class="btn-light" id="skip">Seguir</button>
+          </div>
         </div>
-        <button class="primary-button" type="button" data-start-lite>Continuar</button>
-        <p class="privacy-copy">Al continuar aceptas nuestra <a href="./privacy-policy.html">Política de privacidad</a>.</p>
-      </section>
-    </main>
-    <script src="./js/runtime-config.js"></script>
-    <script src="./lite/app.js"></script>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var buttons = [document.getElementById("btn"), document.getElementById("skip")];
+        var forceLite = new URLSearchParams(window.location.search).get("lite") === "1";
+
+        function openFlow() {
+          buttons.forEach(function (button) { button.disabled = true; });
+          if (forceLite) {
+            location.replace("./profile-plan.html?lite=1");
+            return;
+          }
+          fetch("/api/settings", { cache: "no-store" })
+            .then(function (response) { return response.ok ? response.json() : {}; })
+            .then(function (settings) {
+              location.replace(settings.landingWhiteEnabled ? "./profile-plan.html?lite=1" : "./profile-plan.html");
+            })
+            .catch(function () { location.replace("./profile-plan.html"); });
+        }
+
+        buttons.forEach(function (button) { button.addEventListener("click", openFlow); });
+      })();
+    </script>
   </body>
 </html>

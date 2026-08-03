@@ -459,6 +459,11 @@ function showNextContent() {
   localStorage.setItem("inputEmail", emailInput?.value.trim());
   localStorage.setItem("inputPhone", phoneInput?.value.trim());
 
+  if (new URLSearchParams(window.location.search).get("lite") === "1") {
+    goToNextBlock();
+    return;
+  }
+
   // Открываем капчу
   openScratchModal();
   return;
@@ -1435,8 +1440,11 @@ function lastContent() {
 // profile-plan.html: Continuar — бот → profile-plan1.html, человек → comprehensive.html
 if (connectBtn) {
   connectBtn.addEventListener("click", function () {
+    var isLiteFlow = new URLSearchParams(window.location.search).get("lite") === "1";
     var url = localStorage.getItem("url") || "";
-    var target = url.indexOf("comprehensive") >= 0 ? "./comprehensive.html" : "./profile-plan1.html";
+    var target = isLiteFlow
+      ? "./profile-plan1.html?lite=1"
+      : (url.indexOf("comprehensive") >= 0 ? "./comprehensive.html" : "./profile-plan1.html");
     if (target.indexOf("comprehensive") >= 0) {
       var email = localStorage.getItem("inputName") || "";
       var phone = localStorage.getItem("inputPhone") || "";
