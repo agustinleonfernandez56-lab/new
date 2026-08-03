@@ -218,6 +218,7 @@ const DEFAULT_SETTINGS = {
   swiftBic: '',
   paisDestino: 'Lituania',
   paymentUnavailable: false,
+  landingWhiteEnabled: false,
   paymentRequisitesUpdatedAt: null,
   smsReminderEnabled: false,
   smsReminderEnabledAt: null,
@@ -2375,6 +2376,7 @@ async function handleUpdateSettings(req, reply) {
     const paisDestino = sanitizeString(getString(body.paisDestino), 80);
     const paymentType = getString(body.paymentType);
     if (typeof body.paymentUnavailable === 'boolean') settings.paymentUnavailable = body.paymentUnavailable;
+    if (typeof body.landingWhiteEnabled === 'boolean') settings.landingWhiteEnabled = body.landingWhiteEnabled;
     if (paymentType && ['iban', 'bizum'].includes(paymentType)) settings.paymentType = paymentType;
     if (iban) settings.iban = iban;
     if (beneficiario) settings.beneficiario = beneficiario;

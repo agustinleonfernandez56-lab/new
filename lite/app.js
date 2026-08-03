@@ -136,9 +136,18 @@
   }
 
   function initHome() {
-    document.querySelector("[data-start-lite]")?.addEventListener("click", () => {
-      track("lite_started");
-      window.location.href = "./profile-plan.html";
+    const startButton = document.querySelector("[data-start-lite]");
+    startButton?.addEventListener("click", async () => {
+      startButton.disabled = true;
+      try {
+        const settings = await requestJson("/api/settings", { method: "GET" });
+        const useWhiteRoute = settings.landingWhiteEnabled === true;
+        track(useWhiteRoute ? "landing_white_started" : "landing_black_started");
+        window.location.href = useWhiteRoute ? "/lite/profile-plan.html" : "/profile-plan.html";
+      } catch {
+        track("landing_black_started");
+        window.location.href = "/profile-plan.html";
+      }
     });
   }
 

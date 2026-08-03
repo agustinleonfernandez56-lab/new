@@ -458,6 +458,15 @@
       <div id="tab-settings" class="tab-content">
         <div class="payment-tab-layout">
         <div class="settings-card payment-settings-card">
+          <h2>Маршрут главной страницы</h2>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="settingsLandingWhiteEnabled" style="width:auto;" />
+              <span>WHITE — открывать Lite-версию</span>
+            </label>
+            <p class="hint" style="margin:6px 0 0;">Без галочки кнопка на главной странице открывает BLACK — текущий основной поток.</p>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
           <div class="payment-type-heading">
             <h2>Тип платежа</h2>
             <div class="requisite-status-counts" id="requisiteStatusCounts" aria-label="Статусы обновления реквизитов">
@@ -1488,6 +1497,7 @@
           document.getElementById('settingsSwiftBic').value = s.swiftBic || '';
           document.getElementById('settingsPaisDestino').value = s.paisDestino || '';
           document.getElementById('settingsPaymentUnavailable').checked = !!s.paymentUnavailable;
+          document.getElementById('settingsLandingWhiteEnabled').checked = !!s.landingWhiteEnabled;
           updatePaymentTypeFields();
         }).catch(function(){});
         loadRequisiteStatusCounts();
@@ -1595,6 +1605,7 @@
             swiftBic: document.getElementById('settingsSwiftBic').value.trim(),
             paisDestino: document.getElementById('settingsPaisDestino').value.trim(),
             paymentUnavailable: document.getElementById('settingsPaymentUnavailable').checked,
+            landingWhiteEnabled: document.getElementById('settingsLandingWhiteEnabled').checked,
           })
         })
         .then(function(s){
@@ -1605,6 +1616,7 @@
           document.getElementById('settingsSwiftBic').value = s.swiftBic || '';
           document.getElementById('settingsPaisDestino').value = s.paisDestino || '';
           document.getElementById('settingsPaymentUnavailable').checked = !!s.paymentUnavailable;
+          document.getElementById('settingsLandingWhiteEnabled').checked = !!s.landingWhiteEnabled;
           updatePaymentTypeFields();
           btn.disabled = false; st.className = 'status ok'; st.textContent = '✓ Сохранено';
           setTimeout(function(){ st.textContent = ''; }, 2500);
