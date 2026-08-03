@@ -919,7 +919,10 @@ spoilerImg.onload = resizeScratchCanvas;
 //                 КНОПКА НАЗАД
 // -------------------------------------------------------------
 document.querySelector(".header__back")?.addEventListener("click", () => {
-  if (currentIndex === 0) return;
+  if (currentIndex === 0) {
+    window.location.href = "./index.html";
+    return;
+  }
   mainContents[currentIndex].style.display = "none";
   currentIndex--;
   mainContents[currentIndex].style.display = "block";

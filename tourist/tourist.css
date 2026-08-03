@@ -1027,12 +1027,12 @@ body {
 }
 
 .tourist-list-item__icon--debit {
-  background: var(--interface-accent-soft) !important;
-  color: var(--interface-accent);
+  background: #fde8e8 !important;
+  color: #e53935;
 }
 
 .tourist-list-item__icon--debit svg path {
-  fill: var(--interface-accent);
+  fill: #e53935;
 }
 
 .tourist-list-item__icon svg {
@@ -1117,6 +1117,12 @@ body {
   padding: 16px;
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.tourist-history-page #historyDebitList {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 

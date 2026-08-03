@@ -242,6 +242,11 @@
   -webkit-text-fill-color: var(--interface-accent);
 }
 
+.profile-plan-page .modal-overlay .card-title {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
 /* Currency symbols read as part of the amount, not as an interface action. */
 .amount-form__value .amount-form__euro,
 .euro,
@@ -462,7 +467,9 @@ body.tourist-review-page {
   background: var(--ui-surface-soft);
   background-image: none;
   border-color: transparent;
-  box-shadow: inset 3px 0 0 var(--interface-accent);
+  box-shadow:
+    0 0 0 1px rgba(var(--interface-accent-rgb), 0.18),
+    0 3px 10px rgba(var(--interface-accent-rgb), 0.04);
 }
 
 /* Back controls stay light so they do not compete with primary actions. */
