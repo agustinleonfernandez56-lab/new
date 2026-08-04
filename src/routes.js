@@ -20,7 +20,7 @@ import { getBotConfig, updateBotConfig } from './ai/botConfig.js';
 import { aiChat, providerHasKey } from './ai/chat.js';
 import { queueTranslation, isTranslatable, DEFAULT_TRANSLATE_PROMPT } from './ai/translator.js';
 import { buildSystemPrompt } from './ai/promptBuilder.js';
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { sendPush } from './firebase.js';
 
 // ── Captcha-passed sessions (in-memory; reset on restart) ────────────────────
@@ -1204,15 +1204,15 @@ const LITE_REPORT_CONTENT = {
     profileSubtitle: 'Tu informe personal breve',
     optionsLabel: 'Opciones',
     optionStats: [
-      { value: '8', label: 'Bancos' },
-      { value: '51', label: 'Opciones' },
-      { value: '4', label: 'Adecuadas' },
+      { label: 'Bancos' },
+      { label: 'Opciones' },
+      { label: 'Adecuadas' },
     ],
     levelLabel: 'Nivel',
     levelStats: [
       { source: 'amount', label: 'Objetivo' },
       { value: 'Medio', label: 'Ingreso' },
-      { value: '79%', label: 'Confiabilidad' },
+      { source: 'confidence', label: 'Confiabilidad' },
     ],
     commentLabel: 'Comentario',
     comment: 'Si necesitas el informe completo, simplemente escríbenos.',
@@ -1232,6 +1232,20 @@ function formatLiteAmount(value) {
   return `€${String(Math.round(Number(value))).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
 }
 
+function buildLiteReportMetrics(client) {
+  const seed = [client?.flowSessionId, client?.email, client?.nombre]
+    .filter(Boolean)
+    .join('|') || 'avalavance-lite-report';
+  const digest = createHash('sha256').update(seed).digest();
+  const shift = (index) => (digest[index] % 11) - 5;
+  return {
+    banks: 11 + shift(0),
+    options: 48 + shift(1),
+    suitable: 7 + shift(2),
+    confidence: 79 + shift(3),
+  };
+}
+
 function buildLiteReport(client) {
   const submissionData = (client?.submissionData && typeof client.submissionData === 'object')
     ? client.submissionData
@@ -1247,9 +1261,23 @@ function buildLiteReport(client) {
     amount,
     amountLabel: formatLiteAmount(amount),
   };
+  const metrics = buildLiteReportMetrics(client);
+  const optionValues = [metrics.banks, metrics.options, metrics.suitable];
+  const report = {
+    ...LITE_REPORT_CONTENT.report,
+    optionStats: LITE_REPORT_CONTENT.report.optionStats.map((item, index) => ({
+      ...item,
+      value: String(optionValues[index]),
+    })),
+    levelStats: LITE_REPORT_CONTENT.report.levelStats.map((item) => (
+      item.source === 'confidence'
+        ? { ...item, value: `${metrics.confidence}%` }
+        : { ...item }
+    )),
+  };
   return {
     profile,
-    report: LITE_REPORT_CONTENT.report,
+    report,
   };
 }
 
