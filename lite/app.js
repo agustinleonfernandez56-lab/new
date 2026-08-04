@@ -65,19 +65,8 @@
 
   function setupNotifications() {
     const button = document.querySelector("[data-bell]");
-    const popover = document.querySelector("[data-notification]");
-    if (!button || !popover) return;
-    button.setAttribute("aria-expanded", "false");
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      popover.hidden = !popover.hidden;
-      button.setAttribute("aria-expanded", String(!popover.hidden));
-    });
-    popover.addEventListener("click", (event) => event.stopPropagation());
-    document.addEventListener("click", () => {
-      popover.hidden = true;
-      button.setAttribute("aria-expanded", "false");
-    });
+    if (!button) return;
+    button.addEventListener("click", openWhatsApp);
   }
 
   function setupTime() {
@@ -93,12 +82,13 @@
   const profile = getProfile();
   document.querySelector("[data-profile-name]").textContent = profile.name;
   document.querySelector("[data-profile-email]").textContent = profile.email;
-  document.querySelector("[data-consultation-amount]").textContent = formatCurrency(profile.amount);
+  const consultationAmount = document.querySelector("[data-consultation-amount]");
+  if (consultationAmount) consultationAmount.textContent = formatCurrency(profile.amount);
   document.querySelectorAll(".skeleton-text").forEach((element) => {
     element.classList.remove("skeleton-text", "skeleton-text--small");
   });
 
-  document.querySelector("[data-whatsapp]")?.addEventListener("click", () => {
+  function openWhatsApp() {
     const message = [
       "Hola, quiero hablar con un experto de AvalAvance.",
       `Nombre: ${profile.name}`,
@@ -107,7 +97,9 @@
     ].filter(Boolean).join("\n");
     track("lite_consultation_whatsapp", profile);
     window.location.href = `${whatsappBase}${encodeURIComponent(message)}`;
-  });
+  }
+
+  document.querySelector("[data-whatsapp]")?.addEventListener("click", openWhatsApp);
 
   setupBack();
   setupNotifications();

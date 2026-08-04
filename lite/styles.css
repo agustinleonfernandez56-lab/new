@@ -751,138 +751,214 @@ button {
   font-size: 10px;
 }
 
-.profile-header--consultation {
-  padding-top: 12px;
+body[data-page="consultation"] {
+  --accent: var(--primary-button-color, #066ec0);
+  --text: var(--ui-text, #102a43);
+  --muted: var(--ui-text-muted, #6d8293);
+  --line: var(--ui-border, #e0e8ee);
+  min-height: 100%;
+  color: var(--text);
+  background: var(--ui-page, #eff4f8);
+  font-family: "DM Sans", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-page="consultation"] .consultation-page {
+  width: min(100%, 480px);
+  min-height: 100dvh;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  background: var(--ui-canvas, #f8fafc);
+  box-shadow: none;
+}
+
+/* Шапка в точности повторяет профильный header из tourist/index.html. */
+.consultation-header {
+  --tourist-header-control: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+}
+
+.consultation-header .tourist-header__user {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.consultation-header .tourist-header__avatar {
+  width: var(--tourist-header-control);
+  height: var(--tourist-header-control);
+  flex: 0 0 var(--tourist-header-control);
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--interface-icon-background, #f4f8fc);
+}
+
+.consultation-header .tourist-header__text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.consultation-header .tourist-header__title,
+.consultation-header .tourist-header__subtitle {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.consultation-header .tourist-header__title {
+  color: var(--ui-text, #102a43);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.consultation-header .tourist-header__subtitle {
+  color: var(--ui-text-muted, #6d8293);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+}
+
+.consultation-header .tourist-header__notification {
+  position: relative;
+  display: flex;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  background: var(--interface-accent, #066ec0);
+  box-shadow: 0 8px 18px rgba(var(--interface-accent-rgb, 6, 110, 192), 0.18);
+}
+
+.consultation-header .tourist-header__notification img {
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+
+body[data-page="consultation"] .notification-popover--header {
+  top: 72px;
 }
 
 .consultation-content {
-  padding-top: 10px;
-}
-
-.consultation-content > h1 {
-  text-align: center;
-  font-size: 24px;
-}
-
-.consultation-content > p {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.expert-card {
-  position: relative;
-  height: 348px;
-  overflow: hidden;
-  margin-top: 18px;
-  border-radius: 17px;
-  color: #ffffff;
-  background: #1d1b18;
-  box-shadow: 0 18px 34px rgba(22, 26, 29, 0.2);
-}
-
-.expert-card__background,
-.expert-card__shade {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.expert-card__background {
-  object-fit: cover;
-}
-
-.expert-card__shade {
-  background: linear-gradient(180deg, rgba(12, 13, 13, 0.35), rgba(10, 12, 12, 0.74));
-}
-
-.expert-card__online {
-  position: absolute;
-  top: 0;
-  right: 0;
-  border-radius: 0 0 0 12px;
-  padding: 9px 17px;
-  background: #22cc75;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.expert-card__heading {
-  position: relative;
-  z-index: 2;
-  padding: 28px 18px 0;
-  text-align: center;
-}
-
-.expert-card__heading h2 {
-  margin: 0;
-  font-size: 23px;
-  letter-spacing: -0.025em;
-}
-
-.expert-card__heading p {
-  max-width: 250px;
-  margin: 6px auto 8px;
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.expert-card__heading strong {
-  display: block;
-  font-size: 31px;
-  line-height: 1;
-}
-
-.expert-card__heading small {
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.expert-card__benefits {
-  position: absolute;
-  z-index: 3;
-  bottom: 13px;
-  left: 14px;
-  display: grid;
-  gap: 11px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 12px;
-}
-
-.expert-card__benefits li {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px 24px;
 }
 
-.expert-card__benefits span {
-  display: grid;
-  width: 17px;
-  height: 17px;
-  place-items: center;
-  border-radius: 50%;
-  color: #07331d;
-  background: #17c56d;
-  font-size: 11px;
-  font-weight: 900;
+.consultation-intro {
+  margin-top: 12px;
+  text-align: center;
 }
 
-.expert-card__person {
-  position: absolute;
-  z-index: 2;
-  right: -22px;
-  bottom: -4px;
-  width: 52%;
-  max-height: 66%;
-  object-fit: contain;
-  object-position: bottom right;
+.consultation-intro h1 {
+  margin: 0;
+  color: var(--ui-text, #102a43);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 36px;
+}
+
+.consultation-intro p {
+  margin: 12px 0 0;
+  color: var(--ui-text-muted, #6d8293);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+/* Та же карточка 338x401 и та же типографика, что внутри scratch-капчи. */
+.consultation-card {
+  width: min(338px, calc(100% - 24px));
+  aspect-ratio: 338 / 401;
+  margin: 0 auto;
+}
+
+.consultation-card .card-title,
+.consultation-card .card-subtitle {
+  margin: 0;
+}
+
+.consultation-card .card-subtitle {
+  width: 72%;
+  max-width: 240px;
+  margin-inline: auto;
+}
+
+.consultation-card .card-title {
+  color: #ffffff;
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.consultation-card .card-price .currency {
+  color: #ffffff;
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.consultation-card .card-list-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
 }
 
 .consultation-comment {
-  padding: 18px 0 8px;
+  width: min(338px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 0 0 8px;
+}
+
+.consultation-comment span {
+  color: var(--ui-placeholder-text, #9a9a9a);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.consultation-comment p {
+  margin-top: 8px;
+  color: #0f0f0f;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+body[data-page="consultation"] .sticky-actions {
+  position: fixed;
+  right: auto;
+  left: 50%;
+  width: min(100%, 480px);
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 0;
+  background: rgba(248, 250, 252, 0.96);
+  box-shadow: 0 -8px 24px rgba(19, 62, 92, 0.045);
+  transform: translateX(-50%);
+}
+
+body[data-page="consultation"] .sticky-actions .primary-button {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 14px;
+  color: #ffffff;
+  background: var(--primary-button-color, #066ec0);
+  box-shadow: var(--primary-button-shadow, 0 10px 22px rgba(6, 110, 192, 0.22));
+  font-size: 14px;
+  font-weight: 500;
 }
 
 @keyframes spin {

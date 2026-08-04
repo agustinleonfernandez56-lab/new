@@ -69,15 +69,24 @@ function renderLiteReport(payload) {
   if (predictionsTitle) predictionsTitle.textContent = report.predictionsTitle || "";
   document.querySelectorAll(".goal-item").forEach((goal, index) => {
     const prediction = (report.predictions || [])[index] || {};
-    const percent = Number(prediction.percent) || 0;
+    const rawPercent = Number.parseFloat(String(prediction.percent ?? "").replace(",", "."));
+    const percent = Number.isFinite(rawPercent)
+      ? Math.min(100, Math.max(0, rawPercent))
+      : 0;
     const name = goal.querySelector(".goal-name");
     const rating = goal.querySelector(".goal-amount");
     const percentLabel = goal.querySelector(".goal-percent");
     const progress = goal.querySelector(".progress-fill");
     if (name) name.textContent = prediction.name || "";
     if (rating) rating.textContent = prediction.rating || "";
-    if (percentLabel) percentLabel.textContent = percent ? `${percent}%` : "";
-    if (progress) progress.style.width = `${percent}%`;
+    if (percentLabel) percentLabel.textContent = `${percent}%`;
+    if (progress) {
+      progress.style.width = `${percent}%`;
+      progress.setAttribute("role", "progressbar");
+      progress.setAttribute("aria-valuemin", "0");
+      progress.setAttribute("aria-valuemax", "100");
+      progress.setAttribute("aria-valuenow", String(percent));
+    }
   });
   const continueButton = document.getElementById("continueBtn");
   if (continueButton) {
