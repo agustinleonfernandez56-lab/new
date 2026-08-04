@@ -34,6 +34,10 @@ const mainContents = [
 ].filter(Boolean);
 
 const privacyLink = document.querySelector(".privacy-link");
+const privacyPolicyAnchor = privacyLink?.querySelector("a");
+if (privacyPolicyAnchor && new URLSearchParams(window.location.search).get("lite") === "1") {
+  privacyPolicyAnchor.href = "./lite/privacy-policy.html?lite=1";
+}
 
 // стартуем с 1-го экрана (0-й индекс)
 let currentIndex = 0;

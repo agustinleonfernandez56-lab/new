@@ -10,6 +10,8 @@ KEEP_FILES=(
   "./profile-plan.html"
   "./profile-plan1.html"
   "./lite/consultation.html"
+  "./privacy-policy.html"
+  "./lite/privacy-policy.html"
 )
 
 cd "$PROJECT_ROOT"
