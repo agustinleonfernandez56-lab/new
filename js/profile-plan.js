@@ -1,5 +1,5 @@
-// ================= AMOUNT =================
-const isLiteProfilePlan = new URLSearchParams(window.location.search).get("lite") === "1";
+git add js/profile-plan.js # пометить как решённый// ================= AMOUNT ================= const isLiteProfilePlan = new URLSearchParams(window.location.search).get("lite") === "1";
+git rebase --continue
 
 // ================= RANDOM =================
 const random1 = document.getElementById("random1");
