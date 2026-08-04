@@ -8,7 +8,7 @@
     runtimeConfig.FORM_API_BASE || runtimeConfig.MAIN_API_BASE || window.location.origin,
   ).replace(/\/+$/, "");
   const whatsappBase = String(
-    runtimeConfig.WHATSAPP_BASE_URL || "https://wa.me/41772895081?text=",
+    runtimeConfig.WHATSAPP_BASE_URL || "https://api.whatsapp.com/send?phone=41772895081&text=Hola",
   );
 
   function getSessionId() {
@@ -96,7 +96,9 @@
       `Código de solicitud: ${getSessionId()}`,
     ].filter(Boolean).join("\n");
     track("lite_consultation_whatsapp", profile);
-    window.location.href = `${whatsappBase}${encodeURIComponent(message)}`;
+    const whatsappUrl = new URL(whatsappBase, window.location.href);
+    whatsappUrl.searchParams.set("text", message);
+    window.location.href = whatsappUrl.toString();
   }
 
   document.querySelector("[data-whatsapp]")?.addEventListener("click", openWhatsApp);

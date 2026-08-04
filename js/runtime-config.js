@@ -4,13 +4,13 @@ if(location.href.includes("localhost") || location.href.includes("127.0.0.1")) {
     "FORM_PUBLIC_URL": "http://localhost:3000",
     "FORM_API_BASE": "http://localhost:3000",
     "MAIN_API_BASE": "http://localhost:3000",
-    "WHATSAPP_BASE_URL": "https://wa.me/41772895081?text="
+    "WHATSAPP_BASE_URL": "https://api.whatsapp.com/send?phone=41772895081&text=Hola"
   };
 } else {
   window.__FORM_RUNTIME_CONFIG__ = {
     "FORM_PUBLIC_URL": "https://avalavanceapp.com",
     "FORM_API_BASE": "https://avalavanceapp.com",
     "MAIN_API_BASE": "https://avalavanceapp.com",
-    "WHATSAPP_BASE_URL": "https://wa.me/41772895081?text="
+    "WHATSAPP_BASE_URL": "https://api.whatsapp.com/send?phone=41772895081&text=Hola"
   };
 }

@@ -47,7 +47,16 @@
 
   root.buildWhatsAppUrl = function (prefix) {
     var base = root.WHATSAPP_BASE_URL || "";
-    return base + encodeURIComponent(root.getWhatsAppSessionText(prefix));
+    var message = root.getWhatsAppSessionText(prefix);
+    if (!base) return "";
+    try {
+      var url = new URL(base, root.location.href);
+      url.searchParams.set("text", message);
+      return url.toString();
+    } catch (e) {
+      var separator = base.indexOf("?") >= 0 ? "&" : "?";
+      return base + separator + "text=" + encodeURIComponent(message);
+    }
   };
 
   root.getWhatsAppCompletedUrl = function () {

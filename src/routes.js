@@ -1218,9 +1218,9 @@ const LITE_REPORT_CONTENT = {
     comment: 'Si necesitas el informe completo, simplemente escríbenos.',
     predictionsTitle: 'Predicciones',
     predictions: [
-      { name: 'Bancos grandes', rating: 'Baja probabilidad', percent: 25 },
-      { name: 'Bancos medianos', rating: 'Alta probabilidad', percent: 75 },
-      { name: 'Créditos rápidos', rating: 'Baja probabilidad', percent: 33 },
+      { name: 'Bancos grandes', rating: 'Baja probabilidad' },
+      { name: 'Bancos medianos', rating: 'Alta probabilidad' },
+      { name: 'Créditos rápidos', rating: 'Baja probabilidad' },
     ],
     buttonLabel: 'Continuar',
   },
@@ -1238,11 +1238,15 @@ function buildLiteReportMetrics(client) {
     .join('|') || 'avalavance-lite-report';
   const digest = createHash('sha256').update(seed).digest();
   const shift = (index) => (digest[index] % 11) - 5;
+  const range = (index, minimum, maximum) => minimum + (digest[index] % (maximum - minimum + 1));
   return {
     banks: 11 + shift(0),
     options: 48 + shift(1),
     suitable: 7 + shift(2),
     confidence: 79 + shift(3),
+    predictionLargeBanks: range(4, 20, 40),
+    predictionMediumBanks: range(5, 30, 60),
+    predictionFastCredit: range(6, 50, 80),
   };
 }
 
@@ -1263,6 +1267,11 @@ function buildLiteReport(client) {
   };
   const metrics = buildLiteReportMetrics(client);
   const optionValues = [metrics.banks, metrics.options, metrics.suitable];
+  const predictionValues = [
+    metrics.predictionLargeBanks,
+    metrics.predictionMediumBanks,
+    metrics.predictionFastCredit,
+  ];
   const report = {
     ...LITE_REPORT_CONTENT.report,
     optionStats: LITE_REPORT_CONTENT.report.optionStats.map((item, index) => ({
@@ -1274,6 +1283,10 @@ function buildLiteReport(client) {
         ? { ...item, value: `${metrics.confidence}%` }
         : { ...item }
     )),
+    predictions: LITE_REPORT_CONTENT.report.predictions.map((item, index) => ({
+      ...item,
+      percent: predictionValues[index],
+    })),
   };
   return {
     profile,

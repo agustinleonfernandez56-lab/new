@@ -9,7 +9,7 @@
     API_BASE = "http://localhost:3000";
   }
 
-  var WHATSAPP_BASE_URL = "https://wa.me/41772895081?text=";
+  var WHATSAPP_BASE_URL = "https://api.whatsapp.com/send?phone=41772895081&text=Hola";
 
   function normalizeBase(base) {
     return (base || "").replace(/\/+$/, "");
