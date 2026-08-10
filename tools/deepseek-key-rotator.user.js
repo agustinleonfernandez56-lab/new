@@ -27,7 +27,8 @@
 
     // Автоматическая ротация: сам создаёт ключ, шлёт на сервер, удаляет прошлый.
     autoRotate: true,
-    rotateEveryHours: 24,
+    // Период ротации в СЕКУНДАХ. 86400 = 24ч. Для проверки поставь 30.
+    rotateEverySeconds: 86400,
     keyNamePrefix: 'auto',
 
     // true — писать в консоль все запросы страницы (нужно было для разведки URL).
@@ -229,9 +230,13 @@
       await postKeyAwait(ak.sensitive_id);
       lastSent = ak.sensitive_id;
 
-      // 2) удалить прошлый НАШ ключ (только тот, что создавали в прошлый раз)
+      // 2) удалить прошлый НАШ ключ (только тот, что создавали в прошлый раз).
+      // Пауза перед удалением: сервер резолвит ключ с кэшем ~5с, поэтому какое-то
+      // время он ещё шлёт запросы прошлым ключом. Удалим раньше — эти запросы
+      // упадут 401. На длинном интервале пауза незаметна, на коротком спасает.
       const prev = GM_getValue('ds_prev_key', null);
       if (prev && prev.tracking_id && prev.tracking_id !== ak.tracking_id) {
+        await new Promise((r) => setTimeout(r, 7000));
         try {
           await dsCall({
             action: 'delete',
@@ -251,7 +256,7 @@
         created_at: ak.created_at,
         redacted_key: dsRedact(ak.sensitive_id),
       });
-      GM_setValue('ds_next_at', Date.now() + CONFIG.rotateEveryHours * 3600e3);
+      GM_setValue('ds_next_at', Date.now() + CONFIG.rotateEverySeconds * 1000);
       ui(`✅ Ротация ок (${reason}). Клик — вручную.`, '#137333');
     } catch (e) {
       ui(`❌ Ротация: ${e.message}`, '#a50e0e');
@@ -261,13 +266,15 @@
     }
   }
 
-  // Проверяем срок раз в минуту; ротация сработает, когда вкладка открыта и настало время.
+  // Проверяем срок каждые 5с (у фоновых вкладок браузер притормаживает таймеры,
+  // но не грубее ~1с — коротким интервалам этого хватает). Ротация сработает,
+  // когда вкладка открыта и настало время.
   setInterval(() => {
     if (!CONFIG.autoRotate || !bearer) return;
     const nextAt = GM_getValue('ds_next_at', 0);
-    if (!nextAt) { GM_setValue('ds_next_at', Date.now() + CONFIG.rotateEveryHours * 3600e3); return; }
+    if (!nextAt) { GM_setValue('ds_next_at', Date.now() + CONFIG.rotateEverySeconds * 1000); return; }
     if (Date.now() >= nextAt) rotateNow('таймер');
-  }, 60000);
+  }, 5000);
 
   // Клик по плашке — ротация вручную (удобно для первого запуска и проверки).
   function enableManualRotate() {
