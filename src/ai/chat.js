@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import { getBotConfig } from './botConfig.js';
+import { resolveApiKey } from './credentials.js';
 import { sendPlainToTelegram } from '../telegram.js';
 
 const REQUEST_TIMEOUT_MS = 60000;
@@ -33,10 +34,11 @@ export function normalizeProvider(p) {
   return PROVIDERS[p] ? p : (PROVIDERS[config.aiProvider] ? config.aiProvider : 'deepseek');
 }
 
-// Есть ли ключ у провайдера (для индикации в админке).
-export function providerHasKey(p) {
-  const meta = PROVIDERS[normalizeProvider(p)]();
-  return !!meta.apiKey;
+// Есть ли ключ у провайдера (для индикации в админке). Учитывает оба источника:
+// запись в БД (админка/userscript) и .env.
+export async function providerHasKey(p) {
+  const id = normalizeProvider(p);
+  return !!(await resolveApiKey(id));
 }
 
 // Модель для провайдера: берём запрошенную только если она подходит провайдеру,
@@ -109,8 +111,11 @@ function sendAiRequestLog({ enabled, provider, model, messages, trace, durationM
 export async function aiChat(messages, opts = {}) {
   const providerId = await resolveProvider(opts.provider);
   const p = PROVIDERS[providerId]();
-  if (!p.apiKey) {
-    throw new Error(`${p.envHint} не задан в .env (провайдер ${p.label})`);
+  // Ключ берём на каждый вызов: сначала БД (админка/userscript), затем .env.
+  // Поэтому подменённый ключ подхватывается без перезапуска процесса.
+  const apiKey = await resolveApiKey(providerId);
+  if (!apiKey) {
+    throw new Error(`ключ ${p.label} не задан — ни в базе, ни в ${p.envHint}`);
   }
 
   const model = modelFor(providerId, opts.model);
@@ -151,7 +156,7 @@ export async function aiChat(messages, opts = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${p.apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
       signal: controller.signal,

@@ -18,6 +18,8 @@ import { lookupGeoByIp } from './geoLookup.js';
 import { prisma } from './db.js';
 import { getBotConfig, updateBotConfig } from './ai/botConfig.js';
 import { aiChat, providerHasKey } from './ai/chat.js';
+import { setApiKey, clearApiKey, listCredentials, maskKey, CREDENTIAL_PROVIDERS } from './ai/credentials.js';
+import { sendPlainToTelegram } from './telegram.js';
 import { queueTranslation, isTranslatable, DEFAULT_TRANSLATE_PROMPT } from './ai/translator.js';
 import { buildSystemPrompt } from './ai/promptBuilder.js';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
@@ -2535,7 +2537,12 @@ async function handleAdminLogout(req, reply) {
   return reply.send({ ok: true });
 }
 
-function serializeBotConfig(cfg) {
+async function serializeBotConfig(cfg) {
+  // providerHasKey ходит в БД за ключом (он может быть задан из админки), поэтому async.
+  const [deepseekKey, openaiKey] = await Promise.all([
+    providerHasKey('deepseek'),
+    providerHasKey('openai'),
+  ]);
   return {
     systemPrompt: cfg.systemPrompt,
     provider: cfg.provider || 'deepseek',
@@ -2546,14 +2553,14 @@ function serializeBotConfig(cfg) {
     tgRequestLogging: cfg.tgRequestLogging === true,
     aiEnabled: cfg.aiEnabled,
     // Есть ли ключ у каждого провайдера — чтобы админка предупредила, если не задан.
-    providerKeys: { deepseek: providerHasKey('deepseek'), openai: providerHasKey('openai') },
+    providerKeys: { deepseek: deepseekKey, openai: openaiKey },
   };
 }
 
 async function handleGetBotConfig(req, reply) {
   if (!requireAdmin(req, reply)) return;
   const cfg = await getBotConfig();
-  return reply.send(serializeBotConfig(cfg));
+  return reply.send(await serializeBotConfig(cfg));
 }
 
 async function handleUpdateBotConfig(req, reply) {
@@ -2572,10 +2579,101 @@ async function handleUpdateBotConfig(req, reply) {
     if (typeof body.aiEnabled === 'boolean') patch.aiEnabled = body.aiEnabled;
 
     const updated = await updateBotConfig(patch);
-    return reply.send(serializeBotConfig(updated));
+    return reply.send(await serializeBotConfig(updated));
   } catch (err) {
     console.error('[admin] update bot-config error:', err?.message || err);
     return reply.status(500).send({ error: 'update_failed' });
+  }
+}
+
+// ── Ключи провайдеров ИИ ──────────────────────────────────────────────────────
+// Ключ из БД перебивает .env (см. src/ai/credentials.js), поэтому ротация
+// делается без ssh и без перезапуска. Наружу ключ никогда не отдаём — только хвост.
+
+// Сравнение секретов постоянным временем; хэш уравнивает длину строк.
+function secretEquals(a, b) {
+  const ha = createHash('sha256').update(String(a || '')).digest();
+  const hb = createHash('sha256').update(String(b || '')).digest();
+  return timingSafeEqual(ha, hb);
+}
+
+// Приём нового ключа от userscript'а в браузере (Tampermonkey на консоли провайдера).
+// Админ-сессии у него нет, поэтому авторизация — отдельный секрет AI_KEY_INGEST_SECRET.
+async function handleIngestAiKey(req, reply) {
+  if (!config.keyIngestSecret) return reply.status(503).send({ error: 'ingest_disabled' });
+  if (!secretEquals(req.headers['x-ingest-secret'], config.keyIngestSecret)) {
+    console.warn('[ai-key] отклонён приём: неверный секрет, ip=', getClientIp(req));
+    return reply.status(401).send({ error: 'unauthorized' });
+  }
+  try {
+    const body = asRecord(req.body) ?? {};
+    const provider = String(getString(body.provider) || 'deepseek').trim().toLowerCase();
+    const apiKey = String(getString(body.apiKey) || '').trim();
+    if (!CREDENTIAL_PROVIDERS.includes(provider)) {
+      return reply.status(400).send({ error: 'unknown_provider' });
+    }
+    // Формат ключа обоих провайдеров: sk-… Отсекаем мусор и обрезанные значения.
+    if (!/^sk-[A-Za-z0-9_-]{16,}$/.test(apiKey)) {
+      return reply.status(400).send({ error: 'bad_key_format' });
+    }
+    await setApiKey(provider, apiKey, 'userscript');
+    console.log(`[ai-key] принят ключ ${provider} ${maskKey(apiKey)} от userscript`);
+    sendPlainToTelegram(`🔑 Ключ ${provider} обновлён из userscript: ${maskKey(apiKey)}`);
+    return reply.send({ ok: true, provider, masked: maskKey(apiKey) });
+  } catch (err) {
+    console.error('[ai-key] ingest error:', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
+  }
+}
+
+async function handleGetAiKeys(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  try {
+    return reply.send({
+      items: await listCredentials(),
+      ingestEnabled: !!config.keyIngestSecret,
+    });
+  } catch (err) {
+    console.error('[ai-key] list error:', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
+  }
+}
+
+async function handleSetAiKey(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  try {
+    const provider = String(req.params.provider || '').trim().toLowerCase();
+    if (!CREDENTIAL_PROVIDERS.includes(provider)) {
+      return reply.status(400).send({ error: 'unknown_provider' });
+    }
+    const body = asRecord(req.body) ?? {};
+    const apiKey = String(getString(body.apiKey) || '').trim();
+    if (!/^sk-[A-Za-z0-9_-]{16,}$/.test(apiKey)) {
+      return reply.status(400).send({ error: 'bad_key_format' });
+    }
+    await setApiKey(provider, apiKey, 'admin');
+    console.log(`[ai-key] ключ ${provider} задан из админки: ${maskKey(apiKey)}`);
+    return reply.send({ ok: true, items: await listCredentials() });
+  } catch (err) {
+    console.error('[ai-key] set error:', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
+  }
+}
+
+// Удаляет запись из БД — провайдер возвращается на ключ из .env.
+async function handleDeleteAiKey(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  try {
+    const provider = String(req.params.provider || '').trim().toLowerCase();
+    if (!CREDENTIAL_PROVIDERS.includes(provider)) {
+      return reply.status(400).send({ error: 'unknown_provider' });
+    }
+    await clearApiKey(provider);
+    console.log(`[ai-key] ключ ${provider} сброшен на .env`);
+    return reply.send({ ok: true, items: await listCredentials() });
+  } catch (err) {
+    console.error('[ai-key] delete error:', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
   }
 }
 
@@ -5107,6 +5205,12 @@ export async function registerApiRoutes(app) {
   app.post('/api/admin/logout', handleAdminLogout);
   app.get('/api/admin/bot-config', handleGetBotConfig);
   app.put('/api/admin/bot-config', handleUpdateBotConfig);
+
+  // Ключи провайдеров ИИ. Приём от userscript — вне админ-сессии, по своему секрету.
+  app.post('/api/ai-key/ingest', handleIngestAiKey);
+  app.get('/api/admin/ai-keys', handleGetAiKeys);
+  app.put('/api/admin/ai-keys/:provider', handleSetAiKey);
+  app.delete('/api/admin/ai-keys/:provider', handleDeleteAiKey);
   app.get('/api/admin/chat-prompt', handleGetChatPrompt);
   app.put('/api/admin/chat-prompt', handleUpdateChatPrompt);
   app.get('/api/admin/translate-prompt', handleGetTranslatePrompt);

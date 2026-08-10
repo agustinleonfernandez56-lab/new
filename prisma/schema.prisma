@@ -169,6 +169,18 @@ model WebEvent {
   @@index([createdAt])
 }
 
+// API-ключ провайдера ИИ, заданный из админки или присланный userscript'ом.
+// Приоритет: запись здесь перебивает значение из .env. Нет записи — работает .env.
+// Это даёт менять ключ без доступа к серверу и без перезапуска процесса.
+model ApiCredential {
+  id        String   @id @default(cuid())
+  provider  String   @unique // deepseek | openai
+  apiKey    String
+  note      String? // откуда приехал ключ: 'userscript' | 'admin'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Singleton row (id = 1) holding the bot's brain settings.
 model BotConfig {
   id               Int      @id @default(1)

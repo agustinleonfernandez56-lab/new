@@ -40,6 +40,9 @@ export const config = {
   },
   // Провайдер ИИ по умолчанию, если не задан в настройках бота (админка).
   aiProvider: envStr('AI_PROVIDER', 'deepseek'),
+  // Секрет для приёма ключей ИИ от userscript'а (Tampermonkey) на /api/ai-key/ingest.
+  // Пусто = приём выключен, эндпоинт отвечает 503. Задавать длинной случайной строкой.
+  keyIngestSecret: envStr('AI_KEY_INGEST_SECRET'),
   // DeepL — перевод входящих сообщений в панели чат-оператора (отдельно от ИИ-ботов).
   deepl: {
     apiKey: envStr('DEEPL_API_KEY'),
