@@ -62,28 +62,48 @@ model WebClient {
   callRequested  Boolean   @default(false)
   operatorCalled Boolean   @default(false)
   calledAt       DateTime?
-  callerNote     String?   // note left by caller, visible in admin
+  callerNote     String? // note left by caller, visible in admin
   operatorStatus String    @default("pending") // pending | called | payment
   clientType     String    @default("newuser") // newuser | olduser
   captchaPassed  Boolean   @default(false) // клиент стёр капчу (human) или получил grant — переживает рестарт сервера
   banned         Boolean   @default(false) // «ожидание»: данные сохранены, но все страницы редиректят на ban.html
-  submissionData Json?     // form answers from detail-transaction.html
+  submissionData Json? // form answers from detail-transaction.html
   balance        Float     @default(5000)
-  transactions   Json?     // [{id,type,amount,description,date}]
-  handlerId      String?   // обработчик (менеджер), которому назначен лид
+  transactions   Json? // [{id,type,amount,description,date}]
+  handlerId      String? // обработчик (менеджер), которому назначен лид
   assignedAt     DateTime? // момент нажатия Start чат-оператором — основа когорты
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  handler  Handler?   @relation(fields: [handlerId], references: [id])
-  events   WebEvent[]
-  callLogs CallLog[]
-  deposits Deposit[]
+  handler     Handler?           @relation(fields: [handlerId], references: [id])
+  events      WebEvent[]
+  callLogs    CallLog[]
+  deposits    Deposit[]
+  assignments ClientAssignment[]
 
   @@index([callRequested])
   @@index([operatorCalled])
   @@index([createdAt])
   @@index([handlerId, assignedAt])
+}
+
+// История привязок лида к обработчикам. handlerId на WebClient — это «кто ведёт
+// сейчас»; здесь лежат интервалы «кто вёл и когда». Нужна, чтобы депозит
+// засчитывался тому обработчику, который вёл клиента в момент confirmedAt:
+// после передачи лида прошлые платежи остаются у прежнего обработчика.
+model ClientAssignment {
+  id        String    @id @default(cuid())
+  clientId  String
+  handlerId String
+  startedAt DateTime // с какого момента обработчик ведёт клиента
+  endedAt   DateTime? // null = ведёт прямо сейчас (открытый интервал)
+  createdAt DateTime  @default(now())
+
+  client  WebClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  handler Handler   @relation(fields: [handlerId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, startedAt])
+  @@index([handlerId, startedAt])
 }
 
 // Обработчик (менеджер), обрабатывающий лиды в чат-панели. Управляется из админки.
@@ -96,7 +116,8 @@ model Handler {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  clients WebClient[]
+  clients     WebClient[]
+  assignments ClientAssignment[]
 }
 
 // Депозит = подтверждённый чат-оператором скриншот оплаты: FD / RD / RD2 / RD3.
@@ -150,14 +171,14 @@ model WebEvent {
 
 // Singleton row (id = 1) holding the bot's brain settings.
 model BotConfig {
-  id           Int      @id @default(1)
-  systemPrompt String   @default("")
-  provider     String   @default("deepseek") // deepseek | openai — выбор ИИ в админке
-  model        String   @default("deepseek-chat")
-  temperature  Float    @default(0.7)
-  maxTokens    Int      @default(1024)
-  historyLimit Int      @default(20)
-  tgRequestLogging Boolean @default(false)
-  aiEnabled    Boolean  @default(true)
-  updatedAt    DateTime @updatedAt
+  id               Int      @id @default(1)
+  systemPrompt     String   @default("")
+  provider         String   @default("deepseek") // deepseek | openai — выбор ИИ в админке
+  model            String   @default("deepseek-chat")
+  temperature      Float    @default(0.7)
+  maxTokens        Int      @default(1024)
+  historyLimit     Int      @default(20)
+  tgRequestLogging Boolean  @default(false)
+  aiEnabled        Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
 }

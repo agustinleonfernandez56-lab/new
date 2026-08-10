@@ -1984,6 +1984,36 @@ async function handleUpdateRoutingHandler(req, reply) {
   }
 }
 
+// ── История привязок лида к обработчикам ──────────────────────────────────────
+// WebClient.handlerId — «кто ведёт сейчас». ClientAssignment — интервалы «кто вёл
+// и когда»: открытый интервал (endedAt = null) принадлежит текущему обработчику.
+// Депозит засчитывается тому, в чей интервал попал его confirmedAt, поэтому после
+// передачи лида прошлые платежи остаются у прежнего обработчика.
+async function openAssignmentInterval(clientId, handlerId, startedAt) {
+  if (!clientId || !handlerId) return;
+  try {
+    await prisma.clientAssignment.create({
+      data: { clientId, handlerId, startedAt: startedAt || new Date() },
+    });
+  } catch (e) {
+    console.error('[assignment/open]', e?.message || e);
+  }
+}
+
+// Закрывает открытые интервалы клиента и открывает новый под нового обработчика.
+// Вызывать только когда handlerId реально изменился.
+async function switchAssignment(clientId, nextHandlerId, at = new Date()) {
+  try {
+    await prisma.clientAssignment.updateMany({
+      where: { clientId, endedAt: null },
+      data: { endedAt: at },
+    });
+  } catch (e) {
+    console.error('[assignment/close]', e?.message || e);
+  }
+  if (nextHandlerId) await openAssignmentInterval(clientId, nextHandlerId, at);
+}
+
 // ── Ручное (пере)назначение конкретного лида обработчику ───────────────────────
 async function handleAssignClientHandler(req, reply) {
   if (!requireAdmin(req, reply)) return;
@@ -1991,7 +2021,18 @@ async function handleAssignClientHandler(req, reply) {
     const id = sanitizeString(req.params.id || '', 40);
     const body = asRecord(req.body) ?? {};
     const handlerId = body.handlerId ? sanitizeString(getString(body.handlerId), 40) : null;
+    const before = await prisma.webClient.findUnique({
+      where: { id },
+      select: { handlerId: true, assignedAt: true },
+    });
     await prisma.webClient.update({ where: { id }, data: { handlerId } });
+    // Когорта стартует на Start (assignedAt). Пока его нет — интервал не открываем,
+    // он появится вместе с assignedAt. Если когорта уже идёт и обработчик сменился —
+    // закрываем прошлый интервал и открываем новый с текущего момента: депозиты до
+    // переключения остаются у прежнего обработчика, после — у нового.
+    if (before?.assignedAt && before.handlerId !== handlerId) {
+      await switchAssignment(id, handlerId);
+    }
     broadcastUpdate('clients_changed');
     return reply.send({ ok: true, handlerId });
   } catch (err) {
@@ -2096,17 +2137,21 @@ async function handleHandlerPerformance(req, reply) {
     const toDate = q.to ? new Date(`${String(q.to)}T23:59:59.999`) : null;
     const handlerFilter = q.handlerId ? sanitizeString(String(q.handlerId), 40) : null;
 
-    const assignedWhere = { not: null };
-    if (fromDate && !isNaN(fromDate.getTime())) assignedWhere.gte = fromDate;
-    if (toDate && !isNaN(toDate.getTime())) assignedWhere.lte = toDate;
+    // Запрос 1 — интервалы владения лидами, а НЕ текущий handlerId клиента.
+    // Иначе переназначение задним числом утаскивало бы всю историю депозитов в
+    // когорту нового обработчика, а прежний терял бы свои цифры за прошлые дни.
+    // Дата когорты = startedAt интервала: забрал лид 8-го — попал в когорту 8-го.
+    const startedWhere = {};
+    if (fromDate && !isNaN(fromDate.getTime())) startedWhere.gte = fromDate;
+    if (toDate && !isNaN(toDate.getTime())) startedWhere.lte = toDate;
 
-    const where = { assignedAt: assignedWhere, handlerId: { not: null } };
+    const where = {};
+    if (Object.keys(startedWhere).length) where.startedAt = startedWhere;
     if (handlerFilter) where.handlerId = handlerFilter;
 
-    // Запрос 1 — лиды когорт.
-    const leads = await prisma.webClient.findMany({
+    const assignments = await prisma.clientAssignment.findMany({
       where,
-      select: { id: true, handlerId: true, assignedAt: true },
+      select: { clientId: true, handlerId: true, startedAt: true, endedAt: true },
     });
 
     // Список обработчиков (для имён и селектора).
@@ -2114,7 +2159,22 @@ async function handleHandlerPerformance(req, reply) {
     const handlerName = new Map(handlers.map((h) => [h.id, h.name]));
 
     // Запрос 2 — все депозиты этих клиентов (bulk, без per-row).
-    const clientIds = leads.map((l) => l.id);
+    const clientIds = [...new Set(assignments.map((a) => a.clientId))];
+
+    // Самый ранний интервал каждого клиента считаем открытым влево: депозит,
+    // подтверждённый до нажатия Start, раньше попадал в когорту, и он должен
+    // остаться у первого обработчика, а не пропасть. Границу берём из БД, а не
+    // из выборки выше — она урезана фильтрами по дате и обработчику.
+    const firstSpans = clientIds.length
+      ? await prisma.clientAssignment.groupBy({
+          by: ['clientId'],
+          where: { clientId: { in: clientIds } },
+          _min: { startedAt: true },
+        })
+      : [];
+    const firstStartMs = new Map(
+      firstSpans.map((g) => [g.clientId, new Date(g._min.startedAt).getTime()]),
+    );
     const deposits = clientIds.length
       ? await prisma.deposit.findMany({
           where: { clientId: { in: clientIds } },
@@ -2172,28 +2232,43 @@ async function handleHandlerPerformance(req, reply) {
     }
     let notesDirty = false;
 
-    // Группируем лиды по (handlerId, календарная дата assignedAt).
-    const cohorts = new Map(); // key -> { handlerId, dateKey, cohortStart, leadIds:[] }
-    for (const l of leads) {
-      const cohortStart = startOfLocalDay(new Date(l.assignedAt));
+    // Группируем интервалы по (handlerId, календарная дата startedAt).
+    // Каждый интервал несёт своё окно владения — по нему отсекаются депозиты.
+    const cohorts = new Map(); // key -> { handlerId, dateKey, cohortStart, spans:[{clientId,fromMs,toMs}] }
+    for (const a of assignments) {
+      const cohortStart = startOfLocalDay(new Date(a.startedAt));
       const dateKey = localDateKey(cohortStart);
-      const key = `${l.handlerId}|${dateKey}`;
+      const key = `${a.handlerId}|${dateKey}`;
       let c = cohorts.get(key);
-      if (!c) { c = { handlerId: l.handlerId, dateKey, cohortStart, leadIds: [] }; cohorts.set(key, c); }
-      c.leadIds.push(l.id);
+      if (!c) { c = { handlerId: a.handlerId, dateKey, cohortStart, spans: [] }; cohorts.set(key, c); }
+      const startMs = new Date(a.startedAt).getTime();
+      c.spans.push({
+        clientId: a.clientId,
+        // Первый интервал клиента открыт влево — см. firstStartMs выше.
+        fromMs: firstStartMs.get(a.clientId) === startMs ? -Infinity : startMs,
+        toMs: a.endedAt ? new Date(a.endedAt).getTime() : Infinity, // открытый интервал
+      });
     }
+
+    // Депозит принадлежит интервалу, если confirmedAt попал в [fromMs, toMs).
+    const inSpan = (span, d) => {
+      const t = new Date(d.confirmedAt).getTime();
+      return t >= span.fromMs && t < span.toMs;
+    };
 
     const now = Date.now();
     const rows = [];
     for (const c of cohorts.values()) {
-      const leadCount = c.leadIds.length;
+      // Лид считается один раз, даже если за день его забирали и возвращали.
+      const leadCount = new Set(c.spans.map((s) => s.clientId)).size;
       // ФД/РД/РД2/РД3 по когорте: подтверждённые депозиты клиентов.
       // Суммируем все подтверждённые (не по D-окнам) — это фактический сбор когорты.
       let fdC = 0, fdA = 0, rdC = 0, rdA = 0, rd2C = 0, rd2A = 0, rd3C = 0, rd3A = 0;
-      for (const cid of c.leadIds) {
-        const ds = depositsByClient.get(cid);
+      for (const span of c.spans) {
+        const ds = depositsByClient.get(span.clientId);
         if (!ds) continue;
         for (const d of ds) {
+          if (!inSpan(span, d)) continue;
           if (d.type === 'RD3') { rd3C += 1; rd3A += d.amount; }
           else if (d.type === 'RD2') { rd2C += 1; rd2A += d.amount; }
           else if (d.type === 'RD') { rdC += 1; rdA += d.amount; }
@@ -2226,15 +2301,16 @@ async function handleHandlerPerformance(req, reply) {
         let sumAmount = 0;
         let depositCount = 0;
         const payers = new Set();
-        for (const cid of c.leadIds) {
-          const ds = depositsByClient.get(cid);
+        for (const span of c.spans) {
+          const ds = depositsByClient.get(span.clientId);
           if (!ds) continue;
           for (const d of ds) {
+            if (!inSpan(span, d)) continue; // чужой период владения лидом
             const t = new Date(d.confirmedAt).getTime();
             if (t >= startMs && t < endMs) {
               sumAmount += d.amount;
               depositCount += 1;
-              payers.add(cid);
+              payers.add(span.clientId);
             }
           }
         }
@@ -2665,11 +2741,45 @@ async function handleAdminPayments(req, reply) {
     });
     const handlers = await prisma.handler.findMany({ select: { id: true, name: true } });
     const handlerName = new Map(handlers.map((h) => [h.id, h.name]));
+    // Обработчик на момент платежа: интервал владения, в который попал confirmedAt.
+    // Текущий handlerId клиента тут не годится — после передачи лида он задним
+    // числом переписал бы автора всех прошлых платежей на нового обработчика.
+    const depClientIds = [...new Set(deposits.map((d) => d.clientId))];
+    const spans = depClientIds.length
+      ? await prisma.clientAssignment.findMany({
+          where: { clientId: { in: depClientIds } },
+          select: { clientId: true, handlerId: true, startedAt: true, endedAt: true },
+        })
+      : [];
+    const spansByClient = new Map();
+    for (const s of spans) {
+      const arr = spansByClient.get(s.clientId) || [];
+      arr.push(s);
+      spansByClient.set(s.clientId, arr);
+    }
+    const handlerAtMoment = (clientId, at) => {
+      const t = new Date(at).getTime();
+      const arr = spansByClient.get(clientId) || [];
+      const hit = arr.find((s) => (
+        t >= new Date(s.startedAt).getTime()
+        && t < (s.endedAt ? new Date(s.endedAt).getTime() : Infinity)
+      ));
+      if (hit) return hit.handlerId;
+      // Платёж раньше первого интервала (подтвердили до Start) — он принадлежит
+      // первому обработчику лида, а не текущему.
+      let first = null;
+      for (const s of arr) {
+        if (!first || new Date(s.startedAt) < new Date(first.startedAt)) first = s;
+      }
+      return first && t < new Date(first.startedAt).getTime() ? first.handlerId : null;
+    };
     const items = deposits.map((d) => {
       const pKey = paymentStatusKey(d.flowSessionId, DEPOSIT_TYPE_TO_PAYMENT[d.type] || 'insurance');
       const ps = paymentStatus.get(pKey) || {};
+      // Фоллбэк на текущего handlerId — только для платежей старше истории привязок.
+      const ownerId = handlerAtMoment(d.clientId, d.confirmedAt) || d.client?.handlerId || null;
       const approvedByName = ps.confirmedByName
-        || (d.client?.handlerId ? handlerName.get(d.client.handlerId) : '')
+        || (ownerId ? handlerName.get(ownerId) : '')
         || '—';
       return {
         id: d.id,
@@ -2979,7 +3089,7 @@ async function handleSupportChat(req, reply) {
         if (!existing || !existing.handlerId) {
           routingHandlerId = (await readSettings()).routingHandlerId || null;
         }
-        await prisma.webClient.upsert({
+        const upserted = await prisma.webClient.upsert({
           where: { flowSessionId: sessionId },
           create: {
             flowSessionId: sessionId,
@@ -2996,7 +3106,17 @@ async function handleSupportChat(req, reply) {
             ...(bank ? { bank } : {}),
             ...(shouldSetStatus ? { status: 'ЧАТ: БОТ' } : {}),
           },
+          select: { id: true, assignedAt: true },
         });
+        // Обычно роутинг срабатывает до Start, когда когорты ещё нет — интервал
+        // откроется вместе с assignedAt. Но лид мог стартовать без обработчика
+        // (assignedAt есть, handlerId пуст) — тогда открываем интервал здесь.
+        if (routingHandlerId && upserted.assignedAt) {
+          const open = await prisma.clientAssignment.count({
+            where: { clientId: upserted.id, endedAt: null },
+          });
+          if (!open) await openAssignmentInterval(upserted.id, routingHandlerId, new Date());
+        }
         broadcastUpdate('clients_changed');
       } catch { /* non-fatal */ }
     }
@@ -3476,10 +3596,16 @@ async function handleChatOpClients(req, reply) {
   if (!requireChatOp(req, reply)) return;
   try {
     const visibleOr = [{ operatorCalled: true }, { status: 'ЧАТ: НУЖЕН ЗВОНОК' }, { status: 'ЗАПРОСИЛ ЗВОНОК (ЧЕРЕЗ ЧАТ)' }, { status: 'ЧАТ: АКТИВЕН' }];
-    // Обработчик (DB-логин) видит только свои лиды; .env all-access — все.
+    // Обработчик (DB-логин) видит свои лиды; .env all-access — все.
+    // Плюс те, что вёл раньше (история привязок) — чтобы после передачи лида
+    // не терять свою переписку и уметь свериться со своей статистикой.
     const myHandlerId = chatOpHandlerId(req);
+    const mine = [
+      { handlerId: myHandlerId },
+      { assignments: { some: { handlerId: myHandlerId } } },
+    ];
     const where = myHandlerId
-      ? { AND: [{ handlerId: myHandlerId }, { OR: visibleOr }] }
+      ? { AND: [{ OR: mine }, { OR: visibleOr }] }
       : { OR: visibleOr };
     const clients = await prisma.webClient.findMany({
       where,
@@ -3697,10 +3823,14 @@ async function handleChatOpSend(req, reply) {
           if (!handlerId) {
             handlerId = wc.handlerId || (await readSettings()).routingHandlerId || null;
           }
-          await prisma.webClient.update({
+          const assignedAt = new Date();
+          const updated = await prisma.webClient.update({
             where: { flowSessionId: sessionId },
-            data: { assignedAt: new Date(), ...(handlerId ? { handlerId } : {}) },
+            data: { assignedAt, ...(handlerId ? { handlerId } : {}) },
+            select: { id: true, handlerId: true },
           });
+          // Первый интервал истории = старт когорты (та же дата, что assignedAt).
+          await openAssignmentInterval(updated.id, updated.handlerId, assignedAt);
         }
       } catch (e) {
         console.error('[chat-op/send] assign cohort error:', e?.message);
