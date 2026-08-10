@@ -50,11 +50,14 @@ function modelFor(providerId, requested) {
   return r.includes('deepseek') ? requested.trim() : def; // deepseek
 }
 
-// deepseek-v4-* и o-серия OpenAI сначала «думают», и размышления тоже
-// расходуют max_tokens.
+// deepseek-v4-*, o-серия и gpt-5+ сначала «думают», и размышления тоже
+// расходуют бюджет токенов. При тесном лимите ответ приходит пустой, срабатывает
+// повтор с удвоенным бюджетом — то есть каждый вызов оплачивается дважды.
+// Дешевле сразу дать запас.
 function isReasoningModel(model) {
   const m = String(model || '').toLowerCase();
-  return /deepseek-(v4|r1)/.test(m) || /^o\d/.test(m) || m.includes('reasoner');
+  return /deepseek-(v4|r1)/.test(m) || /^o\d/.test(m) || /^gpt-[5-9]/.test(m)
+    || m.includes('reasoner');
 }
 
 // Возвращает активный провайдер: явный из opts, иначе из настроек бота, иначе дефолт.
@@ -124,25 +127,52 @@ export async function aiChat(messages, opts = {}) {
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   const startedAt = Date.now();
 
+  // Новые модели OpenAI (o-серия, gpt-5 и дальше) не принимают max_tokens —
+  // только max_completion_tokens, а часть из них ещё и запрещает свою
+  // temperature. У DeepSeek всё по-старому. Стартуем с догадки по имени модели,
+  // но если API возразит — перестраиваем запрос по его же ответу: список имён
+  // устареет на следующем релизе, а текст ошибки останется рабочим признаком.
+  let useCompletionTokens = providerId === 'openai'
+    && /^(o\d|gpt-[5-9]|gpt-\d{2})/.test(String(model).toLowerCase());
+  let sendTemperature = true;
+
   async function ask(tokenBudget) {
+    const payload = {
+      model,
+      messages,
+      stream: false,
+      [useCompletionTokens ? 'max_completion_tokens' : 'max_tokens']: tokenBudget,
+    };
+    if (sendTemperature) {
+      payload.temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.7;
+    }
+
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${p.apiKey}`,
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: typeof opts.temperature === 'number' ? opts.temperature : 0.7,
-        max_tokens: tokenBudget,
-        stream: false,
-      }),
+      body: JSON.stringify(payload),
       signal: controller.signal,
     });
 
     const raw = await res.text();
     if (!res.ok) {
+      // Модель отвергла параметр — меняем его и повторяем. Каждый флаг
+      // переключается один раз, поэтому зациклиться нельзя.
+      if (res.status === 400) {
+        if (!useCompletionTokens && raw.includes('max_completion_tokens')) {
+          useCompletionTokens = true;
+          console.warn(`[ai] ${model}: max_tokens не поддержан — повтор с max_completion_tokens`);
+          return ask(tokenBudget);
+        }
+        if (sendTemperature && /temperature/.test(raw) && /unsupported|not supported/i.test(raw)) {
+          sendTemperature = false;
+          console.warn(`[ai] ${model}: своя temperature не поддержана — повтор без неё`);
+          return ask(tokenBudget);
+        }
+      }
       throw new Error(`${p.label} HTTP ${res.status}: ${raw.slice(0, 300)}`);
     }
     let parsed;
