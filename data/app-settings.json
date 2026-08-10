@@ -6,7 +6,7 @@
   "swiftBic": "SXPYDEHHXXX",
   "paisDestino": "Alemania",
   "paymentUnavailable": false,
-  "landingWhiteEnabled": true,
+  "landingWhiteEnabled": false,
   "paymentRequisitesUpdatedAt": "2026-07-24T14:13:57.227Z",
   "smsReminderEnabled": false,
   "smsReminderEnabledAt": null,

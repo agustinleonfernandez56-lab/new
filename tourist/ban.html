@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Solicitud finalizada</title>
+  <style>
+    :root {
+      --accent: var(--interface-accent);
+      --accent-soft: var(--interface-accent-soft);
+      --text: #111111;
+      --muted: #737373;
+      --line: #e9e9e9;
+      --card: #ffffff;
+      --bg: #f7f7f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 18px 16px;
+    }
+
+    .ban-page {
+      width: min(100%, 448px);
+      min-height: calc(100vh - 36px);
+      min-height: calc(100dvh - 36px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ban-content {
+      margin: auto 0;
+    }
+
+    .ban-intro {
+      text-align: center;
+      padding: 0 14px;
+      margin-bottom: 26px;
+    }
+
+    .ban-main-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(var(--interface-accent-rgb), 0.12);
+    }
+
+    .ban-main-icon svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 650;
+      margin: 0 0 12px;
+      letter-spacing: 0;
+    }
+
+    .ban-intro p {
+      max-width: 360px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .ban-summary {
+      overflow: hidden;
+      display: grid;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 10px 26px rgba(15, 15, 15, 0.04);
+    }
+
+    .ban-summary__row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px 18px;
+      color: #404040;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .ban-summary__row + .ban-summary__row {
+      border-top: 1px solid var(--line);
+    }
+
+    .ban-summary__row p {
+      margin: 0;
+    }
+
+    .ban-summary__row strong {
+      color: var(--accent);
+      font-weight: 650;
+    }
+
+    .ban-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      box-shadow: none;
+    }
+
+    .ban-icon svg {
+      width: 21px;
+      height: 21px;
+      display: block;
+    }
+
+    .ban-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 28px;
+      padding: 4px 2px 2px;
+    }
+
+    .ban-logo {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .ban-logo img {
+      display: block;
+      width: 146px;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .ban-kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 26px;
+      padding: 5px 10px;
+      margin: 0;
+      border-radius: 999px;
+      background: #f4f4f4;
+      color: #5f5f5f;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 550;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 360px) {
+      .ban-logo img {
+        width: 132px;
+      }
+
+      .ban-footer {
+        gap: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+    }
+  </style>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
+</head>
+<body>
+  <main class="ban-page" aria-labelledby="banTitle">
+    <div class="ban-content">
+      <section class="ban-intro">
+        <div class="ban-main-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 11V8.5C7 5.46 9.46 3 12.5 3S18 5.46 18 8.5V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M6.5 11H18.5C19.6 11 20.5 11.9 20.5 13V19C20.5 20.1 19.6 21 18.5 21H6.5C5.4 21 4.5 20.1 4.5 19V13C4.5 11.9 5.4 11 6.5 11Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12.5 15V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 id="banTitle">Servicio no disponible</h1>
+        <p>Estimado cliente, AvalAvance le informa de que no podrá continuar prestándole servicios relacionados con su solicitud.</p>
+      </section>
+
+      <div class="ban-summary" aria-label="Información de cierre">
+        <div class="ban-summary__row">
+          <span class="ban-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 3.75V6.25M17 3.75V6.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M5.25 8.5H18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M6.5 5.25H17.5C18.6 5.25 19.5 6.15 19.5 7.25V18C19.5 19.1 18.6 20 17.5 20H6.5C5.4 20 4.5 19.1 4.5 18V7.25C4.5 6.15 5.4 5.25 6.5 5.25Z" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M8 12H8.01M12 12H12.01M16 12H16.01M8 15.5H8.01M12 15.5H12.01" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <p>Todos los pagos realizados serán devueltos a la cuenta de origen en un plazo máximo de <strong>14 días naturales.</strong></p>
+        </div>
+        <div class="ban-summary__row">
+          <span class="ban-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3.75L18.5 6.1V10.65C18.5 14.85 15.95 18.45 12 20.25C8.05 18.45 5.5 14.85 5.5 10.65V6.1L12 3.75Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M9.4 12.05L11.2 13.85L14.9 9.95" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <p>Los datos asociados a este proyecto han sido eliminados de nuestro sistema.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="ban-footer">
+      <div class="ban-logo">
+        <img src="../assets/avalavance-logo.svg" alt="AvalAvance" />
+      </div>
+      <p class="ban-kicker">Expediente cerrado</p>
+    </footer>
+  </main>
+</body>
+</html>

