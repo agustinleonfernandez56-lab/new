@@ -385,6 +385,14 @@
           <span class="status" id="saveStatus"></span>
         </div>
 
+        <!-- AI PROVIDER KEYS (БД перебивает .env) -->
+        <div class="card" style="margin-top:24px;">
+          <h2>🔑 Ключи ИИ</h2>
+          <p class="hint" style="margin-top:2px;margin-bottom:14px">Ключ из базы имеет приоритет над <code>.env</code>. «Сбросить» удаляет ключ из базы — провайдер возвращается на <code>.env</code>. Ключ целиком не показывается, только хвост.</p>
+          <div id="aiKeysRows"></div>
+          <p class="hint" id="aiIngestHint" style="margin-top:10px"></p>
+        </div>
+
         <!-- CHAT SUPPORT PROMPT (второй чат — chat.html) -->
         <div class="card" style="margin-top:24px;">
           <h2>Промпт второго чата (поддержка)</h2>
@@ -960,6 +968,7 @@
           setTok(res.d.token);
           showPanel();
           loadBotConfig();
+          loadAiKeys();
           loadChatPrompt();
           loadTranslatePrompt();
         })
@@ -1067,6 +1076,51 @@
       });
       document.getElementById('reloadBtn').addEventListener('click', loadBotConfig);
       botFields.provider.addEventListener('change', function(){ syncModelToProvider(); updateProviderHint(); });
+
+      // ── Ключи ИИ (БД перебивает .env) ──────────────────────────────────────────
+      function renderAiKeys(items, ingestEnabled){
+        var box = document.getElementById('aiKeysRows');
+        box.innerHTML = '';
+        (items||[]).forEach(function(it){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap';
+          var src = it.source==='db' ? '🟢 база ('+(it.note||'?')+')' : (it.source==='env' ? '⚪ .env' : '🔴 нет ключа');
+          var head = document.createElement('div');
+          head.style.cssText = 'display:flex;gap:10px;align-items:center;min-width:280px';
+          head.innerHTML = '<b style="width:80px">'+it.provider+'</b>'+
+            '<code style="min-width:150px">'+(it.masked||'—')+'</code>'+
+            '<span class="hint">'+src+'</span>';
+          var inp = document.createElement('input');
+          inp.type='text'; inp.placeholder='sk-… вставить вручную';
+          inp.style.cssText='flex:1;min-width:200px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px';
+          var save = document.createElement('button'); save.textContent='Сохранить';
+          save.addEventListener('click', function(){
+            if(!/^sk-/.test(inp.value.trim())) return alert('Ключ должен начинаться с sk-');
+            apiFetch('/api/admin/ai-keys/'+it.provider,{method:'PUT',body:JSON.stringify({apiKey:inp.value.trim()})})
+              .then(function(d){ inp.value=''; renderAiKeys(d.items, ingestEnabled); })
+              .catch(function(e){ alert('Ошибка: '+e.message); });
+          });
+          var reset = document.createElement('button'); reset.className='btn-ghost'; reset.textContent='Сбросить на .env';
+          reset.disabled = it.source!=='db';
+          reset.addEventListener('click', function(){
+            if(!confirm('Удалить ключ '+it.provider+' из базы? Провайдер вернётся на .env.')) return;
+            apiFetch('/api/admin/ai-keys/'+it.provider,{method:'DELETE'})
+              .then(function(d){ renderAiKeys(d.items, ingestEnabled); })
+              .catch(function(e){ alert('Ошибка: '+e.message); });
+          });
+          row.appendChild(head); row.appendChild(inp); row.appendChild(save); row.appendChild(reset);
+          box.appendChild(row);
+        });
+        document.getElementById('aiIngestHint').textContent = ingestEnabled
+          ? '✅ Приём ключей от userscript включён (AI_KEY_INGEST_SECRET задан).'
+          : '⚠️ Приём ключей от userscript выключен — задай AI_KEY_INGEST_SECRET в .env.';
+      }
+
+      function loadAiKeys(){
+        return apiFetch('/api/admin/ai-keys')
+          .then(function(d){ renderAiKeys(d.items, d.ingestEnabled); })
+          .catch(function(){});
+      }
 
       // ── Chat support prompt ───────────────────────────────────────────────────
       function loadChatPrompt(){
@@ -2615,6 +2669,7 @@
       if(tok()){
         showPanel();
         loadBotConfig();
+        loadAiKeys();
         loadChatPrompt();
         loadTranslatePrompt();
         startAdminSSE();

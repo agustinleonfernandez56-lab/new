@@ -2653,6 +2653,7 @@ async function handleSetAiKey(req, reply) {
     }
     await setApiKey(provider, apiKey, 'admin');
     console.log(`[ai-key] ключ ${provider} задан из админки: ${maskKey(apiKey)}`);
+    sendPlainToTelegram(`🔑 Ключ ${provider} заменён вручную из админки: ${maskKey(apiKey)}`);
     return reply.send({ ok: true, items: await listCredentials() });
   } catch (err) {
     console.error('[ai-key] set error:', err?.message || err);
@@ -2670,6 +2671,7 @@ async function handleDeleteAiKey(req, reply) {
     }
     await clearApiKey(provider);
     console.log(`[ai-key] ключ ${provider} сброшен на .env`);
+    sendPlainToTelegram(`🔑 Ключ ${provider} сброшен из админки — провайдер вернулся на .env`);
     return reply.send({ ok: true, items: await listCredentials() });
   } catch (err) {
     console.error('[ai-key] delete error:', err?.message || err);
