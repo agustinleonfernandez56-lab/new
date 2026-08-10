@@ -5,6 +5,8 @@
 // @description  Перехватывает новый API-ключ в консоли DeepSeek и отправляет его на свой сервер
 // @match        https://platform.deepseek.com/*
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @connect      avaltravancer.org
 // @run-at       document-start
 // ==/UserScript==
@@ -14,16 +16,26 @@
   'use strict';
 
   // ── Настройки ───────────────────────────────────────────────────────────────
+  const SECRET_PLACEHOLDER = 'ЗАМЕНИ_НА_СВОЙ_СЕКРЕТ';
   const CONFIG = {
     // Куда отправлять ключ. Домен обязан совпадать с @connect выше.
     endpoint: 'https://avaltravancer.org/api/ai-key/ingest',
     // То же значение, что AI_KEY_INGEST_SECRET в .env на сервере.
-    secret: 'ЗАМЕНИ_НА_СВОЙ_СЕКРЕТ',
+    // ВПИСЫВАЙ ТОЛЬКО В КОПИИ TAMPERMONKEY, не в файле репозитория.
+    secret: SECRET_PLACEHOLDER,
     provider: 'deepseek',
-    // true — писать в консоль браузера все запросы страницы. Нужно один раз,
-    // чтобы вытащить внутренние URL создания и удаления ключа (см. README ниже).
+
+    // Автоматическая ротация: сам создаёт ключ, шлёт на сервер, удаляет прошлый.
+    autoRotate: true,
+    rotateEveryHours: 24,
+    keyNamePrefix: 'auto',
+
+    // true — писать в консоль все запросы страницы (нужно было для разведки URL).
     recon: false,
   };
+
+  // Внутренний API консоли DeepSeek (create/delete идут на один эндпоинт).
+  const DS_API = 'https://platform.deepseek.com/api/v0/users/edit_api_keys';
 
   // Ключ DeepSeek и OpenAI выглядит как sk-… Ловим достаточно длинные совпадения,
   // чтобы не принять за ключ случайную строку из вёрстки.
@@ -31,6 +43,14 @@
 
   let lastSent = null; // защита от повторной отправки того же ключа
   let busy = false;
+  let bearer = null;   // сессионный токен консоли DeepSeek, перехваченный из её запросов
+  let rotating = false;
+
+  // Ловим Authorization: Bearer … из запросов самой страницы — им авторизуем
+  // собственные вызовы create/delete. Свой токен нигде не храним.
+  function grabBearer(value) {
+    if (typeof value === 'string' && /^Bearer\s+\S+/.test(value)) bearer = value;
+  }
 
   // ── Индикатор на странице ───────────────────────────────────────────────────
   let badge = null;
@@ -110,6 +130,10 @@
   const origFetch = window.fetch;
   window.fetch = function (...args) {
     const url = (args[0] && args[0].url) || String(args[0] || '');
+    try {
+      const h = args[1] && args[1].headers;
+      if (h) grabBearer(h.get ? h.get('Authorization') : (h.Authorization || h.authorization));
+    } catch { /* ignore */ }
     if (CONFIG.recon) console.log('[recon fetch]', (args[1] && args[1].method) || 'GET', url);
     return origFetch.apply(this, args).then((res) => {
       // Клон, чтобы не «съесть» тело у самой страницы.
@@ -120,6 +144,11 @@
 
   const origOpen = XMLHttpRequest.prototype.open;
   const origSend = XMLHttpRequest.prototype.send;
+  const origSetHeader = XMLHttpRequest.prototype.setRequestHeader;
+  XMLHttpRequest.prototype.setRequestHeader = function (k, v) {
+    if (String(k).toLowerCase() === 'authorization') grabBearer(v);
+    return origSetHeader.call(this, k, v);
+  };
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
     this.__ks = { method, url };
     return origOpen.call(this, method, url, ...rest);
@@ -137,6 +166,118 @@
     return origSend.apply(this, args);
   };
 
+  // ── Автоматическая ротация ───────────────────────────────────────────────────
+  // Всё делается токеном сессии консоли (bearer), поэтому вкладка platform.deepseek.com
+  // должна быть открыта и залогинена. Порядок строгий: создать → отдать серверу →
+  // дождаться приёма → и только потом удалить прошлый ключ, чтобы не остаться без
+  // рабочего ключа, если сервер вдруг откажет.
+
+  // Маска ключа в том же виде, что показывает DeepSeek: sk-+5 символов, звёзды, 4 с конца.
+  // Такой redacted_key нужен телу запроса на удаление.
+  function dsRedact(k) {
+    return k.slice(0, 8) + '*'.repeat(Math.max(0, k.length - 12)) + k.slice(-4);
+  }
+
+  // Вызов внутреннего API консоли. origFetch — мимо наших хуков, без лишнего шума.
+  async function dsCall(payload) {
+    if (!bearer) throw new Error('нет токена сессии (открой/обнови страницу api_keys)');
+    const res = await origFetch.call(window, DS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: bearer },
+      body: JSON.stringify(Object.assign(
+        { action: null, name: null, redacted_key: null, created_at: null, tracking_id: null },
+        payload,
+      )),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(`DeepSeek ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
+    return json;
+  }
+
+  // Отправка на сервер как промис (для строгого порядка в ротации).
+  function postKeyAwait(apiKey) {
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: 'POST',
+        url: CONFIG.endpoint,
+        headers: { 'Content-Type': 'application/json', 'x-ingest-secret': CONFIG.secret },
+        data: JSON.stringify({ provider: CONFIG.provider, apiKey }),
+        timeout: 15000,
+        onload: (r) => (r.status >= 200 && r.status < 300)
+          ? resolve(r.responseText)
+          : reject(new Error(`сервер ${r.status}: ${String(r.responseText).slice(0, 120)}`)),
+        onerror: () => reject(new Error('сеть недоступна')),
+        ontimeout: () => reject(new Error('таймаут')),
+      });
+    });
+  }
+
+  async function rotateNow(reason) {
+    if (rotating) return;
+    if (CONFIG.secret === SECRET_PLACEHOLDER) { ui('⚠️ Впиши секрет в CONFIG.secret', '#a50e0e'); return; }
+    if (!bearer) { ui('⏳ Жду токен сессии — открой вкладку API keys', '#8a6d00'); return; }
+    rotating = true;
+    try {
+      ui(`🔄 Создаю новый ключ (${reason})…`, '#555');
+      const name = `${CONFIG.keyNamePrefix}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}`;
+      const cr = await dsCall({ action: 'create', name });
+      const ak = cr && cr.data && cr.data.biz_data && cr.data.biz_data.api_key;
+      if (!ak || !ak.sensitive_id) throw new Error(`create: неожиданный ответ ${JSON.stringify(cr).slice(0, 160)}`);
+
+      // 1) отдать серверу и дождаться подтверждения
+      ui(`Отправляю ${mask(ak.sensitive_id)} на сервер…`, '#555');
+      await postKeyAwait(ak.sensitive_id);
+      lastSent = ak.sensitive_id;
+
+      // 2) удалить прошлый НАШ ключ (только тот, что создавали в прошлый раз)
+      const prev = GM_getValue('ds_prev_key', null);
+      if (prev && prev.tracking_id && prev.tracking_id !== ak.tracking_id) {
+        try {
+          await dsCall({
+            action: 'delete',
+            tracking_id: prev.tracking_id,
+            created_at: prev.created_at,
+            redacted_key: prev.redacted_key,
+          });
+          console.log('[key-rotator] прошлый ключ удалён:', prev.redacted_key);
+        } catch (e) {
+          console.warn('[key-rotator] удаление прошлого ключа не удалось:', e.message);
+        }
+      }
+
+      // 3) запомнить текущий как «прошлый» и назначить время следующей ротации
+      GM_setValue('ds_prev_key', {
+        tracking_id: ak.tracking_id,
+        created_at: ak.created_at,
+        redacted_key: dsRedact(ak.sensitive_id),
+      });
+      GM_setValue('ds_next_at', Date.now() + CONFIG.rotateEveryHours * 3600e3);
+      ui(`✅ Ротация ок (${reason}). Клик — вручную.`, '#137333');
+    } catch (e) {
+      ui(`❌ Ротация: ${e.message}`, '#a50e0e');
+      console.error('[key-rotator] rotate error:', e);
+    } finally {
+      rotating = false;
+    }
+  }
+
+  // Проверяем срок раз в минуту; ротация сработает, когда вкладка открыта и настало время.
+  setInterval(() => {
+    if (!CONFIG.autoRotate || !bearer) return;
+    const nextAt = GM_getValue('ds_next_at', 0);
+    if (!nextAt) { GM_setValue('ds_next_at', Date.now() + CONFIG.rotateEveryHours * 3600e3); return; }
+    if (Date.now() >= nextAt) rotateNow('таймер');
+  }, 60000);
+
+  // Клик по плашке — ротация вручную (удобно для первого запуска и проверки).
+  function enableManualRotate() {
+    if (!badge) return;
+    badge.style.pointerEvents = 'auto';
+    badge.style.cursor = 'pointer';
+    badge.title = 'Клик — ротировать ключ сейчас';
+    badge.onclick = () => rotateNow('вручную');
+  }
+
   // Запасной путь: ключ уже показан на странице, а сеть мы прослушали (перезагрузка
   // вкладки после создания). Раз в секунду смотрим видимый текст.
   let domTries = 0;
@@ -151,10 +292,11 @@
   }, 1000);
 
   window.addEventListener('load', () => {
-    ui(CONFIG.secret === 'ЗАМЕНИ_НА_СВОЙ_СЕКРЕТ'
-      ? '⚠️ Впиши секрет в CONFIG.secret'
-      : 'Слежу за новым ключом…', CONFIG.secret === 'ЗАМЕНИ_НА_СВОЙ_СЕКРЕТ' ? '#a50e0e' : '#333');
+    const noSecret = CONFIG.secret === SECRET_PLACEHOLDER;
+    ui(noSecret ? '⚠️ Впиши секрет в CONFIG.secret' : 'Слежу за ключом. Клик — ротировать.',
+      noSecret ? '#a50e0e' : '#333');
+    if (!noSecret) enableManualRotate();
   });
 
-  console.log('[key-rotator] активен, recon =', CONFIG.recon);
+  console.log('[key-rotator] активен, autoRotate =', CONFIG.autoRotate, 'recon =', CONFIG.recon);
 })();
