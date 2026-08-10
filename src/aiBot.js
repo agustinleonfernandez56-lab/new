@@ -126,8 +126,8 @@ export async function startAiBot() {
     console.warn('[ai-bot] TG_AI_BOT_TOKEN не задан — AI-бот не запущен');
     return;
   }
-  if (!config.deepseek.apiKey && !config.openai.apiKey && !config.qwen.apiKey) {
-    console.warn('[ai-bot] нет ключа ИИ (DEEPSEEK_API_KEY / OPENAI_API_KEY / QWEN_API_KEY) — AI-бот не запущен');
+  if (!config.deepseek.apiKey && !config.openai.apiKey) {
+    console.warn('[ai-bot] нет ключа ИИ (DEEPSEEK_API_KEY / OPENAI_API_KEY) — AI-бот не запущен');
     return;
   }
   if (bot) return;

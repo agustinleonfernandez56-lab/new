@@ -38,15 +38,6 @@ export const config = {
     baseUrl: envStr('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
     model: envStr('OPENAI_MODEL', 'gpt-4o-mini'),
   },
-  // Alibaba Cloud Model Studio (Qwen) — тоже OpenAI-совместимый /chat/completions.
-  // Ключ привязывается к IP сервера в консоли Model Studio: права Custom →
-  // IP address whitelist. Base URL зависит от региона, ключи между регионами не
-  // переносятся. По умолчанию Сингапур — в US (Virginia) whitelist не работает.
-  qwen: {
-    apiKey: envStr('QWEN_API_KEY'),
-    baseUrl: envStr('QWEN_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'),
-    model: envStr('QWEN_MODEL', 'qwen-flash'),
-  },
   // Провайдер ИИ по умолчанию, если не задан в настройках бота (админка).
   aiProvider: envStr('AI_PROVIDER', 'deepseek'),
   // DeepL — перевод входящих сообщений в панели чат-оператора (отдельно от ИИ-ботов).
