@@ -2546,7 +2546,11 @@ function serializeBotConfig(cfg) {
     tgRequestLogging: cfg.tgRequestLogging === true,
     aiEnabled: cfg.aiEnabled,
     // Есть ли ключ у каждого провайдера — чтобы админка предупредила, если не задан.
-    providerKeys: { deepseek: providerHasKey('deepseek'), openai: providerHasKey('openai') },
+    providerKeys: {
+      deepseek: providerHasKey('deepseek'),
+      openai: providerHasKey('openai'),
+      qwen: providerHasKey('qwen'),
+    },
   };
 }
 

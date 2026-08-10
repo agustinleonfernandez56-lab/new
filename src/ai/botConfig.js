@@ -67,7 +67,9 @@ export async function updateBotConfig(patch = {}) {
 
   const data = {};
   if (typeof patch.provider === 'string') {
-    data.provider = patch.provider === 'openai' ? 'openai' : 'deepseek';
+    // deepseek | openai | qwen; неизвестное значение — deepseek, как и раньше.
+    const p = patch.provider.trim().toLowerCase();
+    data.provider = ['openai', 'qwen'].includes(p) ? p : 'deepseek';
   }
   if (typeof patch.model === 'string' && patch.model.trim()) data.model = patch.model.trim();
   if (typeof patch.temperature === 'number' && Number.isFinite(patch.temperature)) {

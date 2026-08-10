@@ -8,7 +8,7 @@ const REQUEST_TIMEOUT_MS = 60000;
 const REASONING_MIN_TOKENS = 4096;
 const REQUEST_LOG_TEXT_LIMIT = 1000;
 
-// Оба провайдера используют OpenAI-совместимый /chat/completions.
+// Все провайдеры используют OpenAI-совместимый /chat/completions.
 // Ключ и модель берём из .env (config.js). Модель у каждого — своя.
 const PROVIDERS = {
   deepseek: () => ({
@@ -24,6 +24,13 @@ const PROVIDERS = {
     baseUrl: config.openai.baseUrl,
     model: config.openai.model,
     envHint: 'OPENAI_API_KEY',
+  }),
+  qwen: () => ({
+    label: 'Qwen',
+    apiKey: config.qwen.apiKey,
+    baseUrl: config.qwen.baseUrl,
+    model: config.qwen.model,
+    envHint: 'QWEN_API_KEY',
   }),
 };
 
@@ -47,14 +54,16 @@ function modelFor(providerId, requested) {
   const r = requested.trim().toLowerCase();
   if (!r) return def;
   if (providerId === 'openai') return /^(gpt|o\d|chatgpt|text-|ft:)/.test(r) ? requested.trim() : def;
+  if (providerId === 'qwen') return /^(qwen|qwq|qvq)/.test(r) ? requested.trim() : def;
   return r.includes('deepseek') ? requested.trim() : def; // deepseek
 }
 
-// deepseek-v4-* и o-серия OpenAI сначала «думают», и размышления тоже
-// расходуют max_tokens.
+// deepseek-v4-*, o-серия OpenAI и qwq/qvq у Qwen сначала «думают», и размышления
+// тоже расходуют max_tokens.
 function isReasoningModel(model) {
   const m = String(model || '').toLowerCase();
-  return /deepseek-(v4|r1)/.test(m) || /^o\d/.test(m) || m.includes('reasoner');
+  return /deepseek-(v4|r1)/.test(m) || /^o\d/.test(m) || /^(qwq|qvq)/.test(m)
+    || m.includes('reasoner') || m.includes('thinking');
 }
 
 // Возвращает активный провайдер: явный из opts, иначе из настроек бота, иначе дефолт.
@@ -97,8 +106,8 @@ function sendAiRequestLog({ enabled, provider, model, messages, trace, durationM
 }
 
 /**
- * Универсальный вызов чат-модели. DeepSeek и OpenAI — OpenAI-совместимый API,
- * поэтому логика одна, различаются только endpoint, ключ и модель.
+ * Универсальный вызов чат-модели. DeepSeek, OpenAI и Qwen — OpenAI-совместимый
+ * API, поэтому логика одна, различаются только endpoint, ключ и модель.
  * @param {Array<{role:string, content:string}>} messages
  * @param {{provider?:string, model?:string, temperature?:number, maxTokens?:number}} [opts]
  * @returns {Promise<string>} assistant reply text
