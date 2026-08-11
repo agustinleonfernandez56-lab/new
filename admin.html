@@ -364,14 +364,14 @@
                 <option value="openai">OpenAI</option>
               </select>
             </div>
-            <div><label>Память (сообщений)</label><input type="number" id="historyLimit" step="1" min="1" max="100" /></div>
           </div>
-          <!-- Модель/температура/max tokens заданы статично под каждого провайдера
-               (см. STATIC_PARAMS в JS) — поля скрыты, но значения уходят на сохранение. -->
+          <!-- Модель/температура/max tokens/память заданы статично под каждого
+               провайдера (см. STATIC_PARAMS в JS) — скрыты, но уходят на сохранение. -->
           <div style="display:none">
             <input type="text" id="model" />
             <input type="number" id="temperature" />
             <input type="number" id="maxTokens" />
+            <input type="number" id="historyLimit" />
           </div>
           <p class="hint" id="providerHint" style="margin-top:10px"></p>
           <label style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer">
@@ -1031,8 +1031,8 @@
       // Статичные «норм настройки» под каждого провайдера. Модель/температуру/
       // max tokens в UI не показываем и не меняем — на сохранение уходят отсюда.
       var STATIC_PARAMS = {
-        deepseek: { model: 'deepseek-chat', temperature: 0.7, maxTokens: 1024 },
-        openai:   { model: 'gpt-5.4-mini',  temperature: 0.7, maxTokens: 1024 },
+        deepseek: { model: 'deepseek-chat', temperature: 0.7, maxTokens: 1024, historyLimit: 20 },
+        openai:   { model: 'gpt-5.4-mini',  temperature: 0.7, maxTokens: 1024, historyLimit: 20 },
       };
       function staticFor(provider){ return STATIC_PARAMS[provider] || STATIC_PARAMS.deepseek; }
 
@@ -1043,6 +1043,7 @@
         botFields.model.value = sp.model;
         botFields.temperature.value = sp.temperature;
         botFields.maxTokens.value = sp.maxTokens;
+        botFields.historyLimit.value = sp.historyLimit;
       }
 
       function updateProviderHint(){
@@ -1062,7 +1063,6 @@
       function fillBot(cfg){
         botFields.systemPrompt.value = cfg.systemPrompt || '';
         botFields.provider.value = cfg.provider || 'deepseek';
-        botFields.historyLimit.value = cfg.historyLimit;
         botFields.tgRequestLogging.checked = cfg.tgRequestLogging === true;
         providerKeysCache = cfg.providerKeys || {};
         applyStaticParams(botFields.provider.value);
@@ -1085,7 +1085,7 @@
           model: sp.model,
           temperature: sp.temperature,
           maxTokens: sp.maxTokens,
-          historyLimit: parseInt(botFields.historyLimit.value, 10),
+          historyLimit: sp.historyLimit,
           tgRequestLogging: botFields.tgRequestLogging.checked,
         };
         apiFetch('/api/admin/bot-config',{method:'PUT',body:JSON.stringify(payload)})
