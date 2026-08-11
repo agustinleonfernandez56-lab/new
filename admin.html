@@ -574,11 +574,16 @@
         <!-- SMS Reminder Settings -->
         <div class="card">
           <h2 style="margin-top:0">📩 Автоматическое СМС клиентам, застрявшим на статусе</h2>
-          <p class="hint" style="margin:0 0 18px;">Отправляет СМС клиентам, которые не переходят на следующий статус в течение указанного времени.</p>
+          <p class="hint" style="margin:0 0 18px;">Что делать с клиентом, который не переходит на следующий статус в течение указанного времени.</p>
 
-          <div class="switch" style="margin-bottom:14px">
-            <input type="checkbox" id="smsReminderEnabled" />
-            <span style="font-size:14px;">Включить</span>
+          <div class="field">
+            <label>Режим</label>
+            <select id="smsReminderMode" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit">
+              <option value="off">🚫 Отключено — ничего не отправлять</option>
+              <option value="reminder">💬 Только напоминание — просто СМС</option>
+              <option value="review">⭐ Отзывы — СМС + редирект на страницу отзывов</option>
+            </select>
+            <p class="hint" id="smsReminderModeHint" style="margin-top:6px"></p>
           </div>
 
           <div class="field">
@@ -1788,12 +1793,24 @@
       }
 
       // ── SMS Reminder Settings ──────────────────────────────────────────────────
+      var SMS_MODE_HINTS = {
+        off: 'Клиенты, застрявшие на статусе, ничего не получают.',
+        reminder: 'Застрявшему клиенту уходит только СМС-напоминание, без редиректа.',
+        review: 'Застрявшему клиенту уходит СМС и его открытая страница перекидывается на отзывы.',
+      };
+      function updateSmsModeHint(){
+        var m = document.getElementById('smsReminderMode').value;
+        document.getElementById('smsReminderModeHint').textContent = SMS_MODE_HINTS[m] || '';
+      }
+      document.getElementById('smsReminderMode').addEventListener('change', updateSmsModeHint);
+
       function loadSmsReminderSettings(){
         apiFetch('/api/admin/sms-reminder-settings').then(function(data){
-          document.getElementById('smsReminderEnabled').checked = !!data.enabled;
+          document.getElementById('smsReminderMode').value = data.mode || (data.enabled ? 'review' : 'off');
           document.getElementById('smsReminderMinutes').value = data.minutes || 20;
           document.getElementById('smsReminderSender').value = data.sender || 'AvalAvance';
           document.getElementById('smsReminderText').value = data.text || 'Привет';
+          updateSmsModeHint();
         }).catch(function(){});
       }
 
@@ -1803,7 +1820,7 @@
         apiFetch('/api/admin/sms-reminder-settings',{
           method:'PUT',
           body:JSON.stringify({
-            enabled: document.getElementById('smsReminderEnabled').checked,
+            mode: document.getElementById('smsReminderMode').value,
             minutes: parseInt(document.getElementById('smsReminderMinutes').value, 10) || 20,
             sender: document.getElementById('smsReminderSender').value.trim(),
             text: document.getElementById('smsReminderText').value.trim(),

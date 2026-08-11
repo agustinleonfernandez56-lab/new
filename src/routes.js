@@ -2934,11 +2934,24 @@ async function handleAdminCancelPayment(req, reply) {
   }
 }
 
+// Режим авто-СМС потеряшкам:
+//   'off'      — ничего не отправляем;
+//   'reminder' — только СМС-напоминание;
+//   'review'   — СМС + редирект клиента на страницу отзывов.
+// Старые настройки без поля mode: enabled=true исторически значил СМС+отзывы,
+// поэтому маппим его в 'review', чтобы поведение не изменилось после обновления.
+function resolveSmsReminderMode(settings) {
+  const m = settings.smsReminderMode;
+  if (m === 'off' || m === 'reminder' || m === 'review') return m;
+  return settings.smsReminderEnabled ? 'review' : 'off';
+}
+
 async function handleGetSmsReminderSettings(req, reply) {
   if (!requireAdmin(req, reply)) return;
   try {
     const settings = await readSettings();
     return reply.send({
+      mode: resolveSmsReminderMode(settings),
       enabled: settings.smsReminderEnabled || false,
       enabledAt: settings.smsReminderEnabledAt || null,
       minutes: settings.smsReminderMinutes || 20,
@@ -2957,11 +2970,23 @@ async function handleUpdateSmsReminderSettings(req, reply) {
     const body = asRecord(req.body) ?? {};
     const settings = await readSettings();
 
-    const wasEnabled = !!settings.smsReminderEnabled;
-    if (typeof body.enabled === 'boolean') {
-      settings.smsReminderEnabled = body.enabled;
-      if (body.enabled && !wasEnabled) settings.smsReminderEnabledAt = new Date().toISOString();
-      if (!body.enabled) settings.smsReminderEnabledAt = null;
+    // Новый интерфейс шлёт mode; старый — enabled (boolean). Поддерживаем оба.
+    let nextMode = null;
+    if (typeof body.mode === 'string' && ['off', 'reminder', 'review'].includes(body.mode)) {
+      nextMode = body.mode;
+    } else if (typeof body.enabled === 'boolean') {
+      nextMode = body.enabled ? 'review' : 'off';
+    }
+    if (nextMode) {
+      const wasEnabled = !!settings.smsReminderEnabled;
+      const nowEnabled = nextMode !== 'off';
+      settings.smsReminderMode = nextMode;
+      settings.smsReminderEnabled = nowEnabled; // держим в синхроне для цикла отправки
+      // enabledAt задаёт когорту (шлём только клиентам, созданным после включения).
+      // Ставим его при переходе выключено→включено; переключение reminder↔review
+      // когорту не сбрасывает.
+      if (nowEnabled && !wasEnabled) settings.smsReminderEnabledAt = new Date().toISOString();
+      if (!nowEnabled) settings.smsReminderEnabledAt = null;
     }
     if (settings.smsReminderEnabled && !settings.smsReminderEnabledAt) {
       settings.smsReminderEnabledAt = new Date().toISOString();
@@ -2973,6 +2998,7 @@ async function handleUpdateSmsReminderSettings(req, reply) {
     await writeSettings(settings);
 
     return reply.send({
+      mode: resolveSmsReminderMode(settings),
       enabled: settings.smsReminderEnabled || false,
       enabledAt: settings.smsReminderEnabledAt || null,
       minutes: settings.smsReminderMinutes || 20,
@@ -4328,6 +4354,7 @@ async function sendSmsRemindersToStalledClients() {
   try {
     const settings = await readSettings();
     if (!settings.smsReminderEnabled) return;
+    const mode = resolveSmsReminderMode(settings); // 'reminder' | 'review' (off отсеян выше)
 
     const now = Date.now();
     const enabledAt = await ensureSmsReminderEnabledAt(settings, now);
@@ -4426,13 +4453,16 @@ async function sendSmsRemindersToStalledClients() {
       smsReminderState.set(client.flowSessionId, state);
       stateChanged = true;
 
-      // Клиент застрял — заодно предлагаем ему оставить отзыв. Флаг подхватят
-      // и открытые вкладки (через SSE), и следующий заход на любую страницу.
-      try {
-        await mergeSubmissionData(client.flowSessionId, { reviewPromptAt: new Date().toISOString() });
-        pushClientEvent(client.flowSessionId, { type: 'review' });
-      } catch (e) {
-        console.error('[sms-reminder/review-prompt]', e?.message);
+      // Только в режиме 'review': заодно предлагаем клиенту оставить отзыв. Флаг
+      // подхватят и открытые вкладки (через SSE), и следующий заход на любую страницу.
+      // В режиме 'reminder' шлём чистое СМС без редиректа.
+      if (mode === 'review') {
+        try {
+          await mergeSubmissionData(client.flowSessionId, { reviewPromptAt: new Date().toISOString() });
+          pushClientEvent(client.flowSessionId, { type: 'review' });
+        } catch (e) {
+          console.error('[sms-reminder/review-prompt]', e?.message);
+        }
       }
     }
     if (stateChanged) await saveSmsReminderState();
