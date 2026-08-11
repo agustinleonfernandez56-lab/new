@@ -736,6 +736,7 @@ async function selectClient(sessionId) {
   loadSmsHistory(sessionId);
   refreshBanButton(sessionId);
   updateCommissionGate();
+  updateRd2Gate();
 }
 
 // ─── Render profile ───────────────────────────────────────────────────────────
@@ -1986,6 +1987,11 @@ if (attachMenu) {
       alert('Сначала загрузите конверт с ПК (📮 Конверт) и подтвердите его.');
       return;
     }
+    // Оплата RD2 заблокирована, пока не выбран банк — как этапы РД2 в сценарии.
+    if (action === 'loan-transfer-pay' && !rd2BankSelected(state.activeClient)) {
+      alert('Сначала выберите банк для РД2 (в сценарии: этап «Выбери банк»).');
+      return;
+    }
     closeAttachMenu();
     if (action === 'photo') {
       els.imageInput.click();
@@ -2488,6 +2494,17 @@ function updateCommissionGate() {
   item.title = ok ? '' : 'Сначала загрузите и подтвердите конверт (кнопка 📮 Конверт)';
 }
 
+// Гейт кнопки «Оплата RD2»: как этапы РД2 в сценарии — заблокирована до выбора банка.
+function updateRd2Gate() {
+  const item = document.querySelector('[data-attach="loan-transfer-pay"]');
+  if (!item) return;
+  const ok = rd2BankSelected(state.activeClient);
+  item.disabled = !ok;
+  item.style.opacity = ok ? '' : '0.45';
+  item.style.cursor = ok ? '' : 'not-allowed';
+  item.title = ok ? '' : 'Сначала выберите банк для РД2 (кнопка 🏦 Банк)';
+}
+
 function setEnvClientPatch(patch) {
   if (!state.activeClient) return;
   const sub = (state.activeClient.submissionData && typeof state.activeClient.submissionData === 'object')
@@ -2656,6 +2673,7 @@ async function setRd2Bank(bankKey) {
     apply(state.clients.find((x) => x.flowSessionId === sid));
     renderBankList();
     renderStages(state.activeClient);
+    updateRd2Gate();
     bankResult.style.color = '#2DB97B';
     bankResult.textContent = data.bank ? `✓ ${data.bank.name}` : '✓ Выбор сброшен';
     if (data.bank) setTimeout(closeBankModal, 900);
