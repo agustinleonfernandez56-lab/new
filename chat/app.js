@@ -55,7 +55,6 @@ const els = {
   messageInput: $('[data-message-input]'),
   mainInfo:     $('[data-main-info]'),
   clientData:   $('[data-client-data]'),
-  events:       $('[data-events]'),
   stages:       $('[data-stages]'),
 
   chatNoteInput:  $('#chatNoteInput'),
@@ -878,7 +877,7 @@ function renderMessages(messages, callerNote) {
 function renderDetails(c) {
   renderChatNote(c);
   if (!c) {
-    els.mainInfo.innerHTML = ''; els.clientData.innerHTML = ''; els.events.innerHTML = '';
+    els.mainInfo.innerHTML = ''; els.clientData.innerHTML = '';
     if (els.stages) els.stages.innerHTML = '<div class="stages__empty">Выберите клиента</div>';
     return;
   }
@@ -901,11 +900,6 @@ function renderDetails(c) {
     sub.chatOpNote ? ['Заметка чат-оп.', esc(sub.chatOpNote)] : null,
   ].filter(Boolean);
   els.clientData.innerHTML = clientRows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('') || '<dt style="color:var(--muted)">Нет данных</dt>';
-
-  const events = c.events || [];
-  els.events.innerHTML = events.length
-    ? events.map((e) => `<li><span>${esc(e.event)}</span><time>${fmt(e.createdAt)}</time></li>`).join('')
-    : '<li style="color:var(--muted);font-size:12px">Нет событий</li>';
 
   renderStages(c);
 

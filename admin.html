@@ -1489,14 +1489,6 @@
             ) : '<div style="color:var(--muted);font-size:12px;">Форма не заполнена</div>') +
           '</div>' +
 
-          // ─ История событий
-          '<div class="client-section">' +
-            '<div class="section-title">История событий</div>' +
-            (events.length ? events.map(function(ev){
-              return '<div class="event-line"><span class="event-dot"></span><span class="event-name">' + esc(ev.event) + '</span><span class="event-time">' + fmt(ev.createdAt) + '</span></div>';
-            }).join('') : '<div style="color:var(--muted);font-size:12px;">Нет событий</div>') +
-          '</div>' +
-
           // ─ Чат с ботом (1-й чат — assistant.html: цель/сумма/IBAN)
           renderChatSection('Диалог с ботом · 1-й чат (assistant)', chatMsgs) +
 
