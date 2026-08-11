@@ -352,13 +352,10 @@
 
       <!-- BOT SETTINGS TAB -->
       <div id="tab-bot" class="tab-content active">
+        <!-- AI: провайдер + ключи (один блок, две функции со своими кнопками) -->
         <div class="card">
-          <h2>Системный промпт</h2>
-          <textarea id="systemPrompt" spellcheck="false"></textarea>
-          <p class="hint">Переменные: <code>{{name}}</code>, <code>{{bank}}</code>. Добавьте <code>[[FIN]]</code> в конец финального сообщения — система покажет кнопку перехода к форме.</p>
-        </div>
-        <div class="card">
-          <h2>Параметры</h2>
+          <!-- Функция 1: выбор нейросети -->
+          <h2>🧠 Нейросеть</h2>
           <div class="row">
             <div>
               <label>AI-провайдер</label>
@@ -367,10 +364,14 @@
                 <option value="openai">OpenAI</option>
               </select>
             </div>
-            <div><label>Модель</label><input type="text" id="model" placeholder="авто (по провайдеру)" /></div>
-            <div><label>Температура (0–2)</label><input type="number" id="temperature" step="0.1" min="0" max="2" /></div>
-            <div><label>Max tokens</label><input type="number" id="maxTokens" step="64" min="64" max="8192" /></div>
             <div><label>Память (сообщений)</label><input type="number" id="historyLimit" step="1" min="1" max="100" /></div>
+          </div>
+          <!-- Модель/температура/max tokens заданы статично под каждого провайдера
+               (см. STATIC_PARAMS в JS) — поля скрыты, но значения уходят на сохранение. -->
+          <div style="display:none">
+            <input type="text" id="model" />
+            <input type="number" id="temperature" />
+            <input type="number" id="maxTokens" />
           </div>
           <p class="hint" id="providerHint" style="margin-top:10px"></p>
           <label style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer">
@@ -378,19 +379,25 @@
             <span>Telegram-логи ИИ-запросов</span>
           </label>
           <p class="hint" style="margin-top:6px">После каждого ИИ-вызова отправляет источник, провайдера, ID и текст запроса. Текст ответа не отправляется.</p>
-        </div>
-        <div class="actions">
-          <button id="saveBtn">Сохранить</button>
-          <button class="btn-ghost" id="reloadBtn">Сбросить</button>
-          <span class="status" id="saveStatus"></span>
-        </div>
+          <div class="actions">
+            <button id="saveBtn">Сохранить</button>
+            <button class="btn-ghost" id="reloadBtn">Сбросить</button>
+            <span class="status" id="saveStatus"></span>
+          </div>
 
-        <!-- AI PROVIDER KEYS (БД перебивает .env) -->
-        <div class="card" style="margin-top:24px;">
+          <hr style="border:none;border-top:1px solid var(--border);margin:22px 0" />
+
+          <!-- Функция 2: ключи ИИ (у каждого ключа своя кнопка «Сохранить») -->
           <h2>🔑 Ключи ИИ</h2>
           <p class="hint" style="margin-top:2px;margin-bottom:14px">Ключ из базы имеет приоритет над <code>.env</code>. «Сбросить» удаляет ключ из базы — провайдер возвращается на <code>.env</code>. Ключ целиком не показывается, только хвост.</p>
           <div id="aiKeysRows"></div>
           <p class="hint" id="aiIngestHint" style="margin-top:10px"></p>
+        </div>
+
+        <div class="card">
+          <h2>Системный промпт</h2>
+          <textarea id="systemPrompt" spellcheck="false"></textarea>
+          <p class="hint">Переменные: <code>{{name}}</code>, <code>{{bank}}</code>. Добавьте <code>[[FIN]]</code> в конец финального сообщения — система покажет кнопку перехода к форме. Сохраняется кнопкой «Сохранить» в блоке нейросети выше.</p>
         </div>
 
         <!-- CHAT SUPPORT PROMPT (второй чат — chat.html) -->
@@ -1021,19 +1028,21 @@
       };
       var providerKeysCache = {};
 
-      // Подходит ли модель выбранному провайдеру (та же логика, что на бэкенде).
-      function modelFitsProvider(provider, model){
-        var m = (model || '').trim().toLowerCase();
-        if(!m) return true; // пусто = авто-дефолт, подходит всегда
-        if(provider === 'openai') return /^(gpt|o\d|chatgpt|text-|ft:)/.test(m);
-        return m.indexOf('deepseek') !== -1;
-      }
+      // Статичные «норм настройки» под каждого провайдера. Модель/температуру/
+      // max tokens в UI не показываем и не меняем — на сохранение уходят отсюда.
+      var STATIC_PARAMS = {
+        deepseek: { model: 'deepseek-chat', temperature: 0.7, maxTokens: 1024 },
+        openai:   { model: 'gpt-5.4-mini',  temperature: 0.7, maxTokens: 1024 },
+      };
+      function staticFor(provider){ return STATIC_PARAMS[provider] || STATIC_PARAMS.deepseek; }
 
-      // При смене провайдера чистим несовместимую модель — чтобы не путала.
-      function syncModelToProvider(){
-        if(!modelFitsProvider(botFields.provider.value, botFields.model.value)){
-          botFields.model.value = '';
-        }
+      // Раскладываем статичные параметры в скрытые поля — чтобы payload и отображение
+      // были согласованы даже при смене провайдера.
+      function applyStaticParams(provider){
+        var sp = staticFor(provider);
+        botFields.model.value = sp.model;
+        botFields.temperature.value = sp.temperature;
+        botFields.maxTokens.value = sp.maxTokens;
       }
 
       function updateProviderHint(){
@@ -1043,23 +1052,20 @@
         var hasKey = providerKeysCache[p];
         if(hasKey === false){
           hint.style.color = 'var(--err)';
-          hint.textContent = '⚠️ Ключ для ' + (p==='openai'?'OpenAI (OPENAI_API_KEY)':'DeepSeek (DEEPSEEK_API_KEY)') + ' не задан в .env — бот не сможет отвечать.';
+          hint.textContent = '⚠️ Ключ для ' + (p==='openai'?'OpenAI':'DeepSeek') + ' не задан ни в базе, ни в .env — бот не сможет отвечать.';
         } else {
           hint.style.color = '';
-          hint.textContent = 'Модель можно оставить пустой — возьмётся дефолтная для выбранного провайдера. Промпты и параметры общие для обоих.';
+          hint.textContent = 'Модель, температура и max tokens заданы статично под выбранного провайдера — менять не нужно.';
         }
       }
 
       function fillBot(cfg){
         botFields.systemPrompt.value = cfg.systemPrompt || '';
         botFields.provider.value = cfg.provider || 'deepseek';
-        botFields.model.value = cfg.model || '';
-        botFields.temperature.value = cfg.temperature;
-        botFields.maxTokens.value = cfg.maxTokens;
         botFields.historyLimit.value = cfg.historyLimit;
         botFields.tgRequestLogging.checked = cfg.tgRequestLogging === true;
         providerKeysCache = cfg.providerKeys || {};
-        syncModelToProvider();
+        applyStaticParams(botFields.provider.value);
         updateProviderHint();
       }
 
@@ -1071,12 +1077,14 @@
       document.getElementById('saveBtn').addEventListener('click', function(){
         var btn = this; var st = document.getElementById('saveStatus');
         btn.disabled = true; st.className = 'status'; st.textContent = 'Сохраняю…';
+        var provider = botFields.provider.value;
+        var sp = staticFor(provider);
         var payload = {
           systemPrompt: botFields.systemPrompt.value,
-          provider: botFields.provider.value,
-          model: botFields.model.value,
-          temperature: parseFloat(botFields.temperature.value),
-          maxTokens: parseInt(botFields.maxTokens.value, 10),
+          provider: provider,
+          model: sp.model,
+          temperature: sp.temperature,
+          maxTokens: sp.maxTokens,
           historyLimit: parseInt(botFields.historyLimit.value, 10),
           tgRequestLogging: botFields.tgRequestLogging.checked,
         };
@@ -1085,7 +1093,7 @@
           .catch(function(e){ btn.disabled=false; st.className='status err'; st.textContent='Ошибка: '+e.message; });
       });
       document.getElementById('reloadBtn').addEventListener('click', loadBotConfig);
-      botFields.provider.addEventListener('change', function(){ syncModelToProvider(); updateProviderHint(); });
+      botFields.provider.addEventListener('change', function(){ applyStaticParams(botFields.provider.value); updateProviderHint(); });
 
       // ── Ключи ИИ (БД перебивает .env) ──────────────────────────────────────────
       function renderAiKeys(items, ingestEnabled){
