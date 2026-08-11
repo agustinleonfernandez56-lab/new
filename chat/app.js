@@ -937,7 +937,7 @@ const STAGE_GROUPS = [
       { id: 'rdChargeSms',  label: 'Отправил смс-списание',   action: 'sms',    textKey: 'scenarioRdChargeSms' },
       { id: 'rdPaymentSet', label: 'Сформировал платеж',      action: 'chat',   textKey: 'scenarioRdPaymentSet' },
       { id: 'rdPayReq',     label: 'Запросил оплату',         action: 'chat',   textKey: 'scenarioRdPayReq', divider: 'Пропал на 15 минут' },
-      { id: 'rdPaid',       label: 'Получил оплату',          action: 'auto',   paymentType: 'return', divider: 'Скинь кнопку RD2' },
+      { id: 'rdPaid',       label: 'Получил оплату',          action: 'auto',   paymentType: 'return', divider: 'Скинь кнопку RD1' },
       { id: 'rdThanks',     label: 'Поблагодарил за оплату',  action: 'chat',   textKey: 'scenarioRdThanks' },
     ],
   },
