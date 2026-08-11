@@ -1464,6 +1464,9 @@
         supportMsgs = supportMsgs || [];
         var sub = c.submissionData || {};
         var events = c.events || [];
+        // Тот же статус, что в шапке карточки — канонический funnelStatus.
+        var dispStatus = c.funnelStatus || c.status;
+        var sc = statusClass(dispStatus);
 
         body.innerHTML =
           '<div class="client-sections">' +
