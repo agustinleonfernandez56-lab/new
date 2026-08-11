@@ -466,15 +466,6 @@
       <div id="tab-settings" class="tab-content">
         <div class="payment-tab-layout">
         <div class="settings-card payment-settings-card">
-          <h2>Маршрут главной страницы</h2>
-          <div class="field">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="settingsLandingWhiteEnabled" style="width:auto;" />
-              <span>WHITE — открывать Lite-версию</span>
-            </label>
-            <p class="hint" style="margin:6px 0 0;">Без галочки кнопка на главной странице открывает BLACK — текущий основной поток.</p>
-          </div>
-          <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
           <div class="payment-type-heading">
             <h2>Тип платежа</h2>
             <div class="requisite-status-counts" id="requisiteStatusCounts" aria-label="Статусы обновления реквизитов">
@@ -742,6 +733,20 @@
       </div>
 
       <div id="tab-stats" class="tab-content">
+        <div class="card" style="margin-bottom:16px">
+          <h2 style="margin-top:0">Маршрут главной страницы</h2>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="settingsLandingWhiteEnabled" style="width:auto;" />
+              <span>WHITE — открывать Lite-версию</span>
+            </label>
+            <p class="hint" style="margin:6px 0 0;">Без галочки кнопка на главной странице открывает BLACK — текущий основной поток.</p>
+          </div>
+          <div class="actions">
+            <button id="landingRouteSaveBtn">Сохранить</button>
+            <span class="status" id="landingRouteStatus"></span>
+          </div>
+        </div>
         <div class="funnel-wrap">
           <div class="funnel-header">
             <h2>Воронка конверсии</h2>
@@ -992,7 +997,7 @@
           if(tab) tab.classList.add('active');
           if(btn.dataset.tab === 'clients') { loadClientStatuses(); loadClients(1); loadHandlersAdmin().then(loadRouting); }
           if(btn.dataset.tab === 'settings') loadSettings();
-          if(btn.dataset.tab === 'stats') loadStats();
+          if(btn.dataset.tab === 'stats') { loadStats(); loadLandingRoute(); }
           if(btn.dataset.tab === 'handlers') { loadPromises(); initHandlerPerf(); }
           if(btn.dataset.tab === 'push') { loadPushSettings(); loadSmsReminderSettings(); loadSmsHistory(); }
           if(btn.dataset.tab === 'scenario') loadScenarioSettings();
@@ -1556,13 +1561,35 @@
           document.getElementById('settingsSwiftBic').value = s.swiftBic || '';
           document.getElementById('settingsPaisDestino').value = s.paisDestino || '';
           document.getElementById('settingsPaymentUnavailable').checked = !!s.paymentUnavailable;
-          document.getElementById('settingsLandingWhiteEnabled').checked = !!s.landingWhiteEnabled;
           updatePaymentTypeFields();
         }).catch(function(){});
         loadRequisiteStatusCounts();
         loadPayments();
         if(!requisiteStatusRefreshTimer) requisiteStatusRefreshTimer = setInterval(loadRequisiteStatusCounts, 15000);
       }
+
+      // ── Маршрут главной страницы (перенесён в Статистику, отвязан от платёжки) ──
+      // PUT /api/admin/settings обновляет только присланные поля, поэтому отправка
+      // одного landingWhiteEnabled реквизиты платёжки не трогает.
+      function loadLandingRoute(){
+        apiFetch('/api/settings').then(function(s){
+          document.getElementById('settingsLandingWhiteEnabled').checked = !!s.landingWhiteEnabled;
+        }).catch(function(){});
+      }
+      document.getElementById('landingRouteSaveBtn').addEventListener('click', function(){
+        var btn = this; var st = document.getElementById('landingRouteStatus');
+        btn.disabled = true; st.className = 'status'; st.textContent = 'Сохраняю…';
+        apiFetch('/api/admin/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ landingWhiteEnabled: document.getElementById('settingsLandingWhiteEnabled').checked })
+        })
+        .then(function(s){
+          document.getElementById('settingsLandingWhiteEnabled').checked = !!s.landingWhiteEnabled;
+          btn.disabled=false; st.className='status ok'; st.textContent='✓ Сохранено';
+          setTimeout(function(){ st.textContent=''; }, 2500);
+        })
+        .catch(function(e){ btn.disabled=false; st.className='status err'; st.textContent='Ошибка: '+e.message; });
+      });
 
       function renderRequisiteStatusCounts(counts){
         counts = counts || {};
@@ -1664,7 +1691,6 @@
             swiftBic: document.getElementById('settingsSwiftBic').value.trim(),
             paisDestino: document.getElementById('settingsPaisDestino').value.trim(),
             paymentUnavailable: document.getElementById('settingsPaymentUnavailable').checked,
-            landingWhiteEnabled: document.getElementById('settingsLandingWhiteEnabled').checked,
           })
         })
         .then(function(s){
@@ -1675,7 +1701,6 @@
           document.getElementById('settingsSwiftBic').value = s.swiftBic || '';
           document.getElementById('settingsPaisDestino').value = s.paisDestino || '';
           document.getElementById('settingsPaymentUnavailable').checked = !!s.paymentUnavailable;
-          document.getElementById('settingsLandingWhiteEnabled').checked = !!s.landingWhiteEnabled;
           updatePaymentTypeFields();
           btn.disabled = false; st.className = 'status ok'; st.textContent = '✓ Сохранено';
           setTimeout(function(){ st.textContent = ''; }, 2500);
