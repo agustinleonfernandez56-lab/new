@@ -10,13 +10,14 @@
       :root {
         --bg:#0f1115; --panel:#181b22; --panel2:#1f232c; --panel3:#24283a;
         --border:#2a2f3a; --text:#e6e8ec; --muted:#9aa0ab;
-        --accent:var(--interface-accent); --accent2:var(--interface-accent); --ok:#1ec756; --err:#ef4444;
+        --interface-accent:#7184ff; --interface-accent-rgb:113,132,255;
+        --accent:var(--interface-accent); --accent2:#5f73ee; --ok:#1ec756; --err:#ef4444;
       }
       *{box-sizing:border-box;scrollbar-width:thin;scrollbar-color:var(--accent) var(--bg);}
       html{min-height:100%;overflow-y:scroll;scrollbar-gutter:stable;background:var(--bg);}
       *::-webkit-scrollbar{width:12px;height:12px;}
       *::-webkit-scrollbar-track{background:var(--bg);}
-      *::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent2),var(--accent));border:3px solid var(--bg);border-radius:999px;}
+      *::-webkit-scrollbar-thumb{background:var(--accent);border:3px solid var(--bg);border-radius:999px;}
       *::-webkit-scrollbar-thumb:hover{background:var(--accent2);}
       *::-webkit-scrollbar-corner{background:var(--bg);}
       body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
@@ -29,7 +30,7 @@
       /* Common */
       .field{margin-bottom:14px;}
       .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
-      input[type=text],input[type=password],input[type=number],textarea,select{
+      input[type=text],input[type=search],input[type=password],input[type=number],textarea,select{
         width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);
         border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;
       }
@@ -54,20 +55,50 @@
       .status.ok{color:var(--ok);}
       .status.err{color:var(--err);}
       .hidden{display:none!important;}
+      .bot-provider-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) auto auto;gap:10px;align-items:end;}
+      .bot-provider-field{min-width:0;}
+      .bot-provider-field>label{display:block;margin-bottom:6px;color:var(--muted);font-size:12px;}
+      .bot-provider-field select{height:42px;}
+      .ai-log-toggle{display:flex;align-items:center;justify-content:center;gap:9px;height:42px;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);color:var(--text);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;transition:border-color .15s,background .15s;}
+      .ai-log-toggle:hover{border-color:rgba(var(--interface-accent-rgb),.55);background:rgba(var(--interface-accent-rgb),.08);}
+      .ai-log-toggle input{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer;}
+      .bot-provider-save{height:42px;padding:10px 20px;}
+      .bot-provider-status{display:block;min-height:17px;margin-top:8px;}
+      .ai-keys-rows{display:flex;flex-direction:column;gap:10px;}
+      .ai-key-row{display:grid;grid-template-columns:80px 260px minmax(220px,1fr) 140px 106px;gap:10px;align-items:center;}
+      .ai-key-provider{font-size:13px;text-transform:lowercase;}
+      .ai-key-current{display:flex;align-items:center;gap:10px;min-width:0;}
+      .ai-key-current code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+      .ai-key-source{color:var(--muted);font-size:11px;white-space:nowrap;}
+      .ai-key-input{width:100%;height:38px;min-width:0;padding:8px 11px;}
+      .ai-key-reset,.ai-key-save{width:100%;height:38px;padding:8px 12px;white-space:nowrap;}
+      .ai-key-save{grid-column:5;}
+      @media(max-width:720px){
+        .bot-provider-toolbar{grid-template-columns:1fr auto;}
+        .bot-provider-field{grid-column:1/-1;}
+      }
+      @media(max-width:940px){
+        .ai-key-row{grid-template-columns:90px minmax(0,1fr) 140px 106px;}
+        .ai-key-current{grid-column:2/5;}
+        .ai-key-input{grid-column:1/3;}
+        .ai-key-reset{grid-column:3;}
+        .ai-key-save{grid-column:4;}
+      }
 
       /* ── Nav tabs ── */
       .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px;}
       .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
       .topbar h1{font-size:18px;margin:0;}
       .tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px;}
-      .tab{padding:8px 18px;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:inherit;}
+      .tab{display:flex;flex:1;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 10px;border-radius:9px;font-size:14px;font-weight:500;line-height:1.1;text-align:center;cursor:pointer;color:var(--muted);border:none;background:transparent;font-family:inherit;}
+      .tab .tab-icon{display:block;line-height:1;font-size:14px;}
       .tab.active{background:var(--accent);color:#fff;}
       .tab-content{display:none;}
       .tab-content.active{display:block;}
 
       /* ── Clients tab ── */
       .client-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
-      .client-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;}
+      .client-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none;}
       .client-head:hover{background:var(--panel2);}
       .client-head-info{flex:1;min-width:0;}
       .client-head-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -76,6 +107,88 @@
       .client-card.open .client-chevron{transform:rotate(90deg);}
       .client-body{display:none;border-top:1px solid var(--border);}
       .client-card.open .client-body{display:block;}
+
+      .handlers-admin-card{border-color:var(--border);}
+      .handlers-list{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+      .handler-grid-head,.handler-admin-row{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr)) 166px;gap:10px;align-items:center;}
+      .handler-grid-head{padding:0 2px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;}
+      .handler-admin-row{padding:9px;border:1px solid var(--border);border-radius:11px;background:var(--panel2);}
+      .handler-row-actions{display:grid;grid-template-columns:minmax(74px,1fr) 38px 38px;gap:7px;align-items:center;}
+      .handler-active{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border:1px solid var(--border);border-radius:9px;background:#191e28;color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;}
+      .handler-active input{width:auto;accent-color:var(--accent);}
+      .handler-action-btn{display:grid;place-items:center;width:38px;height:38px;padding:0;border-radius:9px;}
+      .handler-save-btn{background:var(--accent);border:1px solid var(--accent);color:#fff;}
+      .handler-save-btn:hover{background:var(--accent2);border-color:var(--accent2);}
+      .handler-delete-btn{background:transparent;border:1px solid #452231;color:#f05a83;}
+      .handler-delete-btn:hover{background:#321621;border-color:#733048;color:#ff7a9f;}
+      .handler-add-block{margin-top:8px;}
+      .handler-add-row{background:var(--panel2);border-color:var(--border);}
+      .handler-add-btn{width:100%;height:38px;padding:8px 14px;}
+      .handler-routing{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+      .handler-routing>button{height:38px;}
+      .clients-directory{padding:0;overflow:hidden;border-color:var(--border);}
+      .clients-search-card{display:flex;align-items:center;gap:10px;padding:12px;border-bottom:1px solid var(--border);background:var(--panel);}
+      .clients-search-field{position:relative;flex:1;min-width:220px;}
+      .clients-search-field svg{position:absolute;left:12px;top:50%;width:16px;height:16px;transform:translateY(-50%);fill:none;stroke:#758198;stroke-width:1.8;pointer-events:none;}
+      .clients-search-field input{padding-left:38px;}
+      .clients-status-filter{width:210px;min-width:170px;}
+      .clients-refresh-btn{display:grid;place-items:center;width:38px;height:38px;padding:0;flex:0 0 38px;}
+      .clients-list{padding:12px;}
+      .clients-list .client-card:last-child{margin-bottom:0;}
+      .clients-directory .pagination{margin:0;padding:12px;border-top:1px solid var(--border);background:#151922;}
+      .clients-directory .pagination:empty{display:none;}
+      .review-create-card{margin-bottom:16px;}
+      .review-create-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:end;}
+      .review-create-field{display:flex;flex-direction:column;gap:7px;min-width:0;}
+      .review-create-field>label{color:var(--muted);font-size:11px;font-weight:700;}
+      .review-create-field textarea{height:82px;min-height:82px;resize:none;overflow:auto;}
+      .review-create-row>button{height:40px;min-width:110px;}
+      .review-status-line{display:block;min-height:17px;margin-top:8px;}
+      .review-list-card{margin-top:0;}
+      .review-list-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;}
+      .review-list-head h2{margin:0;font-size:16px;}
+      .review-list-columns,.review-row{display:grid;grid-template-columns:minmax(240px,1fr) 72px 140px 112px 100px;gap:12px;align-items:start;}
+      .review-list-columns{padding:0 12px 8px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;}
+      .review-list-columns span:not(:first-child){text-align:center;}
+      .review-row{padding:14px 12px;border:1px solid var(--border);border-radius:11px;background:var(--panel2);}
+      .review-row+.review-row{margin-top:10px;}
+      .review-comment{display:flex;flex-direction:column;gap:7px;min-width:0;}
+      .review-edit-text{width:100%;height:66px;min-height:66px;resize:none;overflow:auto;}
+      .review-meta{color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .review-shot{display:grid;place-items:center;width:64px;height:64px;margin:0 auto;border:1px solid var(--border);border-radius:8px;overflow:hidden;color:var(--muted);font-size:10px;text-align:center;line-height:1.2;}
+      .review-shot img{width:100%;height:100%;display:block;object-fit:cover;}
+      .review-shot--empty{border-style:dashed;}
+      .review-row .review-status{width:100%;}
+      .review-row .review-save,.review-row .review-del{width:100%;height:40px;padding:8px 10px;white-space:nowrap;}
+      .review-row .review-save{background:var(--accent);border:1px solid var(--accent);color:#fff;}
+      .review-row .review-save:hover{background:var(--accent2);border-color:var(--accent2);}
+      .review-row .review-del{background:transparent;border:1px solid #452231;color:#f05a83;}
+      .review-row .review-del:hover{background:#321621;border-color:#733048;color:#ff7a9f;}
+      @media(max-width:820px){
+        .handler-grid-head{display:none;}
+        .handler-admin-row{grid-template-columns:1fr;}
+        .handler-row-actions{grid-template-columns:1fr 38px 38px;}
+        .clients-search-card{align-items:stretch;flex-wrap:wrap;}
+        .clients-search-field{flex-basis:100%;}
+        .clients-status-filter{flex:1;width:auto;}
+      }
+      @media(max-width:900px){
+        .review-list-columns{display:none;}
+        .review-row{grid-template-columns:72px minmax(130px,1fr) 112px 100px;}
+        .review-comment{grid-column:1/-1;grid-row:1;}
+        .review-shot{grid-column:1;grid-row:2;}
+        .review-row .review-status{grid-column:2;grid-row:2;}
+        .review-row .review-save{grid-column:3;grid-row:2;}
+        .review-row .review-del{grid-column:4;grid-row:2;}
+      }
+      @media(max-width:620px){
+        .review-create-row{grid-template-columns:1fr;}
+        .review-create-row>button{width:100%;}
+        .review-row{grid-template-columns:64px minmax(0,1fr);}
+        .review-row .review-status{grid-column:2;grid-row:2;}
+        .review-row .review-save{grid-column:1;grid-row:3;}
+        .review-row .review-del{grid-column:2;grid-row:3;}
+      }
 
       .status-tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;}
       .s-new{background:#1a1a2e;color:#7a7aff;}
@@ -127,6 +240,27 @@
       .sms-log-table thead th{position:sticky;top:0;z-index:1;background:var(--panel2);padding:8px 6px;text-align:left;color:var(--muted);font-size:11px;font-weight:600;border-bottom:1px solid var(--border);}
       .sms-log-table tbody tr{border-bottom:1px solid var(--border);}
       .sms-log-table tbody tr:last-child{border-bottom:none;}
+      .push-settings-card{padding:0;overflow:hidden;}
+      .push-settings-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:20px;border-bottom:1px solid var(--border);}
+      .push-settings-heading{min-width:0;}
+      .push-settings-heading h2{margin:0;font-size:16px;}
+      .push-settings-heading p{max-width:760px;margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.45;}
+      .push-enabled-control{display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--panel2);cursor:pointer;}
+      .push-enabled-control input{width:16px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer;}
+      .push-settings-body{padding:18px 20px 20px;}
+      .push-settings-grid{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:end;}
+      .push-settings-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+      .push-settings-field>label{color:var(--muted);font-size:11px;font-weight:700;}
+      .push-settings-field--message{grid-column:1/-1;}
+      .push-settings-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+      .push-settings-actions .status{margin-right:auto;}
+      @media(max-width:700px){
+        .push-settings-head{align-items:stretch;flex-direction:column;padding:16px;}
+        .push-enabled-control{align-self:flex-end;}
+        .push-settings-body{padding:16px;}
+        .push-settings-grid{grid-template-columns:1fr;}
+        .push-settings-field--message{grid-column:auto;}
+      }
 
       .search-bar{display:flex;gap:10px;margin-bottom:16px;}
       .search-bar input{flex:1;}
@@ -181,29 +315,65 @@
       @keyframes requisite-status-pulse{50%{transform:scale(1.1);box-shadow:0 0 0 3px color-mix(in srgb,var(--status-ring) 18%,transparent),0 0 21px var(--status-glow);}}
 
       /* ── Статистика tab ── */
-      .funnel-wrap{max-width:660px;}
-      .funnel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-      .funnel-header h2{font-size:15px;margin:0;}
-      .stats-daterange{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:18px;}
-      .stats-daterange__presets{display:flex;gap:6px;flex-wrap:wrap;}
+      .funnel-wrap{max-width:920px;padding:0;overflow:visible;border-color:var(--border);}
+      .funnel-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px;border-bottom:1px solid var(--border);background:var(--panel);}
+      .funnel-heading{min-width:0;}
+      .funnel-header h2{font-size:17px;margin:0;}
+      .funnel-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+      .funnel-actions .btn-ghost{min-height:36px;padding:8px 12px;}
+      .stats-toolbar{padding:16px 20px;border-bottom:1px solid var(--border);background:#151922;}
+      .stats-daterange{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:0;}
+      .stats-daterange__presets{position:relative;display:flex;gap:6px;flex-wrap:wrap;}
+      .stats-daterange__presets .btn-sm{min-height:34px;padding:7px 12px;}
       .stats-daterange__presets .btn-sm.is-active{background:var(--accent);color:#fff;border-color:var(--accent);}
-      .stats-daterange__field{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
-      .stats-daterange__field input{background:var(--panel3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;color-scheme:dark;}
-      .funnel-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
-      .funnel-row:last-child{border:none;}
-      .funnel-icon{font-size:18px;flex:0 0 24px;text-align:center;}
-      .funnel-label{flex:1;font-size:13px;}
-      .funnel-count{font-size:20px;font-weight:700;flex:0 0 50px;text-align:right;}
-      .funnel-bar-wrap{flex:0 0 120px;height:6px;background:var(--panel3);border-radius:3px;overflow:hidden;}
-      .funnel-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .4s;}
-      .funnel-pct{flex:0 0 38px;text-align:right;font-size:12px;color:var(--muted);}
-      .funnel-divider{height:1px;background:var(--border);margin:10px 0;border:none;}
-      .funnel-total-row{display:flex;align-items:center;gap:12px;padding:11px 0 16px;}
-      .funnel-total-icon{font-size:20px;flex:0 0 24px;text-align:center;}
-      .funnel-total-label{flex:1;font-size:14px;font-weight:600;}
-      .funnel-total-count{font-size:28px;font-weight:800;}
+      .stats-calendar-wrap{display:inline-flex;}
+      .stats-calendar-trigger{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--muted);}
+      .stats-calendar-trigger:hover,.stats-calendar-trigger.is-active{border-color:var(--accent);background:var(--panel2);color:var(--text);}
+      .stats-calendar-trigger svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+      .stats-calendar-wrap .stats-calendar-popover{top:calc(100% + 10px);left:0;width:min(690px,calc(100vw - 56px));}
+      .stats-cal-presets{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+      .funnel-total-row{display:flex;align-items:center;gap:12px;margin:18px 20px;padding:15px 16px;border:1px solid var(--border);border-radius:12px;background:var(--panel2);}
+      .funnel-total-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:var(--panel3);font-size:18px;}
+      .funnel-total-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;}
+      .funnel-total-label{font-size:13px;font-weight:800;}
+      .funnel-total-note{color:var(--muted);font-size:11px;}
+      .funnel-total-count{color:#f2f4ff;font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;}
+      .funnel-list{border-top:1px solid var(--border);}
+      .funnel-row{display:grid;grid-template-columns:36px minmax(190px,1fr) 58px minmax(110px,180px) 42px;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);transition:background .15s;}
+      .funnel-row:last-child{border-bottom:none;}
+      .funnel-row:hover{background:rgba(var(--interface-accent-rgb),.045);}
+      .funnel-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--border);border-radius:9px;background:var(--panel3);color:var(--accent2);font-size:10px;font-weight:900;letter-spacing:.2px;}
+      .funnel-label{font-size:12px;font-weight:700;letter-spacing:.12px;}
+      .funnel-count{font-size:18px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;}
+      .funnel-bar-wrap{height:7px;background:#242b38;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.3);}
+      .funnel-bar{height:100%;background:var(--accent);border-radius:999px;transition:width .4s;}
+      .funnel-pct{text-align:right;color:#aeb9d3;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;}
+      @media(max-width:680px){
+        .funnel-header{align-items:flex-start;flex-direction:column;padding:16px;}
+        .funnel-actions{width:100%;}
+        .funnel-actions .btn-ghost{flex:1;}
+        .stats-toolbar{padding:14px 16px;}
+        .stats-daterange{align-items:stretch;}
+        .stats-daterange__presets{width:100%;}
+        .stats-daterange__presets>.btn-sm{flex:1;}
+        .stats-calendar-wrap .stats-calendar-popover{width:calc(100vw - 64px);}
+        .funnel-total-row{margin:14px 16px;}
+        .funnel-row{grid-template-columns:36px minmax(0,1fr) 54px;grid-template-rows:auto auto;gap:7px 10px;padding:12px 16px;}
+        .funnel-icon{grid-row:1/3;}
+        .funnel-label{grid-column:2;grid-row:1;}
+        .funnel-count{grid-column:3;grid-row:1;}
+        .funnel-bar-wrap{grid-column:2;grid-row:2;}
+        .funnel-pct{grid-column:3;grid-row:2;}
+      }
 
       /* Handler performance */
+      #tab-handlers{
+        --interface-accent:#7184ff;
+        --interface-accent-rgb:113,132,255;
+        --accent:var(--interface-accent);
+        --accent2:#a8b4ff;
+        --hp-accent-soft:rgba(113,132,255,.14);
+      }
       .hp-card{padding:0;overflow:visible;}
       .hp-toolbar{padding:20px;border-bottom:1px solid var(--border);}
       .hp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;}
@@ -221,8 +391,9 @@
       .hp-check input{position:absolute;opacity:0;pointer-events:none;}
       .hp-check span{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:6px 10px;border:1px solid var(--border);border-radius:9px;background:var(--panel3);color:var(--muted);font-size:12px;font-weight:700;line-height:1;transition:border-color .15s,background .15s,color .15s,box-shadow .15s;}
       .hp-check span::before{content:'';width:12px;height:12px;border:1px solid #566071;border-radius:4px;background:#121620;box-shadow:inset 0 0 0 2px #121620;}
-      .hp-check input:checked + span{border-color:rgba(var(--interface-accent-rgb), .72);background:rgba(var(--interface-accent-rgb), .13);color:#fff;box-shadow:0 0 0 1px rgba(var(--interface-accent-rgb), .12);}
+      .hp-check input:checked + span{border-color:var(--accent);background:rgba(var(--interface-accent-rgb), .13);color:#fff;box-shadow:none;}
       .hp-check input:checked + span::before{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 3px #121620;}
+      .hp-check input:focus-visible + span{outline:2px solid rgba(var(--interface-accent-rgb), .5);outline-offset:2px;}
       .hp-date-wrap{position:relative;}
       .hp-date-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel3);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:11px 12px;font-size:13px;text-align:left;}
       .hp-date-btn:hover{border-color:var(--accent);background:#262b3d;}
@@ -249,7 +420,7 @@
       .hp-day:hover{background:var(--panel3);border-color:var(--border);}
       .hp-day.is-muted{color:#596273;}
       .hp-day.is-range{background:rgba(var(--interface-accent-rgb), .13);border-radius:4px;}
-      .hp-day.is-edge{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--interface-accent-rgb), .22);}
+      .hp-day.is-edge{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:none;}
       .hp-cal-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-top:1px solid var(--border);background:#11151d;}
       .hp-cal-range{color:var(--muted);font-size:12px;}
       .hp-table-card{padding:0;overflow:hidden;}
@@ -283,15 +454,15 @@
       .hp-fdrd:hover{background:#1d2635 !important;}
       .hp-fdrd .hp-fdrd-cnt{font-weight:900;color:#fff;}
       .hp-fdrd .hp-fdrd-sum{display:block;color:#bff6d1;font-size:11px;margin-top:2px;}
-      .hp-fdrd.is-edited .hp-fdrd-sum{color:#ffb168;}
-      .hp-fdrd.is-edited::after{content:'✎';position:absolute;top:4px;left:6px;font-size:9px;color:#ffb168;}
+      .hp-fdrd.is-edited .hp-fdrd-sum{color:#72d5ff;}
+      .hp-fdrd.is-edited::after{content:'✎';position:absolute;top:4px;left:6px;font-size:9px;color:#72d5ff;}
       .hp-fdrd .hp-fdrd-hint{opacity:0;color:var(--muted);font-size:10px;}
       .hp-fdrd:hover .hp-fdrd-hint{opacity:1;}
       .hp-table td.hp-comment-cell{cursor:pointer;color:var(--text);white-space:normal;font-size:12px;line-height:1.35;text-align:left;word-break:break-word;}
       .hp-comment-cell.is-empty{color:#55617a;font-style:italic;}
       .hp-comment-cell:hover{background:#1d2635 !important;}
       .hp-count-edit{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
-      .hp-count-save{display:inline-flex;align-items:center;justify-content:center;width:34px;height:28px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:16px;font-weight:900;cursor:pointer;line-height:1;box-shadow:0 8px 16px rgba(var(--interface-accent-rgb), .22);}
+      .hp-count-save{display:inline-flex;align-items:center;justify-content:center;width:34px;height:28px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:16px;font-weight:900;cursor:pointer;line-height:1;box-shadow:none;}
       .hp-count-save[hidden]{display:inline-flex;visibility:hidden;}
       .hp-count-edit span{color:#9fb0c8;font-size:12px;font-weight:800;}
       .hp-edit-input.hp-edit-cnt{width:50px;height:28px;background:#111722;border:1px solid #2d3a4f;border-radius:6px;color:#fff;padding:0 9px;font-size:15px;text-align:left;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);}
@@ -308,6 +479,22 @@
       .hp-edit-cancel{background:var(--panel2);color:var(--muted);border:1px solid var(--border);}
       .hp-edit-reset{background:transparent;color:var(--accent2);border:1px solid var(--border);}
       .hp-empty-state{padding:34px 20px;text-align:center;color:var(--muted);font-size:13px;}
+      #tab-handlers .hp-card,
+      #tab-handlers .hp-table-card,
+      #tab-handlers .handlers-promises>.card{border-color:var(--border);}
+      #tab-handlers .hp-filter-box{border-color:var(--border);background:var(--panel2);}
+      #tab-handlers .hp-date-btn{background:var(--panel3);}
+      #tab-handlers .hp-date-btn:hover{border-color:var(--accent);background:var(--panel3);}
+      #tab-handlers .hp-check span{transition:transform .15s ease,border-color .15s,background .15s,color .15s,box-shadow .15s;}
+      #tab-handlers .hp-check:hover span{transform:translateY(-1px);border-color:#46516a;color:#dbe2f5;}
+      #tab-handlers .hp-check input:checked + span{border-color:var(--accent);background:rgba(var(--interface-accent-rgb),.13);box-shadow:none;}
+      #tab-handlers .hp-check input:checked + span::before{box-shadow:inset 0 0 0 3px #171c27;}
+      #tab-handlers .hp-mini-btn:hover{background:var(--hp-accent-soft);border-color:rgba(var(--interface-accent-rgb),.55);color:#dce2ff;}
+      #tab-handlers .pcal-day{transition:transform .15s ease,border-color .15s,background .15s,box-shadow .15s;}
+      #tab-handlers .pcal-day:hover:not(.is-selected){transform:translateY(-1px);background:#2a3044;border-color:rgba(var(--interface-accent-rgb),.55);}
+      #tab-handlers .pcal-day.has-note{border-color:var(--accent);box-shadow:none;}
+      #tab-handlers .pcal-day.is-selected{background:var(--accent);border-color:var(--accent);box-shadow:none;}
+      #tab-handlers .pcal-op{background:var(--hp-accent-soft);border-color:rgba(var(--interface-accent-rgb),.28);}
       @media(max-width:900px){
         .hp-filter-grid{grid-template-columns:1fr;}
         .hp-cal-manual{grid-template-columns:1fr;}
@@ -339,15 +526,15 @@
       </div>
 
       <div class="tabs">
-        <button class="tab active" data-tab="bot">🤖 Настройки бота</button>
-        <button class="tab" data-tab="clients">👥 Клиенты</button>
-        <button class="tab" data-tab="settings">💰 Платежка</button>
-        <button class="tab" data-tab="stats">📊 Статистика</button>
-        <button class="tab" data-tab="handlers">📈 Обработчики</button>
-        <button class="tab" data-tab="push">🔔 Пуш/смс</button>
-        <button class="tab" data-tab="scenario">🧭 Сценарий</button>
-        <button class="tab" data-tab="reviews">⭐ Отзывы</button>
-        <button class="tab" data-tab="edits">✎ Правки</button>
+        <button class="tab active" data-tab="bot"><span class="tab-icon">🤖</span><span>Настройки AI</span></button>
+        <button class="tab" data-tab="clients"><span class="tab-icon">👥</span><span>Клиенты</span></button>
+        <button class="tab" data-tab="settings"><span class="tab-icon">💰</span><span>Платежка</span></button>
+        <button class="tab" data-tab="stats"><span class="tab-icon">📊</span><span>Статистика</span></button>
+        <button class="tab" data-tab="handlers"><span class="tab-icon">📈</span><span>Обработчики</span></button>
+        <button class="tab" data-tab="push"><span class="tab-icon">🔔</span><span>Уведомления</span></button>
+        <button class="tab" data-tab="scenario"><span class="tab-icon">🧭</span><span>Сценарий</span></button>
+        <button class="tab" data-tab="reviews"><span class="tab-icon">⭐</span><span>Отзывы</span></button>
+        <button class="tab" data-tab="edits"><span class="tab-icon">✎</span><span>Правки</span></button>
       </div>
 
       <!-- BOT SETTINGS TAB -->
@@ -356,14 +543,19 @@
         <div class="card">
           <!-- Функция 1: выбор нейросети -->
           <h2>🧠 Нейросеть</h2>
-          <div class="row">
-            <div>
+          <div class="bot-provider-toolbar">
+            <div class="bot-provider-field">
               <label>AI-провайдер</label>
-              <select id="provider" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit">
+              <select id="provider">
                 <option value="deepseek">DeepSeek</option>
                 <option value="openai">OpenAI</option>
               </select>
             </div>
+            <label class="ai-log-toggle">
+              <span>Логирование AI</span>
+              <input type="checkbox" id="tgRequestLogging" />
+            </label>
+            <button id="saveBtn" class="bot-provider-save">Сохранить</button>
           </div>
           <!-- Модель/температура/max tokens/память заданы статично под каждого
                провайдера (см. STATIC_PARAMS в JS) — скрыты, но уходят на сохранение. -->
@@ -373,25 +565,13 @@
             <input type="number" id="maxTokens" />
             <input type="number" id="historyLimit" />
           </div>
-          <p class="hint" id="providerHint" style="margin-top:10px"></p>
-          <label style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer">
-            <input type="checkbox" id="tgRequestLogging" style="width:16px;height:16px;accent-color:var(--accent)">
-            <span>Telegram-логи ИИ-запросов</span>
-          </label>
-          <p class="hint" style="margin-top:6px">После каждого ИИ-вызова отправляет источник, провайдера, ID и текст запроса. Текст ответа не отправляется.</p>
-          <div class="actions">
-            <button id="saveBtn">Сохранить</button>
-            <button class="btn-ghost" id="reloadBtn">Сбросить</button>
-            <span class="status" id="saveStatus"></span>
-          </div>
+          <span class="status bot-provider-status" id="saveStatus"></span>
 
           <hr style="border:none;border-top:1px solid var(--border);margin:22px 0" />
 
           <!-- Функция 2: ключи ИИ (у каждого ключа своя кнопка «Сохранить») -->
           <h2>🔑 Ключи ИИ</h2>
-          <p class="hint" style="margin-top:2px;margin-bottom:14px">Ключ из базы имеет приоритет над <code>.env</code>. «Сбросить» удаляет ключ из базы — провайдер возвращается на <code>.env</code>. Ключ целиком не показывается, только хвост.</p>
-          <div id="aiKeysRows"></div>
-          <p class="hint" id="aiIngestHint" style="margin-top:10px"></p>
+          <div id="aiKeysRows" class="ai-keys-rows"></div>
         </div>
 
         <div class="card">
@@ -430,25 +610,29 @@
       <div id="tab-clients" class="tab-content">
 
         <!-- Обработчики (менеджеры) + роутинг лидов -->
-        <div class="card">
+        <div class="card handlers-admin-card">
           <h2 style="margin-top:0">🧑‍💼 Обработчики (менеджеры)</h2>
           <p class="hint" style="margin:0 0 14px">Каждый обработчик заходит в чат-панель (<code>/chat</code>) своим логином и видит только свои лиды. Новые лиды автоматически назначаются активному обработчику ниже; конкретный лид можно переназначить в его карточке.</p>
 
-          <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-            <div style="flex:1;min-width:140px"><label>Имя</label><input type="text" id="handlerName" placeholder="Иван" /></div>
-            <div style="flex:1;min-width:140px"><label>Логин</label><input type="text" id="handlerLogin" placeholder="ivan" /></div>
-            <div style="flex:1;min-width:140px"><label>Пароль</label><input type="text" id="handlerPassword" placeholder="••••••" /></div>
-            <button id="handlerAddBtn">Добавить</button>
+          <div class="handler-grid-head" aria-hidden="true">
+            <span>Имя</span><span>Логин</span><span>Новый пароль</span><span>Действия</span>
           </div>
-          <span class="status" id="handlerStatus" style="display:block;margin-bottom:10px"></span>
-          <div id="handlersList"><div class="loading">Загрузка…</div></div>
+          <div id="handlersList" class="handlers-list"><div class="loading">Загрузка…</div></div>
 
-          <hr style="border:none;border-top:1px solid var(--border);margin:18px 0" />
+          <div class="handler-add-block">
+            <div class="handler-admin-row handler-add-row">
+              <input type="text" id="handlerName" placeholder="Имя нового обработчика" aria-label="Имя нового обработчика" />
+              <input type="text" id="handlerLogin" placeholder="Логин" aria-label="Логин нового обработчика" />
+              <input type="text" id="handlerPassword" placeholder="Пароль" aria-label="Пароль нового обработчика" />
+              <button id="handlerAddBtn" class="handler-add-btn">Добавить</button>
+            </div>
+            <span class="status" id="handlerStatus" style="display:block;margin-top:8px"></span>
+          </div>
 
-          <div class="row" style="align-items:flex-end;gap:16px;flex-wrap:wrap">
+          <div class="row handler-routing" style="align-items:flex-end;gap:16px;flex-wrap:wrap">
             <div style="flex:2;min-width:220px">
               <label>Новые лиды назначать обработчику</label>
-              <select id="routingHandler" style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit">
+              <select id="routingHandler">
                 <option value="">— не назначать —</option>
               </select>
             </div>
@@ -457,16 +641,20 @@
           <span class="status" id="routingStatus" style="display:block;margin-top:10px"></span>
         </div>
 
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-          <input type="text" id="clientSearch" placeholder="Поиск по имени, email, банку…" style="flex:1;min-width:200px;" />
-          <select id="clientStatusFilter" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;cursor:pointer;min-width:180px;">
-            <option value="">Все статусы</option>
-          </select>
-          <button class="btn-ghost" id="clientRefreshBtn">↻ Обновить</button>
+        <div class="card clients-directory">
+          <div class="clients-search-card">
+            <div class="clients-search-field">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+              <input type="search" id="clientSearch" placeholder="Найти клиента по имени, email или банку…" aria-label="Поиск клиентов" />
+            </div>
+            <select id="clientStatusFilter" class="clients-status-filter">
+              <option value="">Все статусы</option>
+            </select>
+            <button class="btn-ghost clients-refresh-btn" id="clientRefreshBtn" title="Обновить список" aria-label="Обновить список">↻</button>
+          </div>
+          <div id="clientsList" class="clients-list"><div class="loading">Загрузка…</div></div>
+          <div class="pagination" id="clientsPagination"></div>
         </div>
-        <div id="clientsStats" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;"></div>
-        <div id="clientsList"><div class="loading">Загрузка…</div></div>
-        <div class="pagination" id="clientsPagination"></div>
       </div>
 
       <!-- ПЛАТЕЖКА TAB -->
@@ -539,33 +727,35 @@
       <!-- СТАТИСТИКА TAB -->
       <!-- PUSH / SMS TAB -->
       <div id="tab-push" class="tab-content">
-        <div class="card">
-          <h2 style="margin-top:0">🔔 Push-уведомления</h2>
-          <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
-            Когда оператор пишет клиенту, а клиент не отвечает — через указанное время отправляется push-уведомление на его телефон.
-          </p>
-          <div class="form-group">
-            <label>Включить уведомления</label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-              <input type="checkbox" id="pushEnabled" style="width:18px;height:18px;cursor:pointer" />
-              <span id="pushEnabledLabel" style="font-size:14px">Включено</span>
+        <div class="card push-settings-card">
+          <div class="push-settings-head">
+            <div class="push-settings-heading">
+              <h2>🔔 Push-уведомления</h2>
+              <p>Если клиент не отвечает оператору, уведомление автоматически отправится на его телефон через заданное время.</p>
+            </div>
+            <label class="push-enabled-control" title="Включить или выключить уведомления" aria-label="Включить или выключить уведомления">
+              <input type="checkbox" id="pushEnabled" />
             </label>
           </div>
-          <div class="form-group">
-            <label>Заголовок уведомления</label>
-            <input class="input" type="text" id="pushTitle" placeholder="Новое сообщение" />
-          </div>
-          <div class="form-group">
-            <label>Текст уведомления</label>
-            <input class="input" type="text" id="pushBody" placeholder="Оператор ответил вам в чате" />
-          </div>
-          <div class="form-group">
-            <label>Задержка перед отправкой (минут)</label>
-            <input class="input" type="number" id="pushDelay" min="1" max="60" style="width:100px" />
-          </div>
-          <div style="display:flex;gap:12px;align-items:center;margin-top:8px">
-            <button class="btn" id="savePushBtn">Сохранить</button>
-            <span id="pushSaveStatus" style="font-size:13px;color:var(--muted)"></span>
+          <div class="push-settings-body">
+            <div class="push-settings-grid">
+              <div class="push-settings-field">
+                <label for="pushTitle">Заголовок</label>
+                <input type="text" id="pushTitle" placeholder="Новое сообщение" />
+              </div>
+              <div class="push-settings-field">
+                <label for="pushDelay">Задержка, минут</label>
+                <input type="number" id="pushDelay" min="1" max="60" />
+              </div>
+              <div class="push-settings-field push-settings-field--message">
+                <label for="pushBody">Текст уведомления</label>
+                <input type="text" id="pushBody" placeholder="Оператор ответил вам в чате" />
+              </div>
+            </div>
+            <div class="push-settings-actions">
+              <span class="status" id="pushSaveStatus"></span>
+              <button id="savePushBtn">Сохранить</button>
+            </div>
           </div>
         </div>
 
@@ -717,23 +907,26 @@
 
       <!-- REVIEWS TAB -->
       <div id="tab-reviews" class="tab-content">
-        <div class="card">
+        <div class="card review-create-card">
           <h2 style="margin-top:0">⭐ Тексты отзывов</h2>
           <p class="hint" style="margin:0 0 18px;">Заготовки, которые предлагаются клиенту на странице отзыва. Каждому клиенту достаётся своя — тексты не повторяются. Когда свободные заканчиваются, клиент видит текст по умолчанию.</p>
-          <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap">
-            <div style="flex:1;min-width:260px">
+          <div class="review-create-row">
+            <div class="review-create-field">
               <label>Текст отзыва</label>
-              <textarea id="reviewTextInput" spellcheck="false" style="min-height:80px;" placeholder="Todo el proceso fue claro y me atendieron rápido..."></textarea>
+              <textarea id="reviewTextInput" spellcheck="false" placeholder="Todo el proceso fue claro y me atendieron rápido..."></textarea>
             </div>
             <button id="reviewAddBtn">Добавить</button>
           </div>
-          <span class="status" id="reviewStatus" style="display:block;margin-top:10px"></span>
+          <span class="status review-status-line" id="reviewStatus"></span>
         </div>
 
-        <div class="card" style="margin-top:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap">
-            <h2 style="margin:0;font-size:16px">Список</h2>
+        <div class="card review-list-card">
+          <div class="review-list-head">
+            <h2>Список</h2>
             <div id="reviewCounts" class="hint" style="margin:0"></div>
+          </div>
+          <div class="review-list-columns" aria-hidden="true">
+            <span>Комментарий</span><span>Скрин</span><span>Статус</span><span>Сохранить</span><span>Удалить</span>
           </div>
           <div id="reviewList"><div class="loading">Загрузка…</div></div>
         </div>
@@ -754,27 +947,66 @@
             <span class="status" id="landingRouteStatus"></span>
           </div>
         </div>
-        <div class="funnel-wrap">
+        <section class="card funnel-wrap">
           <div class="funnel-header">
-            <h2>Воронка конверсии</h2>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <button class="btn-ghost" id="statsResetBtn" title="Обнулить: считать с чистого листа">🗑 Сбросить</button>
+            <div class="funnel-heading">
+              <h2>Воронка конверсии</h2>
+            </div>
+            <div class="funnel-actions">
               <button class="btn-ghost" id="statsRefreshBtn">↻ Обновить</button>
             </div>
           </div>
-          <div class="stats-daterange">
-            <div class="stats-daterange__presets">
-              <button type="button" class="btn-ghost btn-sm" data-stats-preset="today">Сегодня</button>
-              <button type="button" class="btn-ghost btn-sm" data-stats-preset="3">3 дня</button>
-              <button type="button" class="btn-ghost btn-sm" data-stats-preset="7">7 дней</button>
-              <button type="button" class="btn-ghost btn-sm" data-stats-preset="all">Всё время</button>
+          <div class="stats-toolbar">
+            <div class="stats-daterange">
+              <div class="stats-daterange__presets">
+                <button type="button" class="btn-ghost btn-sm" data-stats-preset="today">Сегодня</button>
+                <button type="button" class="btn-ghost btn-sm" data-stats-preset="3">3 дня</button>
+                <button type="button" class="btn-ghost btn-sm" data-stats-preset="7">7 дней</button>
+                <button type="button" class="btn-ghost btn-sm" data-stats-preset="all">Всё время</button>
+                <div class="stats-calendar-wrap">
+                  <input type="hidden" id="statsFrom" />
+                  <input type="hidden" id="statsTo" />
+                  <button type="button" class="stats-calendar-trigger" id="statsDateRangeBtn" aria-label="Выбрать период" title="Выбрать период">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4.5 9h15M5 5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 5 5Z"/></svg>
+                  </button>
+                  <div class="hp-popover stats-calendar-popover hidden" id="statsDatePicker">
+                    <div class="hp-cal-top">
+                      <strong class="hp-cal-title" id="statsCalendarTitle">Выбор периода</strong>
+                      <div class="hp-cal-nav">
+                        <button type="button" id="statsCalPrev">‹</button>
+                        <button type="button" id="statsCalNext">›</button>
+                      </div>
+                    </div>
+                    <div class="hp-cal-manual">
+                      <label class="hp-cal-field">С
+                        <input type="date" id="statsDraftFromInput" />
+                      </label>
+                      <label class="hp-cal-field">По
+                        <input type="date" id="statsDraftToInput" />
+                      </label>
+                      <div class="stats-cal-presets">
+                        <button type="button" class="hp-cal-preset" data-stats-cal-preset="today">Сегодня</button>
+                        <button type="button" class="hp-cal-preset" data-stats-cal-preset="7">7 дней</button>
+                        <button type="button" class="hp-cal-preset" data-stats-cal-preset="30">30 дней</button>
+                        <button type="button" class="hp-cal-preset" data-stats-cal-preset="month">Этот месяц</button>
+                        <button type="button" class="hp-cal-preset" data-stats-cal-preset="prev-month">Прошлый месяц</button>
+                      </div>
+                    </div>
+                    <div class="hp-months" id="statsCalendarMonths"></div>
+                    <div class="hp-cal-actions">
+                      <span class="hp-cal-range" id="statsCalendarRangeText">Выберите начало и конец</span>
+                      <div>
+                        <button type="button" class="btn-ghost btn-sm" id="statsCalCancel">Отмена</button>
+                        <button type="button" class="btn-sm" id="statsCalApply">Применить</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <label class="stats-daterange__field">С <input type="date" id="statsFrom" /></label>
-            <label class="stats-daterange__field">По <input type="date" id="statsTo" /></label>
           </div>
-          <div id="statsResetInfo" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
           <div id="funnelContent"><div class="loading">Загрузка…</div></div>
-        </div>
+        </section>
       </div>
 
       <!-- HANDLER PERFORMANCE TAB -->
@@ -788,7 +1020,7 @@
             <div class="hp-head">
               <div class="hp-title">
                 <h2>📈 Эффективность обработчиков</h2>
-                <p class="hint">Когорта = дата назначения лида. Окно Dn считается с 00:00 даты назначения до +n суток; оранжевый индикатор значит, что окно еще не завершилось.</p>
+                <p class="hint">Когорта = дата назначения лида. Окно Dn считается с 00:00 даты назначения до +n суток; голубой индикатор значит, что окно еще не завершилось.</p>
               </div>
               <button class="btn-ghost" id="hpRefreshBtn">↻ Обновить</button>
             </div>
@@ -1026,8 +1258,6 @@
         historyLimit: document.getElementById('historyLimit'),
         tgRequestLogging: document.getElementById('tgRequestLogging'),
       };
-      var providerKeysCache = {};
-
       // Статичные «норм настройки» под каждого провайдера. Модель/температуру/
       // max tokens в UI не показываем и не меняем — на сохранение уходят отсюда.
       var STATIC_PARAMS = {
@@ -1046,27 +1276,11 @@
         botFields.historyLimit.value = sp.historyLimit;
       }
 
-      function updateProviderHint(){
-        var hint = document.getElementById('providerHint');
-        if(!hint) return;
-        var p = botFields.provider.value;
-        var hasKey = providerKeysCache[p];
-        if(hasKey === false){
-          hint.style.color = 'var(--err)';
-          hint.textContent = '⚠️ Ключ для ' + (p==='openai'?'OpenAI':'DeepSeek') + ' не задан ни в базе, ни в .env — бот не сможет отвечать.';
-        } else {
-          hint.style.color = '';
-          hint.textContent = 'Модель, температура и max tokens заданы статично под выбранного провайдера — менять не нужно.';
-        }
-      }
-
       function fillBot(cfg){
         botFields.systemPrompt.value = cfg.systemPrompt || '';
         botFields.provider.value = cfg.provider || 'deepseek';
         botFields.tgRequestLogging.checked = cfg.tgRequestLogging === true;
-        providerKeysCache = cfg.providerKeys || {};
         applyStaticParams(botFields.provider.value);
-        updateProviderHint();
       }
 
       function loadBotConfig(){
@@ -1092,51 +1306,54 @@
           .then(function(cfg){ fillBot(cfg); btn.disabled=false; st.className='status ok'; st.textContent='✓ Сохранено'; setTimeout(function(){st.textContent='';},2500); })
           .catch(function(e){ btn.disabled=false; st.className='status err'; st.textContent='Ошибка: '+e.message; });
       });
-      document.getElementById('reloadBtn').addEventListener('click', loadBotConfig);
-      botFields.provider.addEventListener('change', function(){ applyStaticParams(botFields.provider.value); updateProviderHint(); });
+      botFields.provider.addEventListener('change', function(){ applyStaticParams(botFields.provider.value); });
 
       // ── Ключи ИИ (БД перебивает .env) ──────────────────────────────────────────
-      function renderAiKeys(items, ingestEnabled){
+      function renderAiKeys(items){
         var box = document.getElementById('aiKeysRows');
         box.innerHTML = '';
         (items||[]).forEach(function(it){
           var row = document.createElement('div');
-          row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap';
+          row.className = 'ai-key-row';
           var src = it.source==='db' ? '🟢 база ('+(it.note||'?')+')' : (it.source==='env' ? '⚪ .env' : '🔴 нет ключа');
-          var head = document.createElement('div');
-          head.style.cssText = 'display:flex;gap:10px;align-items:center;min-width:280px';
-          head.innerHTML = '<b style="width:80px">'+it.provider+'</b>'+
-            '<code style="min-width:150px">'+(it.masked||'—')+'</code>'+
-            '<span class="hint">'+src+'</span>';
+          var provider = document.createElement('b');
+          provider.className = 'ai-key-provider';
+          provider.textContent = it.provider;
+          var current = document.createElement('div');
+          current.className = 'ai-key-current';
+          var masked = document.createElement('code');
+          masked.textContent = it.masked || '—';
+          var source = document.createElement('span');
+          source.className = 'ai-key-source';
+          source.textContent = src;
+          current.appendChild(masked);
+          current.appendChild(source);
           var inp = document.createElement('input');
           inp.type='text'; inp.placeholder='sk-… вставить вручную';
-          inp.style.cssText='flex:1;min-width:200px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px';
-          var save = document.createElement('button'); save.textContent='Сохранить';
+          inp.className = 'ai-key-input';
+          var save = document.createElement('button'); save.className='ai-key-save'; save.textContent='Сохранить';
           save.addEventListener('click', function(){
             if(!/^sk-/.test(inp.value.trim())) return alert('Ключ должен начинаться с sk-');
             apiFetch('/api/admin/ai-keys/'+it.provider,{method:'PUT',body:JSON.stringify({apiKey:inp.value.trim()})})
-              .then(function(d){ inp.value=''; renderAiKeys(d.items, ingestEnabled); })
+              .then(function(d){ inp.value=''; renderAiKeys(d.items); })
               .catch(function(e){ alert('Ошибка: '+e.message); });
           });
-          var reset = document.createElement('button'); reset.className='btn-ghost'; reset.textContent='Сбросить на .env';
+          var reset = document.createElement('button'); reset.className='btn-ghost ai-key-reset'; reset.textContent='Сбросить на .env';
           reset.disabled = it.source!=='db';
           reset.addEventListener('click', function(){
             if(!confirm('Удалить ключ '+it.provider+' из базы? Провайдер вернётся на .env.')) return;
             apiFetch('/api/admin/ai-keys/'+it.provider,{method:'DELETE'})
-              .then(function(d){ renderAiKeys(d.items, ingestEnabled); })
+              .then(function(d){ renderAiKeys(d.items); })
               .catch(function(e){ alert('Ошибка: '+e.message); });
           });
-          row.appendChild(head); row.appendChild(inp); row.appendChild(save); row.appendChild(reset);
+          row.appendChild(provider); row.appendChild(current); row.appendChild(inp); row.appendChild(reset); row.appendChild(save);
           box.appendChild(row);
         });
-        document.getElementById('aiIngestHint').textContent = ingestEnabled
-          ? '✅ Приём ключей от userscript включён (AI_KEY_INGEST_SECRET задан).'
-          : '⚠️ Приём ключей от userscript выключен — задай AI_KEY_INGEST_SECRET в .env.';
       }
 
       function loadAiKeys(){
         return apiFetch('/api/admin/ai-keys')
-          .then(function(d){ renderAiKeys(d.items, d.ingestEnabled); })
+          .then(function(d){ renderAiKeys(d.items); })
           .catch(function(){});
       }
 
@@ -1346,7 +1563,7 @@
         list.innerHTML = '<div class="loading">Загрузка…</div>';
         var q = encodeURIComponent(document.getElementById('clientSearch').value.trim());
         var status = encodeURIComponent(document.getElementById('clientStatusFilter').value.trim());
-        var url = '/api/admin/clients?page=' + currentPage + (q ? '&q='+q : '') + (status ? '&status='+status : '');
+        var url = '/api/admin/clients?page=' + currentPage + '&limit=10' + (q ? '&q='+q : '') + (status ? '&status='+status : '');
         apiFetch(url)
           .then(function(data){ renderClients(data); })
           .catch(function(){ list.innerHTML = '<div class="empty">⚠️ Ошибка загрузки. Убедитесь что сервер перезапущен после изменений.</div>'; });
@@ -1354,17 +1571,7 @@
 
       function renderClients(data){
         var clients = data.clients || [];
-        var total   = data.total || 0;
         var pages   = data.pages || 1;
-
-        // Stats
-        var stats = document.getElementById('clientsStats');
-        var byStatus = {};
-        clients.forEach(function(c){ byStatus[c.status] = (byStatus[c.status]||0)+1; });
-        stats.innerHTML =
-          mkStat(total, 'Всего') +
-          mkStat(clients.filter(function(c){ return c.callRequested; }).length, 'Запросили звонок') +
-          mkStat(clients.filter(function(c){ return c.operatorCalled; }).length, 'Прозвонены');
 
         var list = document.getElementById('clientsList');
         if(!clients.length){ list.innerHTML = '<div class="empty">Клиентов пока нет</div>'; renderPagination(0,1); return; }
@@ -1372,13 +1579,6 @@
         list.innerHTML = '';
         clients.forEach(function(c){ list.appendChild(buildClientCard(c)); });
         renderPagination(pages, currentPage);
-      }
-
-      function mkStat(val, lbl){
-        return '<div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;">' +
-          '<div style="font-size:22px;font-weight:700;">' + val + '</div>' +
-          '<div style="color:var(--muted);font-size:11px;margin-top:2px;">' + lbl + '</div>' +
-          '</div>';
       }
 
       function buildClientCard(c){
@@ -1519,7 +1719,7 @@
         var opts = '<option value="">— нет —</option>' + adminHandlersCache.map(function(h){
           return '<option value="'+esc(h.id)+'"'+(c.handlerId===h.id?' selected':'')+'>'+esc(h.name)+'</option>';
         }).join('');
-        return '<select onchange="assignClientHandler(\''+esc(c.id)+'\', this.value)" style="background:var(--panel3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:12px">'+opts+'</select>';
+        return '<select onchange="assignClientHandler(\''+esc(c.id)+'\', this.value)">'+opts+'</select>';
       }
 
       function renderPagination(pages, page){
@@ -1925,32 +2125,26 @@
         if(!texts.length){ el.innerHTML = '<div class="empty">Текстов пока нет — добавьте первый выше.</div>'; return; }
 
         el.innerHTML = texts.map(function(t){
-          var meta = REVIEW_STATUS_LABELS[t.status] || REVIEW_STATUS_LABELS.free;
           var who = t.sessionId
-            ? '<span class="hint" style="margin:0">Клиент: ' + esc(t.clientName || t.sessionId) + '</span>'
-            : '<span class="hint" style="margin:0">Никому не выдан</span>';
+            ? '<span class="review-meta">Клиент: ' + esc(t.clientName || t.sessionId) + '</span>'
+            : '<span class="review-meta">Никому не выдан</span>';
           var shot = t.screenshotUrl
-            ? '<a href="' + esc(t.screenshotUrl) + '" target="_blank" rel="noopener" style="display:block">'
-              + '<img src="' + esc(t.screenshotUrl) + '" alt="Скриншот отзыва" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border,#1e2e45);display:block" /></a>'
-            : '<div style="width:64px;height:64px;border-radius:8px;border:1px dashed var(--border,#1e2e45);display:flex;align-items:center;justify-content:center;color:#4a6080;font-size:11px;text-align:center;line-height:1.2">нет<br>скрина</div>';
+            ? '<a class="review-shot" href="' + esc(t.screenshotUrl) + '" target="_blank" rel="noopener">'
+              + '<img src="' + esc(t.screenshotUrl) + '" alt="Скриншот отзыва" /></a>'
+            : '<div class="review-shot review-shot--empty">нет<br>скрина</div>';
           var opts = Object.keys(REVIEW_STATUS_LABELS).map(function(k){
             return '<option value="' + k + '"' + (t.status === k ? ' selected' : '') + '>' + REVIEW_STATUS_LABELS[k].label + '</option>';
           }).join('');
 
-          return '<div class="review-row" data-id="' + esc(t.id) + '" style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border,#1e2e45)">'
+          return '<div class="review-row" data-id="' + esc(t.id) + '">'
+            + '<div class="review-comment">'
+              + '<textarea class="review-edit-text" spellcheck="false">' + esc(t.text) + '</textarea>'
+              + who
+            + '</div>'
             + shot
-            + '<div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px">'
-              + '<textarea class="review-edit-text" spellcheck="false" style="min-height:64px;width:100%">' + esc(t.text) + '</textarea>'
-              + '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
-                + '<span style="color:' + meta.color + ';font-weight:600;font-size:12px">● ' + meta.label + '</span>'
-                + who
-              + '</div>'
-            + '</div>'
-            + '<div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">'
-              + '<select class="review-status" style="min-width:130px">' + opts + '</select>'
-              + '<button class="btn-ghost btn-sm review-save">💾 Сохранить</button>'
-              + '<button class="btn-ghost btn-sm review-del" style="color:#f20b5d">🗑 Удалить</button>'
-            + '</div>'
+            + '<select class="review-status">' + opts + '</select>'
+            + '<button class="review-save">Сохранить</button>'
+            + '<button class="review-del">Удалить</button>'
           + '</div>';
         }).join('');
       }
@@ -2014,15 +2208,23 @@
       }
 
       var statsInited = false;
+      var statsCalendarMonth = null;
+      var statsDraftFrom = '';
+      var statsDraftTo = '';
+      var statsCustomRange = false;
+      var statsMonthNames = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+      var statsWeekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
       function initStatsControls(){
         if(statsInited) return;
         statsInited = true;
         // По умолчанию — считаем от текущей даты (сегодня)
         document.getElementById('statsFrom').value = todayStr();
         document.getElementById('statsTo').value = '';
+        statsCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         markPreset('today');
-        document.getElementById('statsFrom').addEventListener('change', function(){ markPreset(''); loadStats(); });
-        document.getElementById('statsTo').addEventListener('change', function(){ markPreset(''); loadStats(); });
+        statsUpdateCalendarTrigger();
+        statsBindCalendar();
         document.querySelectorAll('[data-stats-preset]').forEach(function(btn){
           btn.addEventListener('click', function(){
             var p = btn.dataset.statsPreset;
@@ -2033,20 +2235,172 @@
             else if(p === '3') fromEl.value = daysAgoStr(2);
             else if(p === '7') fromEl.value = daysAgoStr(6);
             else if(p === 'all') fromEl.value = '';
+            statsCustomRange = false;
             markPreset(p);
+            statsUpdateCalendarTrigger();
+            statsCloseCalendar();
             loadStats();
           });
         });
-        // Кнопка «Сбросить» — обнулить статистику с чистого листа
-        document.getElementById('statsResetBtn').addEventListener('click', function(){
-          if(!confirm('Сбросить статистику? Всё, что было до этого момента, перестанет учитываться в воронке (данные в БД не удаляются).')) return;
-          var btn = this; btn.disabled = true;
-          apiFetch('/api/admin/stats/reset', { method: 'POST', body: '{}' })
-            .then(function(){ markPreset('all'); document.getElementById('statsFrom').value=''; document.getElementById('statsTo').value=''; loadStats(); })
-            .catch(function(){ alert('Не удалось сбросить статистику'); })
-            .then(function(){ btn.disabled = false; });
+      }
+
+      function statsParseDate(s){
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s||''))) return null;
+        var p = String(s).split('-').map(Number);
+        var d = new Date(p[0], p[1]-1, p[2]);
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      function statsDateKey(d){
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      }
+
+      function statsDateLong(s){
+        var d = statsParseDate(s);
+        return d ? d.toLocaleDateString('ru-RU', {day:'2-digit',month:'long',year:'numeric'}) : '—';
+      }
+
+      function statsUpdateCalendarTrigger(){
+        var from = document.getElementById('statsFrom').value;
+        var to = document.getElementById('statsTo').value;
+        var label = 'Выбрать период';
+        if(from && to) label = statsDateLong(from) + ' — ' + statsDateLong(to);
+        else if(from) label = statsDateLong(from) + ' — сегодня';
+        var btn = document.getElementById('statsDateRangeBtn');
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+        btn.classList.toggle('is-active', statsCustomRange);
+      }
+
+      function statsBindCalendar(){
+        document.getElementById('statsDateRangeBtn').addEventListener('click', function(e){
+          e.stopPropagation();
+          statsOpenCalendar();
+        });
+        document.getElementById('statsDatePicker').addEventListener('click', function(e){ e.stopPropagation(); });
+        document.getElementById('statsCalPrev').addEventListener('click', function(){
+          statsCalendarMonth = new Date(statsCalendarMonth.getFullYear(), statsCalendarMonth.getMonth()-1, 1);
+          statsRenderCalendar();
+        });
+        document.getElementById('statsCalNext').addEventListener('click', function(){
+          statsCalendarMonth = new Date(statsCalendarMonth.getFullYear(), statsCalendarMonth.getMonth()+1, 1);
+          statsRenderCalendar();
+        });
+        document.getElementById('statsCalCancel').addEventListener('click', statsCloseCalendar);
+        document.getElementById('statsCalApply').addEventListener('click', function(){
+          if(statsDraftFrom && !statsDraftTo) statsDraftTo = statsDraftFrom;
+          if(!statsDraftFrom || !statsDraftTo) return;
+          if(statsDraftTo < statsDraftFrom){ var t = statsDraftFrom; statsDraftFrom = statsDraftTo; statsDraftTo = t; }
+          document.getElementById('statsFrom').value = statsDraftFrom;
+          document.getElementById('statsTo').value = statsDraftTo;
+          statsCustomRange = true;
+          markPreset('');
+          statsUpdateCalendarTrigger();
+          statsCloseCalendar();
+          loadStats();
+        });
+        ['statsDraftFromInput','statsDraftToInput'].forEach(function(id){
+          document.getElementById(id).addEventListener('change', function(){
+            statsSetDraftRange(document.getElementById('statsDraftFromInput').value, document.getElementById('statsDraftToInput').value, true);
+          });
+        });
+        document.querySelector('.stats-cal-presets').addEventListener('click', function(e){
+          var btn = e.target.closest('[data-stats-cal-preset]');
+          if(btn) statsApplyCalendarPreset(btn.dataset.statsCalPreset);
+        });
+        document.getElementById('statsCalendarMonths').addEventListener('click', function(e){
+          var btn = e.target.closest('[data-stats-date]');
+          if(!btn) return;
+          var val = btn.dataset.statsDate;
+          if(!statsDraftFrom || (statsDraftFrom && statsDraftTo)){
+            statsDraftFrom = val;
+            statsDraftTo = '';
+          } else if(val === statsDraftFrom){
+            statsDraftTo = val;
+          } else if(val < statsDraftFrom){
+            statsDraftTo = statsDraftFrom;
+            statsDraftFrom = val;
+          } else {
+            statsDraftTo = val;
+          }
+          statsRenderCalendar();
+        });
+        document.addEventListener('click', function(e){
+          var picker = document.getElementById('statsDatePicker');
+          var wrap = document.querySelector('.stats-calendar-wrap');
+          if(!picker.classList.contains('hidden') && wrap && !wrap.contains(e.target)) statsCloseCalendar();
         });
       }
+
+      function statsOpenCalendar(){
+        statsDraftFrom = document.getElementById('statsFrom').value;
+        statsDraftTo = document.getElementById('statsTo').value;
+        var from = statsParseDate(statsDraftFrom);
+        if(from) statsCalendarMonth = new Date(from.getFullYear(), from.getMonth(), 1);
+        document.getElementById('statsDatePicker').classList.remove('hidden');
+        statsRenderCalendar();
+      }
+
+      function statsCloseCalendar(){
+        document.getElementById('statsDatePicker').classList.add('hidden');
+      }
+
+      function statsRenderCalendar(){
+        var months = [statsCalendarMonth, new Date(statsCalendarMonth.getFullYear(), statsCalendarMonth.getMonth()+1, 1)];
+        document.getElementById('statsCalendarTitle').textContent = statsMonthNames[months[0].getMonth()] + ' ' + months[0].getFullYear() + ' - ' + statsMonthNames[months[1].getMonth()] + ' ' + months[1].getFullYear();
+        document.getElementById('statsCalendarRangeText').textContent = statsDraftFrom && statsDraftTo ? statsDateLong(statsDraftFrom) + ' - ' + statsDateLong(statsDraftTo) : 'Выберите начало и конец';
+        document.getElementById('statsDraftFromInput').value = statsDraftFrom || '';
+        document.getElementById('statsDraftToInput').value = statsDraftTo || '';
+        document.getElementById('statsCalApply').disabled = !statsDraftFrom;
+        document.getElementById('statsCalendarMonths').innerHTML = months.map(statsMonthHtml).join('');
+      }
+
+      function statsSetDraftRange(from, to, moveCalendar){
+        statsDraftFrom = /^\d{4}-\d{2}-\d{2}$/.test(String(from||'')) ? from : '';
+        statsDraftTo = /^\d{4}-\d{2}-\d{2}$/.test(String(to||'')) ? to : '';
+        if(statsDraftFrom && statsDraftTo && statsDraftTo < statsDraftFrom){
+          var t = statsDraftFrom; statsDraftFrom = statsDraftTo; statsDraftTo = t;
+        }
+        var d = statsParseDate(statsDraftFrom || statsDraftTo);
+        if(moveCalendar && d) statsCalendarMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+        statsRenderCalendar();
+      }
+
+      function statsApplyCalendarPreset(preset){
+        var now = new Date();
+        var from;
+        var to = todayStr();
+        if(preset === 'today') from = to;
+        else if(preset === '7') from = daysAgoStr(6);
+        else if(preset === '30') from = daysAgoStr(29);
+        else if(preset === 'month') from = statsDateKey(new Date(now.getFullYear(), now.getMonth(), 1));
+        else if(preset === 'prev-month'){
+          from = statsDateKey(new Date(now.getFullYear(), now.getMonth()-1, 1));
+          to = statsDateKey(new Date(now.getFullYear(), now.getMonth(), 0));
+        }
+        statsSetDraftRange(from, to, true);
+      }
+
+      function statsMonthHtml(monthDate){
+        var year = monthDate.getFullYear();
+        var month = monthDate.getMonth();
+        var first = new Date(year, month, 1);
+        var offset = (first.getDay() + 6) % 7;
+        var start = new Date(year, month, 1 - offset);
+        var days = [];
+        for(var i=0;i<42;i++){
+          var d = new Date(start.getFullYear(), start.getMonth(), start.getDate()+i);
+          var key = statsDateKey(d);
+          var cls = 'hp-day' + (d.getMonth() !== month ? ' is-muted' : '');
+          if(statsDraftFrom && statsDraftTo && key > statsDraftFrom && key < statsDraftTo) cls += ' is-range';
+          if(key === statsDraftFrom || key === statsDraftTo) cls += ' is-edge';
+          days.push('<button type="button" class="'+cls+'" data-stats-date="'+key+'">'+d.getDate()+'</button>');
+        }
+        return '<div><div class="hp-month-name">'+esc(statsMonthNames[month])+' '+year+'</div>'
+          + '<div class="hp-week">'+statsWeekdays.map(function(w){ return '<span>'+w+'</span>'; }).join('')+'</div>'
+          + '<div class="hp-days">'+days.join('')+'</div></div>';
+      }
+
       function markPreset(p){
         document.querySelectorAll('[data-stats-preset]').forEach(function(b){
           b.classList.toggle('is-active', b.dataset.statsPreset === p);
@@ -2069,39 +2423,29 @@
       }
 
       function renderStats(s){
-        // Инфо о точке сброса
-        var info = document.getElementById('statsResetInfo');
-        if(info){
-          if(s.statsResetAt){
-            var rd = new Date(s.statsResetAt);
-            info.textContent = '🗑 Статистика обнулена: ' + rd.toLocaleDateString('ru-RU') + ' ' + rd.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) + ' — данные до этого момента не учитываются.';
-          } else {
-            info.textContent = '';
-          }
-        }
         // База воронки — «Прошёл капчу» (первый шаг). Если 0 — используем всего клиентов.
         var base = s.passedCaptcha || s.totalClients || 1;
         var rows = [
-          { icon: '1️⃣', label: 'ПРОШЁЛ КАПЧУ',           val: s.passedCaptcha },
-          { icon: '2️⃣', label: 'БОТ НАЧАЛ ДИАЛОГ',        val: s.bot1Started },
-          { icon: '3️⃣', label: 'БОТ ЗАКОНЧИЛ ДИАЛОГ',     val: s.bot1Finished },
-          { icon: '4️⃣', label: 'ПОДПИСАЛ ДОГОВОР',        val: s.contractSigned },
-          { icon: '5️⃣', label: 'БОТ-2 НАЧАЛ ДИАЛОГ',      val: s.bot2Started },
-          { icon: '6️⃣', label: 'БОТ-2 ЗАКОНЧИЛ ДИАЛОГ',   val: s.bot2Finished },
-          { icon: '7️⃣', label: 'НАЧАЛАСЬ ОБРАБОТКА',      val: s.processingStarted },
-          { icon: '8️⃣', label: 'ОПЛАТИЛ FD',              val: s.paidFD },
-          { icon: '9️⃣', label: 'ОПЛАТИЛ RD',              val: s.paidRD },
-          { icon: '🔟', label: 'ОПЛАТИЛ RD2',             val: s.paidRD2 },
-          { icon: '1️⃣1️⃣', label: 'ОПЛАТИЛ RD3',          val: s.paidRD3 },
+          { icon: '01', label: 'Прошёл капчу',          val: s.passedCaptcha },
+          { icon: '02', label: 'Бот начал диалог',      val: s.bot1Started },
+          { icon: '03', label: 'Бот закончил диалог',   val: s.bot1Finished },
+          { icon: '04', label: 'Подписал договор',      val: s.contractSigned },
+          { icon: '05', label: 'Бот-2 начал диалог',    val: s.bot2Started },
+          { icon: '06', label: 'Бот-2 закончил диалог', val: s.bot2Finished },
+          { icon: '07', label: 'Началась обработка',    val: s.processingStarted },
+          { icon: '08', label: 'Оплатил FD',            val: s.paidFD },
+          { icon: '09', label: 'Оплатил RD',            val: s.paidRD },
+          { icon: '10', label: 'Оплатил RD2',           val: s.paidRD2 },
+          { icon: '11', label: 'Оплатил RD3',           val: s.paidRD3 },
         ];
 
-        var html = '<div style="background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;">';
+        var html = '';
         // Total row
         html += '<div class="funnel-total-row">'
           + '<span class="funnel-total-icon">📥</span>'
-          + '<span class="funnel-total-label">Всего клиентов</span>'
+          + '<span class="funnel-total-copy"><span class="funnel-total-label">Всего клиентов</span><span class="funnel-total-note">Общий входящий поток за период</span></span>'
           + '<span class="funnel-total-count">' + (s.totalClients || 0) + '</span>'
-          + '</div><hr class="funnel-divider" />';
+          + '</div><div class="funnel-list">';
 
         rows.forEach(function(r){
           var val = r.val || 0;
@@ -2124,15 +2468,11 @@
       function loadPushSettings(){
         apiFetch('/api/admin/push-settings').then(function(d){
           document.getElementById('pushEnabled').checked = !!d.enabled;
-          document.getElementById('pushEnabledLabel').textContent = d.enabled ? 'Включено' : 'Отключено';
           document.getElementById('pushTitle').value = d.title || '';
           document.getElementById('pushBody').value = d.body || '';
           document.getElementById('pushDelay').value = d.delayMinutes || 3;
         }).catch(function(){});
       }
-      document.getElementById('pushEnabled').addEventListener('change', function(){
-        document.getElementById('pushEnabledLabel').textContent = this.checked ? 'Включено' : 'Отключено';
-      });
       document.getElementById('savePushBtn').addEventListener('click', function(){
         var st = document.getElementById('pushSaveStatus');
         st.textContent = 'Сохранение…';
@@ -2172,13 +2512,15 @@
         var el = document.getElementById('handlersList');
         if(!adminHandlersCache.length){ el.innerHTML = '<div class="hint">Обработчиков пока нет — добавьте первого.</div>'; return; }
         el.innerHTML = adminHandlersCache.map(function(h){
-          return '<div class="offer-row" data-id="'+esc(h.id)+'" style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">'
-            + '<input class="h-name" type="text" value="'+esc(h.name)+'" style="flex:1;min-width:110px" />'
-            + '<input class="h-login" type="text" value="'+esc(h.login)+'" style="flex:1;min-width:110px" />'
-            + '<input class="h-pass" type="text" placeholder="новый пароль…" style="flex:1;min-width:110px" />'
-            + '<label style="font-size:12px;white-space:nowrap;cursor:pointer"><input type="checkbox" class="h-active" '+(h.active?'checked':'')+' style="width:auto;vertical-align:middle"> активен</label>'
-            + '<button class="btn-ghost btn-sm h-save">💾</button>'
-            + '<button class="btn-ghost btn-sm h-del" style="color:#f20b5d">🗑</button>'
+          return '<div class="offer-row handler-admin-row" data-id="'+esc(h.id)+'">'
+            + '<input class="h-name" type="text" value="'+esc(h.name)+'" aria-label="Имя обработчика" />'
+            + '<input class="h-login" type="text" value="'+esc(h.login)+'" aria-label="Логин обработчика" />'
+            + '<input class="h-pass" type="text" placeholder="новый пароль…" aria-label="Новый пароль" />'
+            + '<div class="handler-row-actions">'
+            + '<label class="handler-active"><input type="checkbox" class="h-active" '+(h.active?'checked':'')+'> активен</label>'
+            + '<button class="handler-action-btn handler-save-btn h-save" title="Сохранить" aria-label="Сохранить">💾</button>'
+            + '<button class="handler-action-btn handler-delete-btn h-del" title="Удалить" aria-label="Удалить">🗑</button>'
+            + '</div>'
             + '</div>';
         }).join('');
       }
@@ -2200,6 +2542,11 @@
           })
           .catch(function(e){ handlerMsg(e.message==='login_taken'?'Логин занят':'Ошибка: '+e.message, false); })
           .then(function(){ btn.disabled=false; });
+      });
+      ['handlerName','handlerLogin','handlerPassword'].forEach(function(id){
+        document.getElementById(id).addEventListener('keydown', function(e){
+          if(e.key === 'Enter') document.getElementById('handlerAddBtn').click();
+        });
       });
 
       document.getElementById('handlersList').addEventListener('click', function(e){

@@ -1774,7 +1774,7 @@ async function handleAdminClients(req, reply) {
   if (!requireAdmin(req, reply)) return;
   try {
     const page = Math.max(1, parseInt(req.query.page || '1', 10));
-    const limit = 50;
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '10', 10) || 10));
     const skip = (page - 1) * limit;
     const q = (req.query.q || '').trim();
     const status = (req.query.status || '').trim();
