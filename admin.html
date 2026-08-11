@@ -1472,7 +1472,7 @@
           '<div class="client-section">' +
             '<div class="section-title">Основное</div>' +
             kv('Имя', c.nombre) + kv('Email', c.email) + kv('Банк', c.bank) + kv('IP', c.ip) +
-            kv('Статус', '<span class="status-tag ' + statusClass(c.status) + '">' + esc(c.status||'—') + '</span>') +
+            kv('Статус', '<span class="status-tag ' + sc + '">' + esc(dispStatus||'new') + '</span>') +
             kv('Обработчик', handlerSelectHtml(c)) +
             kv('Назначен', c.assignedAt ? fmt(c.assignedAt) : '<span style="color:var(--muted)">не нажат Start</span>') +
             kv('Регистрация', fmt(c.createdAt)) +
