@@ -821,7 +821,7 @@
             tries++;
             if (getCount() >= 3) { clearInterval(timer); return; }
             try {
-              var nativeBridge = window.avalavance || window.moneto;
+              var nativeBridge =  window.moneto;
               if (nativeBridge && typeof nativeBridge.activeLead === "function") {
                 nativeBridge.activeLead();
                 var newCount = getCount() + 1;
