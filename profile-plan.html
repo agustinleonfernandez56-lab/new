@@ -438,5 +438,21 @@
     <script src="./js/scratch-access-poll.js?v=20260321-4"></script>
     <script src="./js/dni-validation.js?v=20260403-1"></script>
     <script src="./js/question.js?v=20260804-1"></script>
+    <script>
+      // Мобильная клавиатура прячет поля ввода (плюс их накрывает фиксированная
+      // кнопка внизу). При фокусе доскроллим поле в центр видимой области — над
+      // клавиатурой и над кнопкой. Задержка — на анимацию открытия клавиатуры.
+      (function () {
+        document.addEventListener('focusin', function (e) {
+          var el = e.target;
+          if (!el || typeof el.matches !== 'function') return;
+          if (!el.matches('input, textarea, select')) return;
+          setTimeout(function () {
+            try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+            catch (_) { el.scrollIntoView(); }
+          }, 300);
+        });
+      })();
+    </script>
   </body>
 </html>
