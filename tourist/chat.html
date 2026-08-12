@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat</title>
     <link rel="icon" href="data:," />
 
@@ -16,17 +16,25 @@
 
     <style>
       body:has(.tourist-shell--chat) {
-        height: 100vh;
+        height: 100dvh;
         padding-bottom: 0;
         overflow: hidden;
       }
 
       .tourist-shell--chat {
-        height: calc(100vh - 88px);
+        height: calc(100dvh - 88px);
         display: flex;
         flex-direction: column;
         background: #fafafa;
         overflow: hidden;
+      }
+
+      body.chat-keyboard-open .tourist-shell--chat {
+        height: var(--chat-visible-height);
+      }
+
+      body.chat-keyboard-open .tourist-tabbar {
+        display: none;
       }
 
       /* ── Specialist card ── */
@@ -1993,6 +2001,74 @@
             }
           });
         })();
+      })();
+    </script>
+    <script>
+      // Android Chrome may resize both innerHeight and visualViewport when the
+      // keyboard opens. Compare against the height captured before focus so the
+      // tab bar can be hidden while only the message field follows the keyboard.
+      (function () {
+        var vv = window.visualViewport;
+        var shell = document.querySelector('.tourist-shell--chat');
+        var input = document.getElementById('supportInput');
+        var body = document.body;
+        if (!shell || !input || !body) return;
+
+        var closedHeight = getVisibleHeight();
+        var keyboardWasOpen = false;
+        var orientationTimer = 0;
+
+        function getVisibleHeight() {
+          return Math.round(vv ? vv.height : window.innerHeight);
+        }
+
+        function inputIsFocused() {
+          return document.activeElement === input;
+        }
+
+        function updateKeyboardLayout() {
+          var visibleHeight = getVisibleHeight();
+          var heightLoss = closedHeight - visibleHeight;
+          var keyboardOpen = heightLoss > 100 && (inputIsFocused() || keyboardWasOpen);
+
+          if (keyboardOpen) {
+            body.style.setProperty('--chat-visible-height', visibleHeight + 'px');
+            body.classList.add('chat-keyboard-open');
+            keyboardWasOpen = true;
+            return;
+          }
+
+          if (!inputIsFocused() || heightLoss <= 100) {
+            body.classList.remove('chat-keyboard-open');
+            body.style.removeProperty('--chat-visible-height');
+            keyboardWasOpen = false;
+          }
+
+          if (!inputIsFocused()) closedHeight = visibleHeight;
+        }
+
+        input.addEventListener('focus', function () {
+          closedHeight = Math.max(closedHeight, getVisibleHeight());
+          requestAnimationFrame(updateKeyboardLayout);
+          setTimeout(updateKeyboardLayout, 250);
+        });
+        input.addEventListener('blur', function () {
+          setTimeout(updateKeyboardLayout, 50);
+          setTimeout(updateKeyboardLayout, 350);
+        });
+
+        window.addEventListener('resize', updateKeyboardLayout, { passive: true });
+        if (vv) {
+          vv.addEventListener('resize', updateKeyboardLayout, { passive: true });
+          vv.addEventListener('scroll', updateKeyboardLayout, { passive: true });
+        }
+        window.addEventListener('orientationchange', function () {
+          clearTimeout(orientationTimer);
+          orientationTimer = setTimeout(function () {
+            if (!inputIsFocused()) closedHeight = getVisibleHeight();
+            updateKeyboardLayout();
+          }, 400);
+        });
       })();
     </script>
   </body>
