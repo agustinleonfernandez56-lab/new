@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content" />
     <title>Chat</title>
     <link rel="icon" href="data:," />
 
@@ -16,13 +16,13 @@
 
     <style>
       body:has(.tourist-shell--chat) {
-        height: 100dvh;
+        height: 100vh;
         padding-bottom: 0;
         overflow: hidden;
       }
 
       .tourist-shell--chat {
-        height: calc(100dvh - 88px);
+        height: calc(100vh - 88px);
         display: flex;
         flex-direction: column;
         background: #fafafa;
@@ -1993,32 +1993,6 @@
             }
           });
         })();
-      })();
-    </script>
-    <script>
-      // Мобильная клавиатура: по умолчанию браузер ужимает вьюпорт, и нижняя
-      // навигация (fixed) вместе с полем ввода «улетают» вверх, зависая над
-      // клавиатурой. Через visualViewport определяем высоту клавиатуры и на время
-      // ввода: прячем нижнюю навигацию, а высоту шелла равняем видимой области —
-      // поле ввода оказывается прямо над клавиатурой (как в мессенджерах).
-      (function () {
-        var vv = window.visualViewport;
-        if (!vv) return;
-        var shell = document.querySelector('.tourist-shell--chat');
-        var tabbar = document.querySelector('.tourist-tabbar');
-        function update() {
-          var kb = window.innerHeight - vv.height - vv.offsetTop;
-          if (kb > 120) {                          // клавиатура открыта
-            if (tabbar) tabbar.style.display = 'none';
-            if (shell) shell.style.height = vv.height + 'px';
-          } else {                                 // клавиатура закрыта
-            if (tabbar) tabbar.style.display = '';
-            if (shell) shell.style.height = '';
-          }
-        }
-        vv.addEventListener('resize', update);
-        vv.addEventListener('scroll', update);
-        update();
       })();
     </script>
   </body>
