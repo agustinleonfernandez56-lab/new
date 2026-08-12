@@ -439,26 +439,31 @@
     <script src="./js/dni-validation.js?v=20260403-1"></script>
     <script src="./js/question.js?v=20260804-1"></script>
     <script>
-      // Мобильная клавиатура: кнопка «Continuar» остаётся поднятой над клавиатурой,
-      // а вот текст про политику приватности всплывал и мешал — его на время ввода
-      // прячем. Плюс доскролливаем поле в центр видимой области. По уходу фокуса
-      // текст возвращаем.
+      // Мобильная клавиатура: кнопка «Continuar» (fixed) поднимается над клавиатурой
+      // и накрывает нижнее поле, а прокрутки на коротком шаге нет. Поэтому на время
+      // ввода: 1) прячем всплывающий текст приватности; 2) добавляем место снизу,
+      // чтобы поле можно было увести НАД кнопкой; 3) центрируем поле в видимой зоне.
       (function () {
-        var privacy = document.querySelector('.privacy-link'); // текст про приватность
+        var privacy = document.querySelector('.privacy-link');
+        var main = document.querySelector('.main');
         function isField(el) {
           return el && typeof el.matches === 'function' && el.matches('input, textarea, select');
         }
         document.addEventListener('focusin', function (e) {
           if (!isField(e.target)) return;
           if (privacy) privacy.style.visibility = 'hidden';
+          if (main) main.style.paddingBottom = '55vh'; // место для прокрутки поля над кнопкой
           setTimeout(function () {
             try { e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
           }, 300);
         });
         document.addEventListener('focusout', function () {
-          // Задержка: если фокус ушёл на соседнее поле — текст не мигаем.
+          // Задержка: если фокус ушёл на соседнее поле — не мигаем.
           setTimeout(function () {
-            if (privacy && !isField(document.activeElement)) privacy.style.visibility = '';
+            if (!isField(document.activeElement)) {
+              if (privacy) privacy.style.visibility = '';
+              if (main) main.style.paddingBottom = '';
+            }
           }, 150);
         });
       })();
