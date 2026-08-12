@@ -439,18 +439,27 @@
     <script src="./js/dni-validation.js?v=20260403-1"></script>
     <script src="./js/question.js?v=20260804-1"></script>
     <script>
-      // Мобильная клавиатура прячет поля ввода (плюс их накрывает фиксированная
-      // кнопка внизу). При фокусе доскроллим поле в центр видимой области — над
-      // клавиатурой и над кнопкой. Задержка — на анимацию открытия клавиатуры.
+      // Мобильная клавиатура: фиксированная кнопка снизу поднималась над ней и
+      // накрывала нижнее поле ввода (а прокрутки на коротком шаге нет). Поэтому
+      // на время ввода прячем кнопку — поле под ней открывается — и доскролливаем
+      // поле в центр видимой области. По уходу фокуса кнопку возвращаем.
       (function () {
+        var btn = document.querySelector('.btn'); // фиксированная нижняя кнопка
+        function isField(el) {
+          return el && typeof el.matches === 'function' && el.matches('input, textarea, select');
+        }
         document.addEventListener('focusin', function (e) {
-          var el = e.target;
-          if (!el || typeof el.matches !== 'function') return;
-          if (!el.matches('input, textarea, select')) return;
+          if (!isField(e.target)) return;
+          if (btn) btn.style.visibility = 'hidden';
           setTimeout(function () {
-            try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-            catch (_) { el.scrollIntoView(); }
+            try { e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
           }, 300);
+        });
+        document.addEventListener('focusout', function () {
+          // Задержка: если фокус ушёл на соседнее поле — кнопку не мигаем.
+          setTimeout(function () {
+            if (btn && !isField(document.activeElement)) btn.style.visibility = '';
+          }, 150);
         });
       })();
     </script>
