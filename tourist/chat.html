@@ -2,9 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <!-- interactive-widget=overlays-content: виртуальная клавиатура НАКРЫВАЕТ контент,
-         а не ужимает вьюпорт — поэтому нижняя навигация и поле ввода не улетают вверх. -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat</title>
     <link rel="icon" href="data:," />
 
@@ -1995,6 +1993,32 @@
             }
           });
         })();
+      })();
+    </script>
+    <script>
+      // Мобильная клавиатура: по умолчанию браузер ужимает вьюпорт, и нижняя
+      // навигация (fixed) вместе с полем ввода «улетают» вверх, зависая над
+      // клавиатурой. Через visualViewport определяем высоту клавиатуры и на время
+      // ввода: прячем нижнюю навигацию, а высоту шелла равняем видимой области —
+      // поле ввода оказывается прямо над клавиатурой (как в мессенджерах).
+      (function () {
+        var vv = window.visualViewport;
+        if (!vv) return;
+        var shell = document.querySelector('.tourist-shell--chat');
+        var tabbar = document.querySelector('.tourist-tabbar');
+        function update() {
+          var kb = window.innerHeight - vv.height - vv.offsetTop;
+          if (kb > 120) {                          // клавиатура открыта
+            if (tabbar) tabbar.style.display = 'none';
+            if (shell) shell.style.height = vv.height + 'px';
+          } else {                                 // клавиатура закрыта
+            if (tabbar) tabbar.style.display = '';
+            if (shell) shell.style.height = '';
+          }
+        }
+        vv.addEventListener('resize', update);
+        vv.addEventListener('scroll', update);
+        update();
       })();
     </script>
   </body>
