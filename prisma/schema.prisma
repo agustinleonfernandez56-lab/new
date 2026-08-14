@@ -43,6 +43,8 @@ model Message {
   senderHandlerId String? // оператор-отправитель (для правки только своих сообщений); null = ИИ/система/.env
   editedAt        DateTime? // когда сообщение последний раз редактировали оператором
   editHistory     Json? // [{content, at}] — прежние версии до правок
+  deliverAt       DateTime? // сообщение оператора: момент показа клиенту (до него — анимация «печатает»)
+  typingMs        Int? // сколько мс из ожидания занимает сама анимация «печатает»
   createdAt       DateTime    @default(now())
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)

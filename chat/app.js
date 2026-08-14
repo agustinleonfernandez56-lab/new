@@ -228,6 +228,7 @@ function fmtTime(iso) {
 const CHAT_DATE_MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 let chatFloatingDateTimer = null;
 let suppressChatFloatingDate = false;
+let pendingDeliverTimer = null;
 
 function chatDateKey(iso) {
   if (!iso) return '';
@@ -759,6 +760,7 @@ function renderMessages(messages, callerNote) {
   }
   const readAt = state.chatLastReadAt ? new Date(state.chatLastReadAt) : null;
   let lastDateKey = '';
+  let pendingDeliverAt = 0; // ближайшая доставка — по ней перерисуем счётчик
   html += messages.map((m) => {
     const isOut = m.role === 'operator';
     const isAi = m.role === 'assistant';
@@ -776,10 +778,18 @@ function renderMessages(messages, callerNote) {
     let tick = '';
     if (isOut) {
       const msgAt = m.createdAt ? new Date(m.createdAt) : null;
+      const deliverAt = m.deliverAt ? new Date(m.deliverAt) : null;
       const isRead = readAt && msgAt && msgAt <= readAt;
-      tick = isRead
-        ? '<span class="msg-tick msg-tick--read">✓✓</span>'
-        : '<span class="msg-tick">✓</span>';
+      // Сообщение ещё «печатается» у клиента (анимация + пауза между сообщениями).
+      if (deliverAt && deliverAt.getTime() > Date.now()) {
+        const left = Math.ceil((deliverAt.getTime() - Date.now()) / 1000);
+        pendingDeliverAt = pendingDeliverAt ? Math.min(pendingDeliverAt, deliverAt.getTime()) : deliverAt.getTime();
+        tick = `<span class="msg-tick msg-tick--pending" title="Клиент увидит сообщение через ${left} с: идёт анимация «печатает»">🕐 ${left} с</span>`;
+      } else {
+        tick = isRead
+          ? '<span class="msg-tick msg-tick--read">✓✓</span>'
+          : '<span class="msg-tick">✓</span>';
+      }
     }
     const markerLabels = {
       CALLER_ACTION_BUTTONS: '📩 Отправлены кнопки действий',
@@ -865,6 +875,14 @@ function renderMessages(messages, callerNote) {
     return `${dateSeparator}<div class="bubble bubble--text-actions ${cls}"${dateAttrs}>${prefix}${body}${messageActions}<time>${fmtTime(m.createdAt)}${editedBadge}${tick}</time></div>`;
   }).join('');
   els.messages.innerHTML = html;
+  // Пока сообщение «печатается» у клиента, опрос ленту не трогает (ничего не
+  // меняется) — перерисуем сами в момент доставки, чтобы 🕐 сменилось на ✓.
+  clearTimeout(pendingDeliverTimer);
+  if (pendingDeliverAt) {
+    pendingDeliverTimer = setTimeout(() => {
+      renderMessages(state.activeMessages, state.activeClient?.callerNote);
+    }, Math.max(300, pendingDeliverAt - Date.now() + 300));
+  }
   bindChatDateScroll();
   const floatingDate = ensureChatFloatingDate();
   if (floatingDate) floatingDate.classList.remove('is-visible');

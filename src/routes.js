@@ -3219,6 +3219,46 @@ function chatLeadKey(sessionId) {
   return `chat:${sessionId}`;
 }
 
+// ─── Отложенная доставка сообщений оператора («печатает…») ────────────────────
+// Сообщение менеджера прилетает клиенту не мгновенно: сперва идёт анимация
+// «печатает», её длина считается от количества символов. Момент показа
+// (deliverAt) лежит в БД, поэтому клиент, открывший чат позже, досматривает
+// только остаток: отправили 10-секундное, зашёл через 5 → анимация 5 секунд.
+const TYPING_MS_PER_CHAR = 90;
+const TYPING_MIN_MS = 5000;
+const TYPING_MAX_MS = 15000;
+// Два сообщения подряд не должны падать пачкой — держим паузу между показами.
+const OPERATOR_GAP_MS = 10000;
+
+// Маркеры/картинки «печатать» нечего — им достаётся минимальная анимация.
+function operatorTypingMs(content) {
+  const text = String(content || '');
+  const isMarker = /^(\[\[|\/uploads\/|PAYMENT_SCREENSHOT|CALLER_ACTION_BUTTONS|OFFER_BUTTONS)/.test(text);
+  const chars = isMarker ? 0 : text.length;
+  return Math.min(TYPING_MAX_MS, Math.max(TYPING_MIN_MS, Math.round(chars * TYPING_MS_PER_CHAR)));
+}
+
+async function createOperatorMessage(leadId, content, senderHandlerId = null) {
+  const typingMs = operatorTypingMs(content);
+  try {
+    const prev = await prisma.message.findFirst({
+      where: { leadId, role: 'SYSTEM' },
+      orderBy: { createdAt: 'desc' },
+      select: { deliverAt: true, createdAt: true },
+    });
+    const prevAt = prev ? new Date(prev.deliverAt || prev.createdAt).getTime() : 0;
+    const deliverAt = new Date(Math.max(Date.now() + typingMs, prevAt + OPERATOR_GAP_MS));
+    return await prisma.message.create({
+      data: { leadId, role: 'SYSTEM', content, senderHandlerId, deliverAt, typingMs },
+    });
+  } catch (e) {
+    if (e?.code !== 'P2022') throw e;
+    // Миграция ещё не применена — доставляем сразу, без анимации.
+    console.error('[chat] deliverAt/typingMs columns missing — migration required');
+    return prisma.message.create({ data: { leadId, role: 'SYSTEM', content, senderHandlerId } });
+  }
+}
+
 async function handleSupportChat(req, reply) {
   try {
     const body = asRecord(req.body) ?? {};
@@ -3496,18 +3536,45 @@ async function handleSupportChat(req, reply) {
 async function handleSupportChatHistory(req, reply) {
   const sessionId = sanitizeString(req.params.sessionId || '', 80);
   reply.header('Cache-Control', 'no-store');
-  if (!sessionId) return reply.send({ messages: [], closed: false });
+  if (!sessionId) return reply.send({ messages: [], pending: [], closed: false });
   const lead = await prisma.lead.findUnique({ where: { tgId: chatLeadKey(sessionId) } });
-  if (!lead) return reply.send({ messages: [], closed: false });
-  const history = await prisma.message.findMany({
-    where: { leadId: lead.id },
-    orderBy: { createdAt: 'asc' },
-    select: { role: true, content: true },
-  });
-  return reply.send({
-    messages: history.map((m) => ({ role: m.role.toLowerCase(), content: m.content })),
-    closed: !lead.aiEnabled,
-  });
+  if (!lead) return reply.send({ messages: [], pending: [], closed: false });
+  let history;
+  try {
+    history = await prisma.message.findMany({
+      where: { leadId: lead.id },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, role: true, content: true, deliverAt: true, typingMs: true },
+    });
+  } catch (e) {
+    if (e?.code !== 'P2022') throw e; // нет колонок задержки — отдаём всё сразу
+    history = await prisma.message.findMany({
+      where: { leadId: lead.id },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, role: true, content: true },
+    });
+  }
+
+  // Сообщения оператора с deliverAt в будущем клиенту ещё не показываем: они
+  // уезжают в pending, откуда чат сам разыграет анимацию и покажет их вовремя.
+  // Побочно это держит счётчик непрочитанных честным на других страницах.
+  const now = Date.now();
+  const messages = [];
+  const pending = [];
+  for (const m of history) {
+    const deliverAt = m.deliverAt ? new Date(m.deliverAt).getTime() : 0;
+    if (m.role === 'SYSTEM' && deliverAt > now) {
+      pending.push({
+        id: m.id,
+        content: m.content,
+        deliverInMs: deliverAt - now,
+        typingMs: Math.min(deliverAt - now, m.typingMs || TYPING_MIN_MS),
+      });
+    } else {
+      messages.push({ id: m.id, role: m.role.toLowerCase(), content: m.content });
+    }
+  }
+  return reply.send({ messages, pending, closed: !lead.aiEnabled });
 }
 
 async function handleGetChatPrompt(req, reply) {
@@ -3912,7 +3979,7 @@ async function handleChatOpMessages(req, reply) {
       history = await prisma.message.findMany({
         where: { leadId: lead.id },
         orderBy: { createdAt: 'asc' },
-        select: { id: true, role: true, content: true, translation: true, createdAt: true, senderHandlerId: true, editedAt: true, editHistory: true },
+        select: { id: true, role: true, content: true, translation: true, createdAt: true, senderHandlerId: true, editedAt: true, editHistory: true, deliverAt: true },
       });
     } catch (e) {
       // Нет какой-то из новых колонок (translation/edit*) — откатываемся на минимальный набор.
@@ -3940,6 +4007,7 @@ async function handleChatOpMessages(req, reply) {
         content: m.content,
         translation: m.translation || null,
         createdAt: m.createdAt,
+        deliverAt: m.deliverAt || null,
         editedAt: m.editedAt || null,
         history: Array.isArray(m.editHistory) ? m.editHistory : [],
         // Править может только отправитель-менеджер; .env all-access (myHandlerId=null) — любое операторское.
@@ -3975,7 +4043,7 @@ async function handleChatOpSend(req, reply) {
       create: { tgId: key, chatId: key },
       update: {},
     });
-    await prisma.message.create({ data: { leadId: lead.id, role: 'SYSTEM', content: message, senderHandlerId: chatOpHandlerId(req) } });
+    await createOperatorMessage(lead.id, message, chatOpHandlerId(req));
     await prisma.webClient.updateMany({
       where: { flowSessionId: sessionId, status: 'ЗАПРОСИЛ ЗВОНОК (ЧЕРЕЗ ЧАТ)' },
       data: { status: 'ЧАТ: АКТИВЕН' },
@@ -5168,7 +5236,7 @@ async function deliverScheduledPush(item) {
   try {
     const key = chatLeadKey(sessionId);
     const lead = await prisma.lead.upsert({ where: { tgId: key }, create: { tgId: key, chatId: key }, update: {} });
-    await prisma.message.create({ data: { leadId: lead.id, role: 'SYSTEM', content: item.message } });
+    await createOperatorMessage(lead.id, item.message);
   } catch (e) { console.error('[autopush] chat msg', e?.message); }
   // 2) Push-уведомление (если есть FCM-токен клиента).
   try {

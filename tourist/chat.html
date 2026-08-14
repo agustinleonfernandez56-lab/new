@@ -1490,8 +1490,25 @@
         try { bank = (localStorage.getItem('selectedBank') || '').trim(); } catch(e) {}
         if (!bank) bank = 'EBN Banco';
 
-        var displayedMsgCount = 0;
         var notifButtonShown = false;
+
+        // Показанные сообщения помечаем по id: сообщение оператора может
+        // «дозреть» уже после того, как клиент написал своё, поэтому считать
+        // по количеству нельзя — порядок в истории меняется задним числом.
+        var seenIds = {};
+        // Своё сообщение и ответ ИИ рисуем сразу, до опроса истории; когда они
+        // приедут с сервера — пропускаем, чтобы не задвоить.
+        var localEcho = { user: 0, bot: 0 };
+        var botMsgCount = 0;
+        // Сообщения оператора, ждущие своей анимации «печатает».
+        var pendingQueue = [];
+        var pendingIds = {};
+        var pendingTimer = null;
+        var typingReasons = { bot: false, operator: false };
+
+        function saveBotCount() {
+          try { localStorage.setItem('chatBotMsgCount', String(botMsgCount)); } catch (e) {}
+        }
 
         function escapeHtml(s) {
           return String(s)
@@ -1738,17 +1755,93 @@
 
         function addMessage(role, content) {
           var el = buildMsgEl(role, content);
-          if (!el) { displayedMsgCount++; return; }
+          if (!el) return;
           chat.insertBefore(el, typing);
-          displayedMsgCount++;
           scrollDown();
           if (role !== 'user') localStorage.setItem('chatUnread', '1');
         }
 
-        function showTyping(on) {
-          typing.style.display = on ? 'flex' : 'none';
-          if (on) chat.appendChild(typing);
+        // Индикатор общий для ИИ и оператора — держим оба повода отдельно,
+        // иначе конец ответа ИИ гасил бы анимацию сообщения менеджера.
+        function setTyping(reason, on) {
+          if (typingReasons[reason] === on) return;
+          typingReasons[reason] = on;
+          var show = typingReasons.bot || typingReasons.operator;
+          typing.style.display = show ? 'flex' : 'none';
+          if (show) chat.appendChild(typing);
           scrollDown();
+        }
+
+        function showTyping(on) { setTyping('bot', on); }
+
+        // Ставим сообщения оператора в очередь показа. deliverInMs — сколько
+        // ждать до появления, typingMs — сколько из этого ожидания показывать
+        // «печатает». Сервер уже вычел прошедшее время, так что зашедший в
+        // середине клиент досматривает только остаток.
+        function schedulePending(list) {
+          var now = Date.now();
+          (list || []).forEach(function (p) {
+            if (!p || !p.id || seenIds[p.id] || pendingIds[p.id]) return;
+            pendingIds[p.id] = true;
+            var wait = Math.max(0, Number(p.deliverInMs) || 0);
+            var typingMs = Math.min(wait, Math.max(0, Number(p.typingMs) || 0));
+            pendingQueue.push({
+              id: p.id,
+              content: p.content,
+              typingAt: now + wait - typingMs,
+              deliverAt: now + wait,
+            });
+          });
+          pendingQueue.sort(function (a, b) { return a.deliverAt - b.deliverAt; });
+          if (pendingQueue.length && !pendingTimer) pendingTimer = setInterval(tickPending, 200);
+          tickPending();
+        }
+
+        // Один тикер на всю очередь: два сообщения подряд не гасят анимацию
+        // друг друга, а вкладка, уснувшая в фоне, догоняет расписание разом.
+        function tickPending() {
+          var now = Date.now();
+          var typingNow = false;
+          var ready = [];
+          pendingQueue = pendingQueue.filter(function (item) {
+            if (item.deliverAt <= now) { ready.push(item); return false; }
+            if (item.typingAt <= now) typingNow = true;
+            return true;
+          });
+          ready.forEach(function (item) {
+            if (seenIds[item.id]) return;
+            seenIds[item.id] = true;
+            botMsgCount++;
+            addMessage('bot', item.content);
+          });
+          if (ready.length) { saveBotCount(); markRead(); }
+          setTyping('operator', typingNow);
+          if (!pendingQueue.length && pendingTimer) {
+            clearInterval(pendingTimer);
+            pendingTimer = null;
+          }
+        }
+
+        // Отрисовка того, что уже доставлено. isInit — первая загрузка истории:
+        // локальных копий на экране ещё нет, рисуем всё подряд.
+        function renderIncoming(msgs, isInit) {
+          (msgs || []).forEach(function (m) {
+            if (m.id) {
+              if (seenIds[m.id]) return;
+              seenIds[m.id] = true;
+            }
+            var isUser = m.role === 'user';
+            if (!isUser) botMsgCount++; // счётчик «прочитано» = все доставленные не-свои
+            if (!isInit) {
+              var slot = isUser ? 'user' : 'bot';
+              if (localEcho[slot] > 0) { // уже на экране — нарисовали при отправке
+                localEcho[slot]--;
+                return;
+              }
+            }
+            addMessage(isUser ? 'user' : 'bot', m.content);
+          });
+          saveBotCount();
         }
 
         function requestPushPermissionFromAndroid() {
@@ -1844,16 +1937,10 @@
             })
               .then(function (r) { return r.json(); })
               .then(function (data) {
-                var msgs = (data && data.messages) || [];
-                if (msgs.length > displayedMsgCount) {
-                  msgs.slice(displayedMsgCount).forEach(function (m) {
-                    if (m.role !== 'user') addMessage('bot', m.content);
-                    else displayedMsgCount++;
-                  });
-                  markRead();
-                  var botCount = msgs.filter(function(m){ return m.role !== 'user'; }).length;
-                  localStorage.setItem('chatBotMsgCount', String(botCount));
-                }
+                var before = botMsgCount;
+                renderIncoming((data && data.messages) || [], false);
+                if (botMsgCount > before) markRead();
+                schedulePending(data && data.pending);
                 if (data && data.closed && !document.getElementById('chatClosedBanner')) showDoneBanner();
               })
               .catch(function () {});
@@ -1873,7 +1960,7 @@
             .then(function (data) {
               setBusy(false);
               saveCollectedData(data || {});
-              if (data && data.reply) addMessage('bot', data.reply);
+              if (data && data.reply) { localEcho.bot++; addMessage('bot', data.reply); }
               if (data && data.done) showDoneBanner();
             })
             .catch(function () {
@@ -1886,6 +1973,7 @@
           e.preventDefault();
           var text = input.value.trim();
           if (!text || input.disabled) return;
+          localEcho.user++;
           addMessage('user', text);
           input.value = '';
           send(text);
@@ -1907,11 +1995,12 @@
             imgBtn.disabled = false;
             input.disabled = false;
             sendBtn.disabled = false;
+            localEcho.user++;
             addMessage('user', url);
             postChat({ sessionId: sessionId, message: url, name: name, bank: bank })
               .then(function (data) {
                 saveCollectedData(data || {});
-                if (data && data.reply) addMessage('bot', data.reply);
+                if (data && data.reply) { localEcho.bot++; addMessage('bot', data.reply); }
                 if (data && data.done) showDoneBanner();
               })
               .catch(function () {});
@@ -1931,16 +2020,11 @@
               var msgs = (data && data.messages) || [];
               var alreadyClosed = !!(data && data.closed);
 
-              if (msgs.length) {
-                msgs.forEach(function (m) {
-                  var el = buildMsgEl(m.role === 'user' ? 'user' : 'bot', m.content);
-                  if (el) chat.insertBefore(el, typing);
-                  displayedMsgCount++;
-                });
+              if (msgs.length || (data && data.pending && data.pending.length)) {
+                renderIncoming(msgs, true);
                 scrollDown();
-                markRead();
-                var botCount = msgs.filter(function(m){ return m.role !== 'user'; }).length;
-                localStorage.setItem('chatBotMsgCount', String(botCount));
+                if (msgs.length) markRead();
+                schedulePending(data && data.pending);
                 if (alreadyClosed) showDoneBanner(chat.querySelector('.caller-actions-wrap'));
                 startPolling();
                 return;
@@ -1950,7 +2034,7 @@
               postChat({ sessionId: sessionId, start: true, name: name, bank: bank })
                 .then(function (d) {
                   setBusy(false);
-                  if (d && d.reply) addMessage('bot', d.reply);
+                  if (d && d.reply) { localEcho.bot++; addMessage('bot', d.reply); }
                   if (d && d.done) showDoneBanner();
                   startPolling();
                 })

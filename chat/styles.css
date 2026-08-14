@@ -1861,6 +1861,13 @@ h2 {
   color: #4fc3f7;
 }
 
+/* Сообщение ещё «печатается» у клиента — доставка отложена */
+.msg-tick--pending {
+  color: #ffc46b;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 /* ── Постоянные действия текстового сообщения ── */
 .bubble--text-actions {
   flex: 0 0 auto;
