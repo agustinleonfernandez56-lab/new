@@ -573,6 +573,13 @@
           try { storedEmail = localStorage.getItem("inputEmail") || localStorage.getItem("inputLogin") || ""; } catch(e){}
           var sessionId = "";
           try { sessionId = (window.getFlowSessionId && window.getFlowSessionId()) || localStorage.getItem("flowSessionId") || ""; } catch(e){}
+          var collectedPaymentMethod = "";
+          var collectedBizum = "";
+          try {
+            var paymentSuffix = ':' + sessionId;
+            collectedPaymentMethod = localStorage.getItem('chatPaymentMethod' + paymentSuffix) || "";
+            collectedBizum = localStorage.getItem('chatBizum' + paymentSuffix) || "";
+          } catch(e){}
           var payload = {
             nombre: document.getElementById("ccfNombre").value.trim(),
             dni: document.getElementById("ccfDni").value.trim(),
@@ -584,6 +591,8 @@
             cp: document.getElementById("ccfCp").value.trim(),
             email: storedEmail,
             flowSessionId: sessionId,
+            paymentMethod: collectedPaymentMethod,
+            bizum: collectedBizum,
             page: window.location.href,
           };
 

@@ -456,9 +456,9 @@
 
         <div class="card">
           <h2>Cuenta destino</h2>
-          <div class="kv"><span>IBAN</span>
-            <b class="iban-val"><span id="cIban">—</span>
-              <button class="copy-btn" id="copyIban" type="button" title="Copiar IBAN">
+          <div class="kv"><span id="cDestinationLabel">IBAN / Bizum</span>
+            <b class="iban-val"><span id="cDestination">—</span>
+              <button class="copy-btn" id="copyDestination" type="button" title="Copiar cuenta destino">
                 <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
               </button>
             </b>
@@ -554,7 +554,7 @@
 
         <div class="card">
           <h2>Verificaciones previas</h2>
-          <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> IBAN verificado</div>
+          <div class="chk" id="destinationVerification"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> <span id="destinationVerificationLabel">Cuenta destino verificada</span></div>
           <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Nombre del titular coincide</div>
           <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Contrato de crédito firmado</div>
           <div class="chk"><span class="chk__i chk__i--ok"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span> Límite de operación disponible</div>
@@ -593,6 +593,45 @@
     iban = String(iban || '').replace(/\s+/g, '');
     if (iban.length < 8) return iban || '—';
     return iban.slice(0, 4) + ' **** **** **** ' + iban.slice(-4);
+  }
+
+  function formatBizum(value) {
+    var digits = String(value || '').replace(/\D/g, '');
+    if (digits.indexOf('0034') === 0 && digits.length === 13) digits = digits.slice(4);
+    else if (digits.indexOf('34') === 0 && digits.length === 11) digits = digits.slice(2);
+    if (!/^[67]\d{8}$/.test(digits)) return String(value || '').trim();
+    return '+34 ' + digits.slice(0, 3) + ' ' + digits.slice(3, 6) + ' ' + digits.slice(6);
+  }
+
+  function bizumDestination(value) {
+    var displayValue = formatBizum(value);
+    return { label: 'Bizum', value: displayValue.replace(/\s+/g, ''), displayValue: displayValue };
+  }
+
+  function getClientDestination(client, submission) {
+    var paymentMethod = String(submission.paymentMethod || client.paymentMethod || '').trim().toLowerCase();
+    var bizum = String(submission.bizum || client.bizum || '').trim();
+    var iban = String(submission.iban || client.iban || '').trim();
+    if (paymentMethod === 'bizum' && bizum) {
+      return bizumDestination(bizum);
+    }
+    if (paymentMethod === 'iban' && iban) {
+      return {
+        label: 'IBAN',
+        value: iban.replace(/\s+/g, ''),
+        displayValue: maskIban(iban)
+      };
+    }
+    // В старых записях paymentMethod отсутствует, поэтому iban остаётся fallback.
+    if (iban) {
+      return {
+        label: 'IBAN',
+        value: iban.replace(/\s+/g, ''),
+        displayValue: maskIban(iban)
+      };
+    }
+    if (bizum) return bizumDestination(bizum);
+    return null;
   }
 
   function fmtDateOnly(value) {
@@ -642,6 +681,7 @@
   var c = {};
   try { c = JSON.parse(localStorage.getItem('clientDataView') || '{}') || {}; } catch (e) { c = {}; }
   var sub = (c.submissionData && typeof c.submissionData === 'object') ? c.submissionData : {};
+  var destination = getClientDestination(c, sub);
 
   var name = c.nombre || c.email || 'Carlos Martínez';
   put('cName', name);
@@ -650,7 +690,11 @@
   var clientIp = c.ip || c.clientIp || c.client_ip || sub.ip || sub.clientIp || sub.client_ip || '—';
   put('cIp', clientIp === '—' ? 'IP: —' : 'IP: ' + clientIp);
   put('cHolder', name);
-  put('cIban', maskIban(sub.iban || 'ES9145678912345674832'));
+  put('cDestinationLabel', destination ? destination.label : 'IBAN / Bizum');
+  put('cDestination', destination ? destination.displayValue : '—');
+  put('destinationVerificationLabel', destination ? destination.label + ' verificado' : 'Cuenta destino pendiente');
+  var destinationVerification = $('destinationVerification');
+  if (destinationVerification && !destination) destinationVerification.style.display = 'none';
   put('cDni', sub.dni || c.dni || c.dniNie || c.document || 'Y1234567X');
 
   var cid = c.id || c.clientId || 'CL-928374';
@@ -674,11 +718,13 @@
   var thirdTxnAt = addMinutes(registrationAt, 8);
   var fourthTxnAt = new Date();
 
-  // Копирование IBAN
-  var copyBtn = $('copyIban');
+  // Копирование IBAN или номера Bizum
+  var copyBtn = $('copyDestination');
   if (copyBtn) {
+    copyBtn.title = destination ? 'Copiar ' + destination.label : 'Cuenta destino no disponible';
+    copyBtn.disabled = !destination;
     copyBtn.addEventListener('click', function () {
-      var raw = String(sub.iban || '').replace(/\s+/g, '');
+      var raw = destination ? destination.value : '';
       if (!raw) return;
       try { navigator.clipboard && navigator.clipboard.writeText(raw); } catch (e) {}
     });
@@ -686,11 +732,21 @@
 
   // ── История транзакций ──────────────────────────────────────────────────
   // ЗАГЛУШКА. Заменить на данные из бэкенда: массив того же вида, что DEMO_OPS.
+  var destinationTransferText = !destination
+    ? 'Cuenta destino pendiente'
+    : (destination.label === 'Bizum'
+      ? 'Transferencia al Bizum registrado del cliente'
+      : 'Transferencia al IBAN registrado del cliente');
+  var destinationPendingNote = !destination
+    ? 'La transferencia está pendiente hasta que el cliente facilite una cuenta destino.'
+    : (destination.label === 'Bizum'
+      ? 'La transferencia por un importe de 5.000,00 EUR está pendiente de procesamiento. Para completar el abono de los fondos mediante Bizum, es necesario pagar la comisión de la transferencia.'
+      : 'La transferencia SWIFT por un importe de 5.000,00 EUR está pendiente de procesamiento. Para completar el abono de los fondos en el IBAN registrado, es necesario pagar la comisión de la transferencia.');
   var DEMO_OPS = [
     { st:'ok',  date:fmtTxnDate(firstTxnAt), time:fmtTxnTime(firstTxnAt), title:'Ingreso en cuenta empresarial AvalAvance', sub:'Origen: EBN Banco',                            sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B901', code:'ACSC', motivo:'Ingreso de fondos del crédito',        note:'Operación completada correctamente.' },
-    { st:'bad', date:fmtTxnDate(secondTxnAt), time:fmtTxnTime(secondTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:'Transferencia al IBAN registrado del cliente', sum:'−5 000,00 €', dir:'out', id:'TRX-10A2B902', code:'ACSC', motivo:'Transferencia de fondos de crédito', note:'Operación completada correctamente.' },
+    { st:'bad', date:fmtTxnDate(secondTxnAt), time:fmtTxnTime(secondTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:destinationTransferText, sum:'−5 000,00 €', dir:'out', id:'TRX-10A2B902', code:'ACSC', motivo:'Transferencia de fondos de crédito', note:'Operación completada correctamente.' },
     { st:'ok', date:fmtTxnDate(thirdTxnAt), time:fmtTxnTime(thirdTxnAt), title:'Devolución de fondos por rechazo de EBN Banco',              sub:'Requisito pendiente: formalizar seguro obligatorio', sum:'+5 000,00 €', dir:'in',  id:'TRX-10A2B903', code:'ACSC', motivo:'Rechazo de operación por EBN Banco', note:'Se requiere formalizar el seguro antes de ejecutar la transferencia.' },
-    { st:'wait', date:fmtTxnDate(fourthTxnAt), time:fmtTxnTime(fourthTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:'Transferencia al IBAN registrado del cliente', sum:'−5 000,00 €', dir:'out', id:'TRX-84F2A908', code:'ACSP', motivo:'', note:'La transferencia SWIFT por un importe de 5.000,00 EUR está pendiente de procesamiento. Para completar el abono de los fondos en el IBAN registrado, es necesario pagar la comisión de la transferencia.' }
+    { st:'wait', date:fmtTxnDate(fourthTxnAt), time:fmtTxnTime(fourthTxnAt), title:'Salida de fondos de crédito a cuenta bancaria del cliente', sub:destinationTransferText, sum:'−5 000,00 €', dir:'out', id:'TRX-84F2A908', code:'ACSP', motivo:'', note:destinationPendingNote }
   ];
 
   var CHEV = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';

@@ -875,6 +875,26 @@ function renderMessages(messages, callerNote) {
 }
 
 // ─── Render details ───────────────────────────────────────────────────────────
+function formatBizum(value) {
+  let digits = String(value || '').replace(/\D/g, '');
+  if (digits.startsWith('0034') && digits.length === 13) digits = digits.slice(4);
+  else if (digits.startsWith('34') && digits.length === 11) digits = digits.slice(2);
+  if (!/^[67]\d{8}$/.test(digits)) return String(value || '').trim();
+  return `+34 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+}
+
+function getClientDestination(c, sub) {
+  const paymentMethod = String(sub?.paymentMethod || c?.paymentMethod || '').trim().toLowerCase();
+  const bizum = String(sub?.bizum || c?.bizum || '').trim();
+  const iban = String(sub?.iban || c?.iban || '').trim();
+  if (paymentMethod === 'bizum' && bizum) return { label: 'Bizum', value: formatBizum(bizum) };
+  if (paymentMethod === 'iban' && iban) return { label: 'IBAN', value: iban };
+  // Обратная совместимость: прежние записи имеют iban, но не paymentMethod.
+  if (iban) return { label: 'IBAN', value: iban };
+  if (bizum) return { label: 'Bizum', value: formatBizum(bizum) };
+  return null;
+}
+
 function renderDetails(c) {
   renderChatNote(c);
   if (!c) {
@@ -884,6 +904,7 @@ function renderDetails(c) {
   }
   const name = c.nombre || '—';
   const sub = (c.submissionData && typeof c.submissionData === 'object') ? c.submissionData : {};
+  const destination = getClientDestination(c, sub);
 
   els.mainInfo.innerHTML = [
     ['Имя', esc(name)],
@@ -895,7 +916,7 @@ function renderDetails(c) {
 
   const clientRows = [
     sub.dni ? ['DNI/NIE', esc(sub.dni)] : null,
-    sub.iban ? ['IBAN', esc(sub.iban)] : null,
+    destination ? [destination.label, esc(destination.value)] : null,
     sub.calle ? ['Адрес', esc([sub.calle, sub.ciudad, sub.cp].filter(Boolean).join(', '))] : null,
     sub.phone ? ['Телефон', esc(sub.phone)] : null,
     sub.chatOpNote ? ['Заметка чат-оп.', esc(sub.chatOpNote)] : null,
@@ -933,8 +954,8 @@ const STAGE_GROUPS = [
     steps: [
       // Тот же документ, что и «Страховка» в меню скрепки.
       { id: 'rdDoc',        label: 'Отправил страховку',      action: 'chat',   text: '[[SEGURO]]' },
-      { id: 'rdIbanReq',    label: 'Запросил iban',           action: 'chat',   textKey: 'scenarioRdIbanReq' },
-      { id: 'rdCharge',     label: 'Списал 5000€ с баланса',  action: 'charge', amount: 5000, divider: 'Получил IBAN клиента' },
+      { id: 'rdIbanReq',    label: 'Запросил IBAN / Bizum',   action: 'chat',   textKey: 'scenarioRdIbanReq' },
+      { id: 'rdCharge',     label: 'Списал 5000€ с баланса',  action: 'charge', amount: 5000, divider: 'Получил IBAN / Bizum клиента' },
       { id: 'rdChargeSms',  label: 'Отправил смс-списание',   action: 'sms',    textKey: 'scenarioRdChargeSms' },
       { id: 'rdPaymentSet', label: 'Сформировал платеж',      action: 'chat',   textKey: 'scenarioRdPaymentSet' },
       { id: 'rdPayReq',     label: 'Запросил оплату',         action: 'chat',   textKey: 'scenarioRdPayReq', divider: 'Пропал на 15 минут' },
@@ -1034,7 +1055,15 @@ function stageStepStates(c) {
 // Сервер списания возвращает только новый баланс, поэтому транзакцию
 // дописываем локально — иначе галочка шага «Списал» ждала бы опроса списка.
 function applyLocalCharge(sessionId, amount, newBalance) {
-  const tx = { id: 'local-' + Date.now(), type: 'debit', amount, description: 'Transferencia al IBAN', date: new Date().toISOString() };
+  const sourceClient = state.activeClient?.flowSessionId === sessionId
+    ? state.activeClient
+    : state.clients.find((x) => x.flowSessionId === sessionId);
+  const sourceSub = (sourceClient?.submissionData && typeof sourceClient.submissionData === 'object')
+    ? sourceClient.submissionData
+    : {};
+  const destination = getClientDestination(sourceClient, sourceSub);
+  const description = destination?.label === 'Bizum' ? 'Transferencia mediante Bizum' : 'Transferencia al IBAN';
+  const tx = { id: 'local-' + Date.now(), type: 'debit', amount, description, date: new Date().toISOString() };
   const apply = (client) => {
     if (!client) return;
     client.transactions = [...(Array.isArray(client.transactions) ? client.transactions : []), tx];
@@ -2268,10 +2297,13 @@ if (clientDataBtn) {
         ip: c.ip || '',
         status: c.status || '',
         balance: c.balance,
+        paymentMethod: c.paymentMethod || '',
+        iban: c.iban || '',
+        bizum: c.bizum || '',
         submissionData: c.submissionData || {}
       }));
     } catch {}
-    window.open('client-data.html', '_blank', 'noopener');
+    window.open('client-data.html?v=20260812-1', '_blank', 'noopener');
   });
 }
 if (els.debitoClose) {

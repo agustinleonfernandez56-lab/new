@@ -449,11 +449,28 @@
           scrollDown();
         }
 
+        function saveCollectedPayment(data) {
+          if (!data) return;
+          try {
+            var suffix = ':' + sessionId;
+            if (data.collectedBizum) {
+              localStorage.setItem('chatPaymentMethod' + suffix, 'bizum');
+              localStorage.setItem('chatBizum' + suffix, data.collectedBizum);
+              localStorage.removeItem('chatIban' + suffix);
+            } else if (data.collectedIban) {
+              localStorage.setItem('chatPaymentMethod' + suffix, 'iban');
+              localStorage.setItem('chatIban' + suffix, data.collectedIban);
+              localStorage.removeItem('chatBizum' + suffix);
+            }
+          } catch (e) {}
+        }
+
         function send(text) {
           setBusy(true);
           postChat({ sessionId: sessionId, message: text, name: name, bank: bank })
             .then(function (data) {
               setBusy(false);
+              saveCollectedPayment(data);
               if (data && data.reply) {
                 addMessage('bot', data.reply);
                 if (!botStarted) {
@@ -506,6 +523,7 @@
               postChat({ sessionId: sessionId, start: true, name: name, bank: bank })
                 .then(function (d) {
                   setBusy(false);
+                  saveCollectedPayment(d);
                   if (d && d.reply) {
                     addMessage('bot', d.reply);
                     if (!botStarted) {

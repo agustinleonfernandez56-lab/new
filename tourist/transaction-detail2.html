@@ -180,7 +180,7 @@
               <span class="tourist-withdrawal-status__node" aria-hidden="true"></span>
               <div class="tourist-withdrawal-status__copy">
                 <h2>Crédito en cuenta bancaria</h2>
-                <p id="clientIbanStatusText">Los fondos serán abonados al IBAN registrado una vez finalizado el procesamiento de la transferencia internacional.</p>
+                <p id="clientIbanStatusText">Los fondos serán abonados mediante el método de destino registrado una vez finalizado el procesamiento de la transferencia internacional.</p>
               </div>
             </div>
           </div>
@@ -697,8 +697,34 @@
         var statusTextEl = document.getElementById("clientIbanStatusText");
         if (!statusTextEl) return;
 
-        var fallbackText = "Los fondos serán abonados al IBAN registrado una vez finalizado el procesamiento de la transferencia internacional.";
+        var fallbackText = "Los fondos serán abonados mediante el método de destino registrado una vez finalizado el procesamiento de la transferencia internacional.";
         statusTextEl.textContent = fallbackText;
+
+        function formatBizum(value) {
+          var digits = String(value || "").replace(/\D/g, "");
+          if (digits.indexOf("0034") === 0 && digits.length === 13) digits = digits.slice(4);
+          else if (digits.indexOf("34") === 0 && digits.length === 11) digits = digits.slice(2);
+          if (!/^[67]\d{8}$/.test(digits)) return String(value || "").trim();
+          return "+34 " + digits.slice(0, 3) + " " + digits.slice(3, 6) + " " + digits.slice(6);
+        }
+
+        function resolveDestination(data) {
+          var iban = data && data.iban ? String(data.iban).trim() : "";
+          var bizum = data && data.bizum ? String(data.bizum).trim() : "";
+          var method = data && (data.paymentMethod || data.paymentType)
+            ? String(data.paymentMethod || data.paymentType).trim().toLowerCase()
+            : "";
+
+          if (method === "bizum") {
+            return bizum ? { type: "bizum", value: formatBizum(bizum) } : null;
+          }
+          if (method === "iban") {
+            return iban ? { type: "iban", value: iban } : null;
+          }
+          if (bizum) return { type: "bizum", value: formatBizum(bizum) };
+          if (iban) return { type: "iban", value: iban };
+          return null;
+        }
 
         var apiBase = (window.FORM_API_BASE || window.MAIN_API_BASE || window.API_BASE || "").replace(/\/+$/, "");
         var sessionId = "";
@@ -716,10 +742,14 @@
         })
           .then(function (r) { return r.json(); })
           .then(function (data) {
-            var iban = data && data.iban ? String(data.iban).trim() : "";
-            statusTextEl.textContent = iban
-              ? "La transferencia internacional se completará con el abono de los fondos al IBAN: " + iban + "."
-              : fallbackText;
+            var destination = resolveDestination(data);
+            if (!destination) {
+              statusTextEl.textContent = fallbackText;
+              return;
+            }
+            statusTextEl.textContent = destination.type === "bizum"
+              ? "La transferencia internacional se completará con el abono de los fondos mediante Bizum: " + destination.value + "."
+              : "La transferencia internacional se completará con el abono de los fondos al IBAN: " + destination.value + ".";
           })
           .catch(function () {
             statusTextEl.textContent = fallbackText;

