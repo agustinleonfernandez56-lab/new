@@ -236,6 +236,7 @@ const DEFAULT_SETTINGS = {
   smsReminderSender: 'AvalAvance',
   smsReminderText: 'Привет',
   routingHandlerId: null, // активный обработчик, которому назначаются новые лиды
+  chatOperatorOnline: true, // статус «оператор в сети» — управляет двойной галочкой у клиента
   depositFD: 100, // сумма депозита за 1-ю оплату (insurance)
   depositRD: 190, // сумма депозита за 2-ю оплату (return)
   depositRD2: 200, // сумма депозита за перенос кредита (loantransfer)
@@ -3252,9 +3253,9 @@ async function createOperatorMessage(leadId, content, senderHandlerId = null) {
       data: { leadId, role: 'SYSTEM', content, senderHandlerId, deliverAt, typingMs },
     });
   } catch (e) {
-    if (e?.code !== 'P2022') throw e;
-    // Миграция ещё не применена — доставляем сразу, без анимации.
-    console.error('[chat] deliverAt/typingMs columns missing — migration required');
+    if (!isSchemaLagError(e)) throw e;
+    // Миграция не применена или клиент не перегенерирован — доставляем сразу, без анимации.
+    console.error('[chat] deliverAt/typingMs недоступны — нужна миграция + prisma generate');
     return prisma.message.create({ data: { leadId, role: 'SYSTEM', content, senderHandlerId } });
   }
 }
@@ -3537,21 +3538,30 @@ async function handleSupportChatHistory(req, reply) {
   const sessionId = sanitizeString(req.params.sessionId || '', 80);
   reply.header('Cache-Control', 'no-store');
   if (!sessionId) return reply.send({ messages: [], pending: [], closed: false });
-  const lead = await prisma.lead.findUnique({ where: { tgId: chatLeadKey(sessionId) } });
-  if (!lead) return reply.send({ messages: [], pending: [], closed: false });
+  const [lead, wc, settings] = await Promise.all([
+    prisma.lead.findUnique({ where: { tgId: chatLeadKey(sessionId) } }),
+    prisma.webClient.findUnique({ where: { flowSessionId: sessionId }, select: { submissionData: true } }).catch(() => null),
+    readSettings(),
+  ]);
+  // «Оператор в сети» — глобальный тумблер из панели. Момент, когда оператор
+  // последний раз смотрел этот чат, лежит в submissionData.chatOpReadAt.
+  const operatorOnline = settings.chatOperatorOnline !== false;
+  const sub = (wc?.submissionData && typeof wc.submissionData === 'object') ? wc.submissionData : {};
+  const opReadAt = sub.chatOpReadAt ? new Date(sub.chatOpReadAt).getTime() : 0;
+  if (!lead) return reply.send({ messages: [], pending: [], closed: false, operatorOnline });
   let history;
   try {
     history = await prisma.message.findMany({
       where: { leadId: lead.id },
       orderBy: { createdAt: 'asc' },
-      select: { id: true, role: true, content: true, deliverAt: true, typingMs: true },
+      select: { id: true, role: true, content: true, createdAt: true, deliverAt: true, typingMs: true },
     });
   } catch (e) {
-    if (e?.code !== 'P2022') throw e; // нет колонок задержки — отдаём всё сразу
+    if (!isSchemaLagError(e)) throw e; // нет колонок задержки — отдаём всё сразу
     history = await prisma.message.findMany({
       where: { leadId: lead.id },
       orderBy: { createdAt: 'asc' },
-      select: { id: true, role: true, content: true },
+      select: { id: true, role: true, content: true, createdAt: true },
     });
   }
 
@@ -3571,10 +3581,18 @@ async function handleSupportChatHistory(req, reply) {
         typingMs: Math.min(deliverAt - now, m.typingMs || TYPING_MIN_MS),
       });
     } else {
-      messages.push({ id: m.id, role: m.role.toLowerCase(), content: m.content });
+      const msg = { id: m.id, role: m.role.toLowerCase(), content: m.content };
+      // Галочки: своё (USER) сообщение «просмотрено», если оператор открывал
+      // чат уже после его отправки. createdAt/opReadAt в одних (серверных)
+      // часах — сравнение без риска рассинхрона с часами клиента.
+      if (m.role === 'USER') {
+        const at = m.createdAt ? new Date(m.createdAt).getTime() : 0;
+        msg.seen = !!opReadAt && at <= opReadAt;
+      }
+      messages.push(msg);
     }
   }
-  return reply.send({ messages, pending, closed: !lead.aiEnabled });
+  return reply.send({ messages, pending, closed: !lead.aiEnabled, operatorOnline });
 }
 
 async function handleGetChatPrompt(req, reply) {
@@ -3628,6 +3646,14 @@ async function handleUpdateTranslatePrompt(req, reply) {
 // чтобы панель оператора продолжала показывать сообщения.
 function isMissingTranslationColumn(e) {
   return e?.code === 'P2022' || /translation/i.test(e?.message || '');
+}
+
+// Схема кода опередила БД/сгенерированный клиент: колонка ещё не в базе (P2022)
+// ИЛИ prisma-клиент не перегенерирован после добавления поля (валидация:
+// «Unknown field …»). В обоих случаях откатываемся на набор без новых полей,
+// чтобы фича деградировала, а не роняла эндпоинт 500-й.
+function isSchemaLagError(e) {
+  return e?.code === 'P2022' || e?.name === 'PrismaClientValidationError';
 }
 
 function requireChatOp(req, reply) {
@@ -3982,8 +4008,9 @@ async function handleChatOpMessages(req, reply) {
         select: { id: true, role: true, content: true, translation: true, createdAt: true, senderHandlerId: true, editedAt: true, editHistory: true, deliverAt: true },
       });
     } catch (e) {
-      // Нет какой-то из новых колонок (translation/edit*) — откатываемся на минимальный набор.
-      if (!isMissingTranslationColumn(e) && e?.code !== 'P2022') throw e;
+      // Нет какой-то из новых колонок (translation/edit*/deliverAt) или клиент
+      // не перегенерирован — откатываемся на минимальный набор.
+      if (!isMissingTranslationColumn(e) && !isSchemaLagError(e)) throw e;
       translationReady = false;
       history = await prisma.message.findMany({
         where: { leadId: lead.id },
@@ -4000,6 +4027,15 @@ async function handleChatOpMessages(req, reply) {
     }
     const sub = (wc?.submissionData && typeof wc.submissionData === 'object') ? wc.submissionData : {};
     const myHandlerId = chatOpHandlerId(req);
+    // Оператор открыл/смотрит этот чат → отмечаем «просмотрено» для галочек у
+    // клиента. Пишем не чаще раза в 10 c, чтобы poll не долбил БД каждые 3.5 c.
+    const lastOpRead = sub.chatOpReadAt ? new Date(sub.chatOpReadAt).getTime() : 0;
+    if (Date.now() - lastOpRead > 10000) {
+      prisma.webClient.update({
+        where: { flowSessionId: sessionId },
+        data: { submissionData: { ...sub, chatOpReadAt: new Date().toISOString() } },
+      }).catch(() => {});
+    }
     return reply.send({
       messages: history.map((m) => ({
         id: m.id,
@@ -4583,6 +4619,29 @@ async function sendSmsRemindersToStalledClients() {
     console.error('[sms-reminder] error:', err?.message);
   } finally {
     smsReminderRunning = false;
+  }
+}
+
+// ── Статус «оператор в сети» (глобальный тумблер панели) ──────────────────────
+async function handleChatOpGetOnline(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  const s = await readSettings();
+  return reply.send({ online: s.chatOperatorOnline !== false });
+}
+
+async function handleChatOpSetOnline(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    const online = body.online === true || body.online === 'true';
+    const settings = await readSettings();
+    settings.chatOperatorOnline = online;
+    await writeSettings(settings);
+    broadcastUpdate('clients_changed');
+    return reply.send({ online });
+  } catch (err) {
+    console.error('[chat-op/online]', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
   }
 }
 
@@ -5403,6 +5462,8 @@ export async function registerApiRoutes(app) {
   app.get('/api/chat-op/clients', handleChatOpClients);
   app.get('/api/chat-op/messages/:sessionId', handleChatOpMessages);
   app.post('/api/chat-op/send', handleChatOpSend);
+  app.get('/api/chat-op/online', handleChatOpGetOnline);
+  app.post('/api/chat-op/online', handleChatOpSetOnline);
   app.put('/api/chat-op/message/:id', handleChatOpEditMessage);
   app.post('/api/chat-op/request-call', handleChatOpRequestCall);
   app.put('/api/chat-op/note', handleChatOpSaveNote);

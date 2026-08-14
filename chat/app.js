@@ -365,6 +365,7 @@ function showWorkspace() {
   els.workspace.style.display = '';
   loadClients();
   loadScenarioTexts();
+  loadOnlineStatus();
   startClientPoll();
 }
 
@@ -423,6 +424,41 @@ if (soundToggleBtn) {
     localStorage.setItem(SOUND_MUTED_KEY, muted ? '0' : '1');
     refreshSoundToggle();
     if (muted) { ensureAudio(); playNewMessageSound(); } // включили — сразу проиграть образец
+  });
+}
+
+// ─── Статус «в сети / не в сети» ──────────────────────────────────────────────
+// Глобальный тумблер (хранится на сервере): когда «в сети» и оператор прочитал
+// сообщение клиента — у клиента загораются две галочки; иначе одна.
+const onlineToggleBtn = $('#onlineToggle');
+let operatorOnline = true;
+function refreshOnlineToggle() {
+  if (!onlineToggleBtn) return;
+  onlineToggleBtn.classList.toggle('is-online', operatorOnline);
+  onlineToggleBtn.classList.toggle('is-offline', !operatorOnline);
+  const label = onlineToggleBtn.querySelector('.online-toggle__label');
+  if (label) label.textContent = operatorOnline ? 'В сети' : 'Не в сети';
+  onlineToggleBtn.title = operatorOnline ? 'Статус: в сети (клиент видит двойные галочки)' : 'Статус: не в сети (клиент видит одну галочку)';
+}
+async function loadOnlineStatus() {
+  try {
+    const data = await api('/api/chat-op/online');
+    if (typeof data.online === 'boolean') { operatorOnline = data.online; refreshOnlineToggle(); }
+  } catch {}
+}
+if (onlineToggleBtn) {
+  refreshOnlineToggle();
+  onlineToggleBtn.addEventListener('click', async () => {
+    const next = !operatorOnline;
+    operatorOnline = next;           // оптимистично
+    refreshOnlineToggle();
+    onlineToggleBtn.disabled = true;
+    try {
+      const data = await api('/api/chat-op/online', { method: 'POST', body: { online: next } });
+      if (typeof data.online === 'boolean') operatorOnline = data.online;
+    } catch { operatorOnline = !next; } // откат при ошибке
+    refreshOnlineToggle();
+    onlineToggleBtn.disabled = false;
   });
 }
 

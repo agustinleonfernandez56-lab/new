@@ -252,6 +252,45 @@ h2 {
   box-shadow: 0 0 8px rgba(17, 102, 255, 0.25);
 }
 
+/* ── Тумблер «в сети / не в сети» ── */
+.online-toggle {
+  height: 32px;
+  padding: 0 10px 0 9px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  border: 1px solid #15243a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d8e2f2;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.online-toggle__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5b6b82;
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.online-toggle.is-online {
+  border-color: rgba(38, 197, 128, 0.5);
+  box-shadow: 0 0 8px rgba(38, 197, 128, 0.2);
+}
+.online-toggle.is-online .online-toggle__dot {
+  background: #26c580;
+  box-shadow: 0 0 0 3px rgba(38, 197, 128, 0.22);
+}
+.online-toggle.is-offline {
+  opacity: 0.7;
+}
+.online-toggle.is-offline .online-toggle__label {
+  color: #9fb0c6;
+}
+
 .msg-translated-label {
   font-size: 10px;
   color: #7a90aa;

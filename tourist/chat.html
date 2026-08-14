@@ -150,6 +150,24 @@
 
       .assistant-msg--user p { color: #ffffff; }
 
+      /* Галочки статуса (как в Telegram) — только на своих сообщениях */
+      .assistant-msg__ticks {
+        display: block;
+        text-align: right;
+        margin-top: 3px;
+        font-size: 12px;
+        line-height: 1;
+        letter-spacing: -3px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .assistant-msg__ticks.is-read { color: #d6ecff; }
+      .assistant-msg--image .assistant-msg__ticks {
+        margin-top: 5px;
+        padding-right: 2px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+      }
+
       /* ── Typing indicator ── */
       .chat-typing {
         align-self: flex-start;
@@ -1496,10 +1514,15 @@
         // «дозреть» уже после того, как клиент написал своё, поэтому считать
         // по количеству нельзя — порядок в истории меняется задним числом.
         var seenIds = {};
-        // Своё сообщение и ответ ИИ рисуем сразу, до опроса истории; когда они
-        // приедут с сервера — пропускаем, чтобы не задвоить.
-        var localEcho = { user: 0, bot: 0 };
+        // Ответ ИИ рисуем сразу, до опроса истории; когда он приедет с сервера —
+        // пропускаем, чтобы не задвоить.
+        var localEcho = { bot: 0 };
         var botMsgCount = 0;
+        // Статус оператора и галочки на своих сообщениях.
+        var operatorOnline = true;
+        var userBubbles = [];   // все свои пузырьки — для перерисовки галочек
+        var echoUserEls = [];   // показанные сразу при отправке, ещё не подтверждённые сервером
+        var seenById = {};      // id сообщения → пузырёк (обновляем «просмотрено» на опросе)
         // Сообщения оператора, ждущие своей анимации «печатает».
         var pendingQueue = [];
         var pendingIds = {};
@@ -1750,15 +1773,38 @@
           } else {
             el.innerHTML = '<p>' + escapeHtml(content).replace(/\n/g, '<br>') + '</p>';
           }
+          // Галочки статуса — только на своих сообщениях (как в Telegram).
+          if (role === 'user') {
+            var ticks = document.createElement('span');
+            ticks.className = 'assistant-msg__ticks';
+            ticks.setAttribute('aria-hidden', 'true');
+            el.appendChild(ticks);
+            el._ticks = ticks;
+            userBubbles.push(el);
+            applyTick(el, false);
+          }
           return el;
+        }
+
+        // Одна галочка — доставлено; две — оператор прочитал И сейчас «в сети».
+        function applyTick(el, seen) {
+          if (!el || !el._ticks) return;
+          el._seen = !!seen;
+          var two = el._seen && operatorOnline;
+          el._ticks.textContent = two ? '✓✓' : '✓';
+          el._ticks.classList.toggle('is-read', two);
+        }
+        function refreshAllTicks() {
+          userBubbles.forEach(function (el) { applyTick(el, el._seen); });
         }
 
         function addMessage(role, content) {
           var el = buildMsgEl(role, content);
-          if (!el) return;
+          if (!el) return null;
           chat.insertBefore(el, typing);
           scrollDown();
           if (role !== 'user') localStorage.setItem('chatUnread', '1');
+          return el;
         }
 
         // Индикатор общий для ИИ и оператора — держим оба повода отдельно,
@@ -1826,22 +1872,37 @@
         // локальных копий на экране ещё нет, рисуем всё подряд.
         function renderIncoming(msgs, isInit) {
           (msgs || []).forEach(function (m) {
-            if (m.id) {
-              if (seenIds[m.id]) return;
-              seenIds[m.id] = true;
-            }
             var isUser = m.role === 'user';
-            if (!isUser) botMsgCount++; // счётчик «прочитано» = все доставленные не-свои
-            if (!isInit) {
-              var slot = isUser ? 'user' : 'bot';
-              if (localEcho[slot] > 0) { // уже на экране — нарисовали при отправке
-                localEcho[slot]--;
-                return;
-              }
+            // Уже показанное сообщение — только обновляем галочки «просмотрено».
+            if (m.id && seenIds[m.id]) {
+              if (isUser && seenById[m.id]) applyTick(seenById[m.id], m.seen);
+              return;
             }
-            addMessage(isUser ? 'user' : 'bot', m.content);
+            if (m.id) seenIds[m.id] = true;
+            if (!isUser) botMsgCount++; // счётчик «прочитано» = все доставленные не-свои
+            var el;
+            if (!isInit && isUser && echoUserEls.length) {
+              el = echoUserEls.shift();     // усыновляем показанное при отправке
+            } else if (!isInit && !isUser && localEcho.bot > 0) {
+              localEcho.bot--;              // ответ ИИ уже на экране
+              return;
+            } else {
+              el = addMessage(isUser ? 'user' : 'bot', m.content);
+            }
+            if (isUser && el) {
+              if (m.id) seenById[m.id] = el;
+              applyTick(el, m.seen);
+            }
           });
           saveBotCount();
+        }
+
+        // Статус оператора из ответа истории → перерисовка галочек при смене.
+        function applyOperatorOnline(data) {
+          if (data && typeof data.operatorOnline === 'boolean' && data.operatorOnline !== operatorOnline) {
+            operatorOnline = data.operatorOnline;
+            refreshAllTicks();
+          }
         }
 
         function requestPushPermissionFromAndroid() {
@@ -1938,6 +1999,7 @@
               .then(function (r) { return r.json(); })
               .then(function (data) {
                 var before = botMsgCount;
+                applyOperatorOnline(data);
                 renderIncoming((data && data.messages) || [], false);
                 if (botMsgCount > before) markRead();
                 schedulePending(data && data.pending);
@@ -1973,8 +2035,8 @@
           e.preventDefault();
           var text = input.value.trim();
           if (!text || input.disabled) return;
-          localEcho.user++;
-          addMessage('user', text);
+          var echoEl = addMessage('user', text);
+          if (echoEl) echoUserEls.push(echoEl);
           input.value = '';
           send(text);
         });
@@ -1995,8 +2057,8 @@
             imgBtn.disabled = false;
             input.disabled = false;
             sendBtn.disabled = false;
-            localEcho.user++;
-            addMessage('user', url);
+            var echoImg = addMessage('user', url);
+            if (echoImg) echoUserEls.push(echoImg);
             postChat({ sessionId: sessionId, message: url, name: name, bank: bank })
               .then(function (data) {
                 saveCollectedData(data || {});
@@ -2020,6 +2082,7 @@
               var msgs = (data && data.messages) || [];
               var alreadyClosed = !!(data && data.closed);
 
+              applyOperatorOnline(data);
               if (msgs.length || (data && data.pending && data.pending.length)) {
                 renderIncoming(msgs, true);
                 scrollDown();
