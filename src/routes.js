@@ -2504,6 +2504,14 @@ async function handleChat(req, reply) {
 
     await prisma.message.create({ data: { leadId: lead.id, role: 'ASSISTANT', content: replyText } });
 
+    // [[FIN]] — бот закончил первый чат: после финального сообщения (с кнопкой-
+    // ссылкой на форму) отключаем ИИ для этого лида, чтобы он больше не отвечал.
+    // Ключ лида здесь web:… отдельный от chat:… второго чата — тот не затрагиваем.
+    if (isDone) {
+      try { await prisma.lead.update({ where: { id: lead.id }, data: { aiEnabled: false } }); }
+      catch (e) { console.error('[chat] disable ai error:', e?.message); }
+    }
+
     // Save extracted tokens immediately. IBAN and Bizum are mutually exclusive.
     if (extractedDni || paymentDetails.paymentMethod) {
       try {
@@ -2549,7 +2557,7 @@ async function handleChatHistory(req, reply) {
   reply.header('Cache-Control', 'no-store');
   if (!sessionId) return reply.send({ messages: [] });
   const lead = await prisma.lead.findUnique({ where: { tgId: leadKeyFromSession(sessionId) } });
-  if (!lead) return reply.send({ messages: [] });
+  if (!lead) return reply.send({ messages: [], closed: false });
   const history = await prisma.message.findMany({
     where: { leadId: lead.id },
     orderBy: { createdAt: 'asc' },
@@ -2557,6 +2565,7 @@ async function handleChatHistory(req, reply) {
   });
   return reply.send({
     messages: history.map((m) => ({ role: m.role.toLowerCase(), content: m.content })),
+    closed: !lead.aiEnabled, // бот закончил ([[FIN]]) — клиент блокирует ввод
   });
 }
 

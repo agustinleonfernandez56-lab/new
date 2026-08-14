@@ -413,7 +413,17 @@
           scrollDown();
         }
 
+        // Бот закончил диалог — блокируем ввод, чтобы он больше не отвечал.
+        var dialogLocked = false;
+        function lockComposer() {
+          dialogLocked = true;
+          input.disabled = true;
+          sendBtn.disabled = true;
+          input.setAttribute('placeholder', 'El chat ha finalizado');
+        }
+
         function setBusy(on) {
+          if (dialogLocked) { showTyping(false); return; } // после финала не разблокируем
           input.disabled = on;
           sendBtn.disabled = on;
           showTyping(on);
@@ -477,14 +487,15 @@
                   botStarted = true;
                   // Статус: БОТ НАЧАЛ ДИАЛОГ (уже начат, если отвечает)
                 }
-              } else {
+              } else if (!(data && (data.disabled || data.done))) {
                 addMessage('bot', 'Disculpa, no he podido responder. Inténtalo de nuevo.');
               }
               // Статус: БОТ ЗАКОНЧИЛ ДИАЛОГ
-              if (data && data.done) {
+              if (data && (data.done || data.disabled)) {
                 try { localStorage.setItem('botDialogDone', '1'); } catch (e) {}
-                if (window.ClientTracker) ClientTracker.track('tourist_bot_finished_dialogue', { bank: bank });
+                if (data.done && window.ClientTracker) ClientTracker.track('tourist_bot_finished_dialogue', { bank: bank });
                 showActionButton();
+                lockComposer();
               }
             })
             .catch(function () {
@@ -512,10 +523,11 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
               var msgs = (data && data.messages) || [];
+              var closed = !!(data && data.closed); // сервер: бот отключён после [[FIN]]
               if (msgs.length) {
                 msgs.forEach(function (m) { addMessage(m.role === 'user' ? 'user' : 'bot', m.content); });
                 botStarted = true;
-                if (isDone) showActionButton();
+                if (isDone || closed) { showActionButton(); lockComposer(); }
                 return;
               }
               // Нет истории — приветствие от бота
@@ -532,9 +544,10 @@
                       if (window.ClientTracker) ClientTracker.track('tourist_bot_started', { bank: bank });
                     }
                   }
-                  if (d && d.done) {
+                  if (d && (d.done || d.disabled)) {
                     try { localStorage.setItem('botDialogDone', '1'); } catch (e) {}
                     showActionButton();
+                    lockComposer();
                   }
                 })
                 .catch(function () { setBusy(false); });
