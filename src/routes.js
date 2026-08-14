@@ -4659,6 +4659,9 @@ async function handleSupportChatMarkRead(req, reply) {
     const body = asRecord(req.body) ?? {};
     const sessionId = sanitizeString(getString(body.sessionId), 80);
     if (!sessionId) return reply.send({ ok: true });
+    // Клиент открыл чат и увидел сообщение (в панели оператора — ✓✓) → пуш-
+    // напоминание больше не нужно. Пуш уходит только тем, кто НЕ увидел ответ.
+    cancelPush(sessionId);
     const existing = await prisma.webClient.findUnique({
       where: { flowSessionId: sessionId },
       select: { submissionData: true },
