@@ -152,19 +152,22 @@
 
       /* Галочки статуса (как в Telegram) — только на своих сообщениях */
       .assistant-msg__ticks {
-        display: block;
-        text-align: right;
-        margin-top: 3px;
+        display: inline;
+        margin-left: 6px;
         font-size: 12px;
-        line-height: 1;
         letter-spacing: -3px;
         font-weight: 700;
+        white-space: nowrap;
+        vertical-align: baseline;
         color: rgba(255, 255, 255, 0.55);
       }
       .assistant-msg__ticks.is-read { color: #d6ecff; }
+      /* На картинке галочек нет текста рядом — ставим их в правый нижний угол */
       .assistant-msg--image .assistant-msg__ticks {
-        margin-top: 5px;
-        padding-right: 2px;
+        display: block;
+        text-align: right;
+        margin: 5px 2px 0 0;
+        line-height: 1;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
       }
 
@@ -1773,12 +1776,15 @@
           } else {
             el.innerHTML = '<p>' + escapeHtml(content).replace(/\n/g, '<br>') + '</p>';
           }
-          // Галочки статуса — только на своих сообщениях (как в Telegram).
+          // Галочки статуса — только на своих сообщениях (как в Telegram):
+          // в тексте — в конце последней строки, на картинке — в углу снизу.
           if (role === 'user') {
             var ticks = document.createElement('span');
             ticks.className = 'assistant-msg__ticks';
             ticks.setAttribute('aria-hidden', 'true');
-            el.appendChild(ticks);
+            var pEl = el.querySelector('p');
+            if (pEl) pEl.appendChild(ticks);
+            else el.appendChild(ticks);
             el._ticks = ticks;
             userBubbles.push(el);
             applyTick(el, false);
