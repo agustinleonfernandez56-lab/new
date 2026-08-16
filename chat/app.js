@@ -3,9 +3,22 @@
 // ─── Config ──────────────────────────────────────────────────────────────────
 const API = window.location.origin;
 const TOKEN_KEY = 'chatOpToken';
+const MESSAGE_DRAFTS_KEY = 'chatOpMessageDrafts';
 const CHATS_PER_PAGE = 11;
 const POLL_CLIENTS_MS = 5000;
 const POLL_MESSAGES_MS = 3500;
+
+function loadMessageDrafts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(MESSAGE_DRAFTS_KEY) || '{}');
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return {};
+    return Object.fromEntries(
+      Object.entries(saved).filter(([sessionId, text]) => sessionId && typeof text === 'string' && text.length)
+    );
+  } catch {
+    return {};
+  }
+}
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let state = {
@@ -25,6 +38,7 @@ let state = {
   activePaymentStatuses: { insurance: 'none', return: 'none', loantransfer: 'none', creditcard: 'none' },
   scenarioTexts: {},     // тексты этапов из админки (грузим один раз после входа)
   smsEntries: [],        // история SMS активного клиента — по ней ловим ручные отправки
+  messageDrafts: loadMessageDrafts(), // отдельный черновик сообщения для каждого чата
   noteDrafts: {},
   noteSaving: {},
   notes: [],             // общие заметки операторов (с сервера)
@@ -554,29 +568,34 @@ function startMsgPoll() {
 }
 
 // ─── Indicator ───────────────────────────────────────────────────────────────
-function getIndicator(lastMsg) {
+function getIndicator(lastMsg, handledWithoutReply = false) {
   if (!lastMsg) return 'gray';
-  if (lastMsg.role === 'user') return 'green';
+  if (lastMsg.role === 'user' && !handledWithoutReply) return 'green';
   return 'yellow';
 }
 
 // Сколько сообщений клиента (user) после последнего сообщения оператора — непрочитанные.
-function countUnread(messages) {
+function countUnread(messages, handledAt = null) {
   if (!messages || !messages.length) return 0;
-  let lastOpIdx = -1;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].role === 'operator') { lastOpIdx = i; break; }
+  const handledAtMs = handledAt ? new Date(handledAt).getTime() : 0;
+  let cutoff = Number.isFinite(handledAtMs) ? handledAtMs : 0;
+  for (const message of messages) {
+    if (message.role !== 'operator') continue;
+    const createdAt = new Date(message.createdAt).getTime();
+    if (Number.isFinite(createdAt) && createdAt > cutoff) cutoff = createdAt;
   }
   let cnt = 0;
-  for (let i = lastOpIdx + 1; i < messages.length; i++) {
-    if (messages[i].role === 'user') cnt++;
+  for (const message of messages) {
+    if (message.role !== 'user') continue;
+    const createdAt = new Date(message.createdAt).getTime();
+    if (!Number.isFinite(createdAt) || createdAt > cutoff) cnt++;
   }
   return cnt;
 }
 
 function updateConversationIndicator(sessionId, messages) {
   const c = state.clients.find((x) => x.flowSessionId === sessionId);
-  const unread = countUnread(messages);
+  const unread = countUnread(messages, c?.chatHandledAt);
   if (c) c.unreadCount = unread;
   const row = document.querySelector(`[data-session-id="${CSS.escape(sessionId)}"]`);
   if (!row) return;
@@ -644,7 +663,7 @@ function renderConversations() {
         : c.requisiteStatus === 'cloud'
           ? '<span class="requisite-chat-status requisite-chat-status--cloud" title="Срок после обновления реквизитов: 24–72 часа" aria-label="Солнышко с тучкой">⛅️</span>'
           : '';
-    const ind = getIndicator(c.lastMsg);
+    const ind = getIndicator(c.lastMsg, c.handledWithoutReply);
     const isNew = c.status === STATUS_NEW;
     const unread = c.unreadCount || 0;
     // Вместо зелёного/жёлтого кружка — счётчик непрочитанных сообщений клиента (как в TG).
@@ -663,7 +682,7 @@ function renderConversations() {
       : '&nbsp;';
     const timeStr = fmtTime(c.lastMsg?.createdAt || c.calledAt || c.createdAt);
     const statusClass = isNew ? '' : ind === 'green' ? 'online' : ind === 'yellow' ? 'hold' : 'pending';
-    const statusText = isNew ? '' : ind === 'green' ? '● Нужен ответ' : ind === 'yellow' ? '⏱ Ответил' : '⌛ Ожидает';
+    const statusText = isNew ? '' : c.handledWithoutReply ? '✓ Спасибун' : ind === 'green' ? '● Нужен ответ' : ind === 'yellow' ? '⏱ Ответил' : '⌛ Ожидает';
     const noteOriginal = c.callerNote || '';
     const hasDraft = Object.prototype.hasOwnProperty.call(state.noteDrafts, c.flowSessionId);
     const noteValue = hasDraft ? state.noteDrafts[c.flowSessionId] : noteOriginal;
@@ -735,7 +754,9 @@ function renderStartBar() {
 
 // ─── Select client ────────────────────────────────────────────────────────────
 async function selectClient(sessionId) {
+  saveActiveMessageDraft();
   state.activeSessionId = sessionId;
+  restoreMessageDraft(sessionId);
   clearInterval(state.msgPollTimer);
 
   const c = state.clients.find((x) => x.flowSessionId === sessionId);
@@ -1955,6 +1976,30 @@ function fitMessageInput() {
   els.messageInput.style.height = `${Math.min(116, els.messageInput.scrollHeight)}px`;
 }
 
+function persistMessageDrafts() {
+  try {
+    localStorage.setItem(MESSAGE_DRAFTS_KEY, JSON.stringify(state.messageDrafts));
+  } catch {}
+}
+
+function setMessageDraft(sessionId, text) {
+  if (!sessionId) return;
+  if (text) state.messageDrafts[sessionId] = text;
+  else delete state.messageDrafts[sessionId];
+  persistMessageDrafts();
+}
+
+function saveActiveMessageDraft() {
+  if (!els.messageInput || !state.activeSessionId) return;
+  setMessageDraft(state.activeSessionId, els.messageInput.value);
+}
+
+function restoreMessageDraft(sessionId) {
+  if (!els.messageInput) return;
+  els.messageInput.value = sessionId ? (state.messageDrafts[sessionId] || '') : '';
+  fitMessageInput();
+}
+
 // Send message
 els.messageForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -1966,13 +2011,17 @@ els.messageForm.addEventListener('submit', async (e) => {
   const sid = state.activeSessionId;
   if (!sid) return;
   els.messageInput.value = '';
+  setMessageDraft(sid, '');
   fitMessageInput();
   clearPendingAttach();
   if (text) await sendOperatorMsg(text, sid);
   if (token) await sendOperatorMsg(token, sid);
 });
 
-els.messageInput.addEventListener('input', fitMessageInput);
+els.messageInput.addEventListener('input', () => {
+  setMessageDraft(state.activeSessionId, els.messageInput.value);
+  fitMessageInput();
+});
 
 els.messageInput.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
@@ -2056,6 +2105,7 @@ if (els.startChatBtn) {
 els.imageBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   if (!state.activeSessionId) return;
+  closeQuickReplies();
   attachMenu?.classList.contains('is-open') ? closeAttachMenu() : openAttachMenu();
 });
 
@@ -2108,6 +2158,601 @@ els.imageInput.addEventListener('change', async () => {
   } finally {
     els.imageBtn.disabled = false;
   }
+});
+
+// ─── Быстрые ответы ───────────────────────────────────────────────────────────
+const quickRepliesToggle = document.getElementById('quickRepliesToggle');
+const quickRepliesModal = document.getElementById('quickRepliesModal');
+const quickRepliesPanel = quickRepliesModal?.querySelector('.quick-replies-panel');
+const quickRepliesClose = document.getElementById('quickRepliesClose');
+const quickReplyAddOpen = document.getElementById('quickReplyAddOpen');
+const quickReplyForm = document.getElementById('quickReplyForm');
+const quickReplyEditorTitle = document.getElementById('quickReplyEditorTitle');
+const quickReplyTitle = document.getElementById('quickReplyTitle');
+const quickReplyText = document.getElementById('quickReplyText');
+const quickReplyCategorySelect = document.getElementById('quickReplyCategorySelect');
+const quickReplyCategoryPicker = document.getElementById('quickReplyCategoryPicker');
+const quickReplyCategoryName = document.getElementById('quickReplyCategoryName');
+const quickReplyCategoryAdd = document.getElementById('quickReplyCategoryAdd');
+const quickReplyFormCancel = document.getElementById('quickReplyFormCancel');
+const quickReplyFormSubmit = document.getElementById('quickReplyFormSubmit');
+const quickReplyFormStatus = document.getElementById('quickReplyFormStatus');
+const quickReplyCategories = document.getElementById('quickReplyCategories');
+const quickReplyList = document.getElementById('quickReplyList');
+
+const quickReplyState = {
+  categories: [],
+  replies: [],
+  allAccess: false,
+  activeCategoryId: 'all',
+  editingReplyId: null,
+  loading: false,
+  dragCategoryId: null,
+  categoryDragEndedAt: 0,
+  dragReplyId: null,
+  touchTap: { id: null, at: 0 },
+};
+
+let quickDeletePress = { key: '', at: 0, button: null, timer: null };
+
+function handleQuickDeletePress(key, button, onDoublePress) {
+  const now = Date.now();
+  const isDoublePress = quickDeletePress.key === key && now - quickDeletePress.at < 550;
+  if (quickDeletePress.timer) clearTimeout(quickDeletePress.timer);
+  quickDeletePress.button?.classList.remove('is-delete-armed');
+  if (isDoublePress) {
+    quickDeletePress = { key: '', at: 0, button: null, timer: null };
+    onDoublePress();
+    return;
+  }
+  button?.classList.add('is-delete-armed');
+  const timer = setTimeout(() => {
+    button?.classList.remove('is-delete-armed');
+    if (quickDeletePress.key === key) quickDeletePress = { key: '', at: 0, button: null, timer: null };
+  }, 560);
+  quickDeletePress = { key, at: now, button, timer };
+}
+
+function quickReplyErrorText(code) {
+  const messages = {
+    category_name_required: 'Введите название категории.',
+    category_exists: 'Такая категория уже существует.',
+    category_required: 'Выберите категорию ответа.',
+    category_not_found: 'Категория уже удалена. Обновите список.',
+    reply_title_required: 'Введите название заготовки.',
+    reply_text_required: 'Введите текст быстрого ответа.',
+    reply_not_found: 'Ответ уже удалён или недоступен.',
+    forbidden: 'Этот набор принадлежит другому обработчику.',
+    unauthorized: 'Сессия истекла. Войдите снова.',
+  };
+  return messages[code] || 'Не удалось сохранить изменения.';
+}
+
+function setQuickReplyStatus(text = '', isError = false) {
+  if (!quickReplyFormStatus) return;
+  quickReplyFormStatus.textContent = text;
+  quickReplyFormStatus.classList.toggle('is-error', !!isError);
+}
+
+function quickCategoryById(id) {
+  return quickReplyState.categories.find((category) => category.id === id) || null;
+}
+
+function visibleQuickReplies() {
+  if (quickReplyState.activeCategoryId === 'all') return quickReplyState.replies;
+  if (quickReplyState.activeCategoryId === 'uncategorized') {
+    return quickReplyState.replies.filter((reply) => !reply.categoryId);
+  }
+  return quickReplyState.replies.filter((reply) => reply.categoryId === quickReplyState.activeCategoryId);
+}
+
+function renderQuickReplyCategorySelect(preferredId) {
+  if (!quickReplyCategorySelect || !quickReplyCategoryPicker) return;
+  const previous = preferredId || quickReplyCategorySelect.value || 'uncategorized';
+  const selected = previous === 'uncategorized' || quickReplyState.categories.some((category) => category.id === previous)
+    ? previous
+    : 'uncategorized';
+  quickReplyCategorySelect.value = selected;
+  const choice = (id, name, removable = false) => `
+    <div class="quick-reply-category-option${removable ? ' has-delete' : ''}${selected === id ? ' is-selected' : ''}">
+      <button class="quick-reply-category-choice-card" type="button" data-quick-category-choice="${esc(id)}" title="${esc(name)}">
+        <span>${esc(name)}</span>
+      </button>
+      ${removable ? `<button class="quick-reply-category-trash" type="button" data-quick-category-delete="${esc(id)}" aria-label="Дважды нажмите, чтобы удалить категорию «${esc(name)}»" title="Дважды нажмите, чтобы удалить">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M9 7l1-3h4l1 3m3 0-1 14H7L6 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>` : ''}
+    </div>`;
+  quickReplyCategoryPicker.innerHTML = [
+    choice('uncategorized', 'Без категории'),
+    ...quickReplyState.categories.map((category) => choice(category.id, category.name, true)),
+  ].join('');
+}
+
+function renderQuickReplyCategories() {
+  if (!quickReplyCategories) return;
+  const activeExists = quickReplyState.activeCategoryId === 'uncategorized'
+    || quickReplyState.categories.some((category) => category.id === quickReplyState.activeCategoryId);
+  if (!activeExists) quickReplyState.activeCategoryId = quickReplyState.categories[0]?.id || 'uncategorized';
+  const tabs = [
+    ...quickReplyState.categories,
+    { id: 'uncategorized', name: 'Без категории' },
+  ];
+  quickReplyCategories.innerHTML = tabs.map((category) => (
+    `<button type="button" class="quick-replies-category${category.id === 'uncategorized' ? ' is-uncategorized' : ' is-movable'}${category.id === quickReplyState.activeCategoryId ? ' is-active' : ''}" data-quick-category="${esc(category.id)}"${category.id === 'uncategorized' ? '' : ' draggable="true" title="Перетащите влево или вправо"'}>${esc(category.name)}</button>`
+  )).join('');
+}
+
+function renderQuickReplyList() {
+  if (!quickReplyList) return;
+  if (quickReplyState.loading) {
+    quickReplyList.innerHTML = '<div class="quick-replies-empty">Загружаю быстрые ответы…</div>';
+    return;
+  }
+  const replies = visibleQuickReplies();
+  if (!replies.length) {
+    const text = quickReplyState.replies.length
+      ? 'В этой категории пока нет ответов.'
+      : 'Пока нет быстрых ответов. Нажмите «Добавить ответ».';
+    quickReplyList.innerHTML = `<div class="quick-replies-empty">${esc(text)}</div>`;
+    return;
+  }
+  quickReplyList.innerHTML = replies.map((reply) => (
+    `<article class="quick-reply-row" data-quick-reply-id="${esc(reply.id)}" title="Дважды нажмите, чтобы отправить">
+      <span class="quick-reply-row__title" title="${esc(reply.title || reply.text)}">${esc(reply.title || reply.text)}</span>
+      <div class="quick-reply-row__content"><span class="quick-reply-row__text">${esc(reply.text)}</span></div>
+      <button class="quick-reply-delete" type="button" data-quick-reply-delete="${esc(reply.id)}" aria-label="Дважды нажмите, чтобы удалить ответ" title="Дважды нажмите, чтобы удалить">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M9 7l1-3h4l1 3m3 0-1 14H7L6 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="quick-reply-edit" type="button" data-quick-reply-edit="${esc(reply.id)}" aria-label="Редактировать ответ" title="Редактировать">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 5 5 5M4 20l3.8-.8L19 8a2.1 2.1 0 0 0-3-3L4.8 16.2 4 20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="quick-reply-drag" draggable="true" tabindex="0" role="button" aria-label="Переместить ответ выше или ниже" title="Перетащить">⠿</span>
+    </article>`
+  )).join('');
+}
+
+function renderQuickReplies(preferredCategoryId) {
+  renderQuickReplyCategories();
+  renderQuickReplyList();
+  renderQuickReplyCategorySelect(preferredCategoryId);
+  requestAnimationFrame(positionQuickReplies);
+}
+
+function applyQuickRepliesData(data, preferredCategoryId) {
+  if (!data || data.error) return false;
+  quickReplyState.categories = Array.isArray(data.categories) ? data.categories : [];
+  quickReplyState.replies = Array.isArray(data.replies) ? data.replies : [];
+  quickReplyState.allAccess = !!data.allAccess;
+  quickReplyState.loading = false;
+  renderQuickReplies(preferredCategoryId);
+  return true;
+}
+
+async function loadQuickReplies() {
+  if (!quickReplyList || quickReplyState.loading) return;
+  quickReplyState.loading = true;
+  renderQuickReplyList();
+  try {
+    const data = await api('/api/chat-op/quick-replies');
+    if (!applyQuickRepliesData(data)) {
+      quickReplyState.loading = false;
+      quickReplyList.innerHTML = `<div class="quick-replies-empty">${esc(quickReplyErrorText(data?.error))}</div>`;
+    }
+  } catch {
+    quickReplyState.loading = false;
+    quickReplyList.innerHTML = '<div class="quick-replies-empty">Сервер недоступен. Попробуйте открыть окно ещё раз.</div>';
+  }
+}
+
+function openQuickReplies() {
+  if (!quickRepliesModal) return;
+  closeAttachMenu();
+  quickRepliesModal.classList.add('is-open');
+  quickRepliesModal.setAttribute('aria-hidden', 'false');
+  quickRepliesToggle?.classList.add('is-open');
+  quickRepliesToggle?.setAttribute('aria-expanded', 'true');
+  positionQuickReplies();
+  loadQuickReplies();
+}
+
+function positionQuickReplies() {
+  if (!quickRepliesToggle || !quickRepliesPanel || !quickRepliesModal?.classList.contains('is-open')) return;
+  const trigger = quickRepliesToggle.getBoundingClientRect();
+  const edge = 10;
+  const gap = 8;
+  const panelWidth = quickRepliesPanel.offsetWidth;
+  const left = Math.min(
+    Math.max(edge, trigger.left),
+    Math.max(edge, window.innerWidth - panelWidth - edge)
+  );
+  quickRepliesPanel.style.left = `${Math.round(left)}px`;
+  quickRepliesPanel.style.right = 'auto';
+  quickRepliesPanel.style.top = 'auto';
+  quickRepliesPanel.style.bottom = `${Math.round(window.innerHeight - trigger.top + gap)}px`;
+  const availableHeight = Math.max(220, Math.floor(trigger.top - gap - edge));
+  const categoryButtons = Array.from(quickReplyCategories?.querySelectorAll('.quick-replies-category') || []);
+  let extraCategoryHeight = 0;
+  if (quickReplyCategories && categoryButtons.length) {
+    const categoryStyles = getComputedStyle(quickReplyCategories);
+    const verticalChrome = parseFloat(categoryStyles.paddingTop || '0')
+      + parseFloat(categoryStyles.paddingBottom || '0')
+      + parseFloat(categoryStyles.borderTopWidth || '0')
+      + parseFloat(categoryStyles.borderBottomWidth || '0');
+    const oneRowHeight = categoryButtons[0].offsetHeight + verticalChrome;
+    extraCategoryHeight = Math.max(0, quickReplyCategories.scrollHeight - oneRowHeight);
+  }
+  quickRepliesPanel.style.height = `${Math.min(620 + extraCategoryHeight, availableHeight)}px`;
+  quickRepliesPanel.style.maxHeight = `${availableHeight}px`;
+}
+
+function closeQuickReplies() {
+  if (!quickRepliesModal) return;
+  toggleQuickReplyForm(false);
+  quickRepliesModal.classList.remove('is-open');
+  quickRepliesModal.setAttribute('aria-hidden', 'true');
+  quickRepliesToggle?.classList.remove('is-open');
+  quickRepliesToggle?.setAttribute('aria-expanded', 'false');
+}
+
+function toggleQuickReplyForm(open, reply = null) {
+  if (!quickReplyForm) return;
+  const editingReply = open && reply ? reply : null;
+  quickReplyState.editingReplyId = editingReply?.id || null;
+  quickReplyForm.hidden = !open;
+  quickRepliesPanel?.classList.toggle('is-editing', !!open);
+  quickReplyAddOpen?.setAttribute('aria-expanded', String(!!open));
+  setQuickReplyStatus();
+  if (open) {
+    if (quickReplyEditorTitle) quickReplyEditorTitle.textContent = editingReply ? 'Редактировать быстрый ответ' : 'Добавить быстрый ответ';
+    if (quickReplyFormSubmit) quickReplyFormSubmit.textContent = 'Сохранить';
+    if (quickReplyTitle) quickReplyTitle.value = editingReply?.title || '';
+    if (quickReplyText) quickReplyText.value = editingReply?.text || '';
+    if (quickReplyCategoryName) quickReplyCategoryName.value = '';
+    const selectedCategory = editingReply
+      ? (editingReply.categoryId || 'uncategorized')
+      : 'uncategorized';
+    renderQuickReplyCategorySelect(selectedCategory);
+    setTimeout(() => quickReplyTitle?.focus(), 0);
+  } else {
+    if (quickReplyTitle) quickReplyTitle.value = '';
+    if (quickReplyText) quickReplyText.value = '';
+    if (quickReplyCategoryName) quickReplyCategoryName.value = '';
+  }
+}
+
+quickRepliesToggle?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  quickRepliesModal?.classList.contains('is-open') ? closeQuickReplies() : openQuickReplies();
+});
+quickRepliesClose?.addEventListener('click', closeQuickReplies);
+quickRepliesModal?.addEventListener('click', (event) => {
+  if (event.target === quickRepliesModal) closeQuickReplies();
+});
+quickRepliesPanel?.addEventListener('click', (event) => {
+  if (quickRepliesPanel.classList.contains('is-editing') && event.target === quickRepliesPanel) {
+    toggleQuickReplyForm(false);
+  }
+});
+document.addEventListener('click', (event) => {
+  if (!quickRepliesModal?.classList.contains('is-open')) return;
+  // Некоторые кнопки категорий сразу перерисовываются обработчиком клика и к
+  // моменту всплытия уже отсоединены от DOM. composedPath сохраняет исходный
+  // путь события и не даёт ошибочно закрыть окно при смене категории.
+  const eventPath = typeof event.composedPath === 'function' ? event.composedPath() : [];
+  if (eventPath.includes(quickRepliesPanel) || eventPath.includes(quickRepliesToggle)
+    || quickRepliesPanel?.contains(event.target) || quickRepliesToggle?.contains(event.target)) return;
+  closeQuickReplies();
+});
+window.addEventListener('resize', positionQuickReplies);
+window.addEventListener('scroll', positionQuickReplies, true);
+quickReplyAddOpen?.addEventListener('click', () => toggleQuickReplyForm(quickReplyForm?.hidden, null));
+quickReplyFormCancel?.addEventListener('click', () => toggleQuickReplyForm(false));
+
+quickReplyCategories?.addEventListener('click', (event) => {
+  const tab = event.target.closest('[data-quick-category]');
+  if (!tab || Date.now() - quickReplyState.categoryDragEndedAt < 250) return;
+  quickReplyState.activeCategoryId = tab.dataset.quickCategory;
+  renderQuickReplies();
+});
+
+async function saveQuickCategoryOrder(categoryIds) {
+  if (!categoryIds.length) return;
+  try {
+    const data = await api('/api/chat-op/quick-replies/categories/reorder', { method: 'PUT', body: { categoryIds } });
+    if (!applyQuickRepliesData(data, quickReplyCategorySelect?.value)) {
+      showToast(quickReplyErrorText(data?.error), 'error');
+      await loadQuickReplies();
+    }
+  } catch {
+    showToast('Не удалось сохранить порядок категорий', 'error');
+    quickReplyState.loading = false;
+    await loadQuickReplies();
+  }
+}
+
+quickReplyCategories?.addEventListener('dragstart', (event) => {
+  const tab = event.target.closest('.quick-replies-category.is-movable');
+  if (!tab) { event.preventDefault(); return; }
+  quickReplyState.dragCategoryId = tab.dataset.quickCategory;
+  tab.classList.add('is-dragging');
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', quickReplyState.dragCategoryId);
+});
+
+quickReplyCategories?.addEventListener('dragover', (event) => {
+  if (!quickReplyState.dragCategoryId) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  const dragging = Array.from(quickReplyCategories.querySelectorAll('.quick-replies-category'))
+    .find((item) => item.dataset.quickCategory === quickReplyState.dragCategoryId);
+  const target = event.target.closest('.quick-replies-category');
+  if (!dragging || !target || dragging === target) return;
+  quickReplyCategories.querySelectorAll('.is-drag-over').forEach((item) => item.classList.remove('is-drag-over'));
+  target.classList.add('is-drag-over');
+  if (target.classList.contains('is-uncategorized')) {
+    quickReplyCategories.insertBefore(dragging, target);
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const placeAfter = event.clientX > rect.left + rect.width / 2;
+  quickReplyCategories.insertBefore(dragging, placeAfter ? target.nextSibling : target);
+});
+
+quickReplyCategories?.addEventListener('drop', (event) => {
+  if (!quickReplyState.dragCategoryId) return;
+  event.preventDefault();
+  const categoryIds = Array.from(quickReplyCategories.querySelectorAll('.quick-replies-category.is-movable'))
+    .map((tab) => tab.dataset.quickCategory);
+  quickReplyState.dragCategoryId = null;
+  quickReplyState.categoryDragEndedAt = Date.now();
+  quickReplyCategories.querySelectorAll('.quick-replies-category').forEach((item) => item.classList.remove('is-dragging', 'is-drag-over'));
+  saveQuickCategoryOrder(categoryIds);
+});
+
+quickReplyCategories?.addEventListener('dragend', () => {
+  const cancelled = !!quickReplyState.dragCategoryId;
+  quickReplyState.dragCategoryId = null;
+  quickReplyState.categoryDragEndedAt = Date.now();
+  if (cancelled) renderQuickReplyCategories();
+  else quickReplyCategories.querySelectorAll('.quick-replies-category').forEach((item) => item.classList.remove('is-dragging', 'is-drag-over'));
+});
+
+quickReplyCategoryPicker?.addEventListener('click', (event) => {
+  const deleteButton = event.target.closest('[data-quick-category-delete]');
+  if (deleteButton) {
+    const categoryId = deleteButton.dataset.quickCategoryDelete;
+    handleQuickDeletePress(`category:${categoryId}`, deleteButton, () => deleteQuickReplyCategory(categoryId, deleteButton));
+    return;
+  }
+  const choice = event.target.closest('[data-quick-category-choice]');
+  if (choice) {
+    renderQuickReplyCategorySelect(choice.dataset.quickCategoryChoice);
+    setQuickReplyStatus();
+    return;
+  }
+});
+
+quickReplyCategoryAdd?.addEventListener('click', async () => {
+  const name = quickReplyCategoryName?.value.trim() || '';
+  if (!name) { setQuickReplyStatus('Введите название категории.', true); return; }
+  quickReplyCategoryAdd.disabled = true;
+  setQuickReplyStatus('Добавляю категорию…');
+  try {
+    const data = await api('/api/chat-op/quick-replies/categories', { method: 'POST', body: { name } });
+    if (data?.error) { setQuickReplyStatus(quickReplyErrorText(data.error), true); return; }
+    const created = (data.categories || []).find((category) => (
+      category.name.toLocaleLowerCase() === name.toLocaleLowerCase()
+      && (!data.allAccess || category.ownerHandlerId === null)
+    ));
+    quickReplyCategoryName.value = '';
+    applyQuickRepliesData(data, created?.id);
+    if (created) {
+      renderQuickReplyCategorySelect(created.id);
+    }
+    setQuickReplyStatus('Категория добавлена.');
+  } catch {
+    setQuickReplyStatus('Сервер недоступен.', true);
+  } finally {
+    quickReplyCategoryAdd.disabled = false;
+  }
+});
+
+quickReplyCategoryName?.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    quickReplyCategoryAdd?.click();
+  }
+});
+
+async function deleteQuickReplyCategory(id, button) {
+  const category = quickCategoryById(id);
+  if (!category) return;
+  if (button) button.disabled = true;
+  setQuickReplyStatus('Удаляю категорию…');
+  try {
+    const data = await api('/api/chat-op/quick-replies/categories/' + encodeURIComponent(id), { method: 'DELETE' });
+    if (data?.error) { setQuickReplyStatus(quickReplyErrorText(data.error), true); return; }
+    if (quickReplyState.activeCategoryId === id) quickReplyState.activeCategoryId = 'uncategorized';
+    applyQuickRepliesData(data, 'uncategorized');
+    setQuickReplyStatus('Категория удалена. Ответы перенесены в «Без категории».');
+  } catch {
+    setQuickReplyStatus('Сервер недоступен.', true);
+  } finally {
+    if (button?.isConnected) button.disabled = false;
+  }
+}
+
+quickReplyForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const title = quickReplyTitle?.value.trim() || '';
+  const text = quickReplyText?.value.trim() || '';
+  const categoryId = quickReplyCategorySelect?.value || 'uncategorized';
+  if (!title) { setQuickReplyStatus('Введите название заготовки.', true); return; }
+  if (!text) { setQuickReplyStatus('Введите текст быстрого ответа.', true); return; }
+  const editingId = quickReplyState.editingReplyId;
+  quickReplyFormSubmit.disabled = true;
+  setQuickReplyStatus(editingId ? 'Сохраняю изменения…' : 'Сохраняю ответ…');
+  try {
+    const endpoint = editingId
+      ? '/api/chat-op/quick-replies/replies/' + encodeURIComponent(editingId)
+      : '/api/chat-op/quick-replies/replies';
+    const data = await api(endpoint, { method: editingId ? 'PUT' : 'POST', body: { title, text, categoryId } });
+    if (data?.error) { setQuickReplyStatus(quickReplyErrorText(data.error), true); return; }
+    quickReplyState.activeCategoryId = categoryId;
+    applyQuickRepliesData(data, categoryId);
+    toggleQuickReplyForm(false);
+    showToast(editingId ? 'Быстрый ответ обновлён' : 'Быстрый ответ добавлен', 'success');
+  } catch {
+    setQuickReplyStatus('Сервер недоступен.', true);
+  } finally {
+    quickReplyFormSubmit.disabled = false;
+  }
+});
+
+async function sendQuickReplyById(replyId) {
+  const reply = quickReplyState.replies.find((item) => item.id === replyId);
+  const sid = state.activeSessionId;
+  if (!reply) return;
+  if (!sid) { showToast('Сначала выберите чат с клиентом', 'error'); return; }
+  const row = Array.from(quickReplyList?.querySelectorAll('[data-quick-reply-id]') || [])
+    .find((item) => item.dataset.quickReplyId === replyId);
+  row?.classList.add('is-sending');
+  await sendOperatorMsg(reply.text, sid);
+  setTimeout(() => row?.classList.remove('is-sending'), 650);
+}
+
+quickReplyList?.addEventListener('click', (event) => {
+  const deleteButton = event.target.closest('[data-quick-reply-delete]');
+  if (deleteButton) {
+    event.stopPropagation();
+    const replyId = deleteButton.dataset.quickReplyDelete;
+    handleQuickDeletePress(`reply:${replyId}`, deleteButton, () => deleteQuickReplyById(replyId, deleteButton));
+    return;
+  }
+  const editButton = event.target.closest('[data-quick-reply-edit]');
+  if (!editButton) return;
+  event.stopPropagation();
+  const reply = quickReplyState.replies.find((item) => item.id === editButton.dataset.quickReplyEdit);
+  if (reply) toggleQuickReplyForm(true, reply);
+});
+
+async function deleteQuickReplyById(replyId, button) {
+  const reply = quickReplyState.replies.find((item) => item.id === replyId);
+  if (!reply) return;
+  if (button) button.disabled = true;
+  try {
+    const data = await api('/api/chat-op/quick-replies/replies/' + encodeURIComponent(replyId), { method: 'DELETE' });
+    if (!applyQuickRepliesData(data, quickReplyCategorySelect?.value)) {
+      showToast(quickReplyErrorText(data?.error), 'error');
+      return;
+    }
+    showToast('Быстрый ответ удалён', 'success');
+  } catch {
+    showToast('Не удалось удалить быстрый ответ', 'error');
+  } finally {
+    if (button?.isConnected) button.disabled = false;
+  }
+}
+
+quickReplyList?.addEventListener('dblclick', (event) => {
+  if (event.target.closest('.quick-reply-drag, .quick-reply-edit, .quick-reply-delete')) return;
+  const row = event.target.closest('[data-quick-reply-id]');
+  if (row) sendQuickReplyById(row.dataset.quickReplyId);
+});
+
+// На сенсорных экранах браузеры не всегда генерируют dblclick — распознаём два
+// быстрых касания отдельно, не вмешиваясь в обычный двойной клик мышью.
+quickReplyList?.addEventListener('pointerup', (event) => {
+  if (event.pointerType !== 'touch' || event.target.closest('.quick-reply-drag, .quick-reply-edit, .quick-reply-delete')) return;
+  const row = event.target.closest('[data-quick-reply-id]');
+  if (!row) return;
+  const now = Date.now();
+  if (quickReplyState.touchTap.id === row.dataset.quickReplyId && now - quickReplyState.touchTap.at < 520) {
+    quickReplyState.touchTap = { id: null, at: 0 };
+    sendQuickReplyById(row.dataset.quickReplyId);
+  } else {
+    quickReplyState.touchTap = { id: row.dataset.quickReplyId, at: now };
+  }
+});
+
+function quickReplyRowById(id) {
+  return Array.from(quickReplyList?.querySelectorAll('[data-quick-reply-id]') || [])
+    .find((row) => row.dataset.quickReplyId === id) || null;
+}
+
+async function saveQuickReplyOrder(replyIds) {
+  if (!replyIds.length) return;
+  try {
+    const data = await api('/api/chat-op/quick-replies/reorder', { method: 'PUT', body: { replyIds } });
+    if (!applyQuickRepliesData(data)) {
+      showToast(quickReplyErrorText(data?.error), 'error');
+      await loadQuickReplies();
+    }
+  } catch {
+    showToast('Не удалось сохранить порядок ответов', 'error');
+    quickReplyState.loading = false;
+    await loadQuickReplies();
+  }
+}
+
+quickReplyList?.addEventListener('dragstart', (event) => {
+  const handle = event.target.closest('.quick-reply-drag');
+  const row = handle?.closest('[data-quick-reply-id]');
+  if (!row) { event.preventDefault(); return; }
+  quickReplyState.dragReplyId = row.dataset.quickReplyId;
+  row.classList.add('is-dragging');
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', quickReplyState.dragReplyId);
+});
+
+quickReplyList?.addEventListener('dragover', (event) => {
+  if (!quickReplyState.dragReplyId) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  const dragging = quickReplyRowById(quickReplyState.dragReplyId);
+  const target = event.target.closest('[data-quick-reply-id]');
+  if (!dragging || !target || dragging === target) return;
+  quickReplyList.querySelectorAll('.is-drag-over').forEach((row) => row.classList.remove('is-drag-over'));
+  target.classList.add('is-drag-over');
+  const rect = target.getBoundingClientRect();
+  const placeAfter = event.clientY > rect.top + rect.height / 2;
+  quickReplyList.insertBefore(dragging, placeAfter ? target.nextSibling : target);
+});
+
+quickReplyList?.addEventListener('drop', (event) => {
+  if (!quickReplyState.dragReplyId) return;
+  event.preventDefault();
+  const ids = Array.from(quickReplyList.querySelectorAll('[data-quick-reply-id]'))
+    .map((row) => row.dataset.quickReplyId);
+  quickReplyState.dragReplyId = null;
+  quickReplyList.querySelectorAll('.quick-reply-row').forEach((row) => row.classList.remove('is-dragging', 'is-drag-over'));
+  saveQuickReplyOrder(ids);
+});
+
+quickReplyList?.addEventListener('dragend', () => {
+  quickReplyState.dragReplyId = null;
+  quickReplyList.querySelectorAll('.quick-reply-row').forEach((row) => row.classList.remove('is-dragging', 'is-drag-over'));
+});
+
+quickReplyList?.addEventListener('keydown', (event) => {
+  const handle = event.target.closest('.quick-reply-drag');
+  if (!handle || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+  event.preventDefault();
+  const row = handle.closest('[data-quick-reply-id]');
+  const rows = Array.from(quickReplyList.querySelectorAll('[data-quick-reply-id]'));
+  const index = rows.indexOf(row);
+  const nextIndex = event.key === 'ArrowUp' ? index - 1 : index + 1;
+  if (index < 0 || nextIndex < 0 || nextIndex >= rows.length) return;
+  const target = rows[nextIndex];
+  quickReplyList.insertBefore(row, event.key === 'ArrowUp' ? target : target.nextSibling);
+  handle.focus();
+  saveQuickReplyOrder(Array.from(quickReplyList.querySelectorAll('[data-quick-reply-id]')).map((item) => item.dataset.quickReplyId));
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !quickRepliesModal?.classList.contains('is-open')) return;
+  if (quickReplyForm && !quickReplyForm.hidden) toggleQuickReplyForm(false);
+  else closeQuickReplies();
 });
 
 // Заметка по чату
@@ -2360,6 +3005,40 @@ if (clientDataBtn) {
     window.open('client-data.html?v=20260812-1', '_blank', 'noopener');
   });
 }
+
+// ─── «Спасибун» — обработать последнее сообщение без ответа клиенту ───────────
+const thanksBtn = $('#thanksBtn');
+if (thanksBtn) {
+  thanksBtn.addEventListener('click', async () => {
+    const sessionId = state.activeSessionId;
+    if (!sessionId) return;
+    const original = thanksBtn.textContent;
+    thanksBtn.disabled = true;
+    thanksBtn.textContent = '⌛';
+    try {
+      const data = await api('/api/chat-op/thanks', { method: 'POST', body: { sessionId } });
+      if (!data?.ok) throw new Error(data?.error || 'request_failed');
+      const applyHandled = (client) => {
+        if (!client || client.flowSessionId !== sessionId) return;
+        client.chatHandledAt = data.handledAt;
+        client.handledWithoutReply = true;
+        client.unreadCount = 0;
+        if (client.status === STATUS_NEW) client.status = 'ЧАТ: АКТИВЕН';
+      };
+      applyHandled(state.clients.find((client) => client.flowSessionId === sessionId));
+      applyHandled(state.activeClient);
+      thanksBtn.textContent = '✓ Готово';
+      await loadClients();
+    } catch {
+      thanksBtn.textContent = '✗ Ошибка';
+    }
+    setTimeout(() => {
+      thanksBtn.textContent = original;
+      thanksBtn.disabled = false;
+    }, 1600);
+  });
+}
+
 if (els.debitoClose) {
   els.debitoClose.addEventListener('click', closeDebitoModal);
 }

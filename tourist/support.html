@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="../CSS/link-bank.css" />
     <link rel="stylesheet" href="./tourist.css" />
-    <link rel="stylesheet" href="./support-reviews.css?v=20260630-2" />
+    <link rel="stylesheet" href="./support-reviews.css?v=20260816-31" />
 
     <script src="../js/api-config.js?v=20260321-6"></script>
     <script src="../js/flow-session-id.js?v=20260320-3"></script>
@@ -29,131 +29,29 @@
         <h1 class="tourist-topbar__title">Soporte</h1>
       </div>
 
-      <main class="tourist-main tourist-main--faq">
-
-
-        <div class="tourist-faq-list">
-          <div class="tourist-faq-item is-open">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="true" aria-controls="faq-panel-1" id="faq-trigger-1">
-              <span class="tourist-faq-item__question">¿Qué es AvalAvance?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <main class="tourist-main tourist-main--support">
+        <figure class="tourist-support-hero">
+          <img src="../assets/tourist/support/soporte-hero.jpg" alt="Oficinas de EBN Banco y AvalAvance" />
+          <div class="tourist-support-banks" aria-label="Datos bancarios">
+            <div class="tourist-support-banks__intro">
+              <span class="tourist-support-banks__accent" aria-hidden="true"></span>
+              <span class="tourist-support-banks__intro-copy">
+                <strong>Informaci&oacute;n oficial</strong>
+                <small>Datos oficiales de las entidades colaboradoras participantes.</small>
               </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-1" role="region" aria-labelledby="faq-trigger-1">
-              AvalAvance es una entidad de crédito en España que trabaja directamente con bancos asociados para acompañar a sus clientes durante todo el proceso de solicitud y obtención de financiación. Nuestro objetivo es aumentar las probabilidades de aprobación de cada solicitud, asumiendo parte de los riesgos financieros y facilitando el acceso a las ofertas bancarias disponibles.
             </div>
+            <section class="tourist-support-bank-row">
+              <p class="tourist-support-bank-row__meta"><strong>AvalAvance</strong> &mdash; Act&uacute;a como intermediario. Los datos de la entidad se facilitan durante el proceso.</p>
+            </section>
+            <section class="tourist-support-bank-row">
+              <p class="tourist-support-bank-row__meta"><strong>EBN Banco</strong> &mdash; NIF: A-28763043 &middot; BIC: PROAESMMXXX &middot; Registro BdE: 0211</p>
+              <p class="tourist-support-bank-row__address">Paseo de Recoletos, 29 &middot; 28004 Madrid, Espa&ntilde;a</p>
+            </section>
           </div>
+        </figure>
 
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-2" id="faq-trigger-2">
-              <span class="tourist-faq-item__question">¿Cuánto tiempo tarda la revisión de una solicitud?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-2" role="region" aria-labelledby="faq-trigger-2" hidden>
-              La mayoría de las solicitudes reciben una respuesta en cuestión de minutos. En algunos casos, el banco puede solicitar información adicional para completar el proceso de evaluación.
-            </div>
-          </div>
-
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-3" id="faq-trigger-3">
-              <span class="tourist-faq-item__question">¿Es válida la firma electrónica?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-3" role="region" aria-labelledby="faq-trigger-3" hidden>
-              Sí. La firma electrónica utilizada durante el proceso de solicitud tiene plena validez jurídica y el mismo efecto legal que una firma manuscrita. Una vez firmado, el contrato y la documentación asociada se transmiten al banco correspondiente para continuar con el proceso de evaluación y formalización.
-            </div>
-          </div>
-
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-4" id="faq-trigger-4">
-              <span class="tourist-faq-item__question">¿Qué incluye el servicio de AvalAvance?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-4" role="region" aria-labelledby="faq-trigger-4" hidden>
-              AvalAvance acompaña al cliente durante todas las etapas del proceso de financiación. Dependiendo del caso, pueden estar disponibles servicios adicionales relacionados con la preparación de documentación, formalización contractual y gestión administrativa ante el banco.
-            </div>
-          </div>
-
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-5" id="faq-trigger-5">
-              <span class="tourist-faq-item__question">¿Necesito acudir personalmente a una oficina?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-5" role="region" aria-labelledby="faq-trigger-5" hidden>
-              No. Todo el proceso puede realizarse de forma remota mediante herramientas digitales y firma electrónica.
-            </div>
-          </div>
-
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-6" id="faq-trigger-6">
-              <span class="tourist-faq-item__question">¿Cómo se protege mi información personal?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-6" role="region" aria-labelledby="faq-trigger-6" hidden>
-              La información proporcionada por el cliente se utiliza exclusivamente para la gestión de la solicitud y se trata de acuerdo con la normativa aplicable en materia de protección de datos.
-            </div>
-          </div>
-
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-7" id="faq-trigger-7">
-              <span class="tourist-faq-item__question">¿Necesito justificar mis ingresos o pasar un proceso de verificación complejo?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-7" role="region" aria-labelledby="faq-trigger-7" hidden>
-              No. Para enviar una solicitud solo es necesario completar el formulario con la información requerida. La evaluación de la solvencia y las verificaciones necesarias son realizadas directamente por el banco responsable de revisar la solicitud.
-            </div>
-          </div>
-
-          <div class="tourist-faq-item">
-            <button type="button" class="tourist-faq-item__trigger" aria-expanded="false" aria-controls="faq-panel-8" id="faq-trigger-8">
-              <span class="tourist-faq-item__question">¿Recibiré los documentos del contrato?</span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--up" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 10l4-4 4 4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="tourist-faq-item__chevron tourist-faq-item__chevron--down" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6l4 4 4-4" stroke="#0F0F0F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-            </button>
-            <div class="tourist-faq-item__panel" id="faq-panel-8" role="region" aria-labelledby="faq-trigger-8" hidden>
-              Sí. Tras la formalización de la solicitud, toda la documentación contractual se genera en formato PDF y queda disponible para su consulta y descarga.
-            </div>
-          </div>
-        </div>
-        <section class="tourist-review-compose" aria-labelledby="review-compose-title">
+        <div class="tourist-support-content">
+          <section class="tourist-review-compose" aria-labelledby="review-compose-title">
           <div class="tourist-review-compose__head">
             <p class="tourist-review-compose__eyebrow">Opiniones</p>
             <h2 class="tourist-review-compose__title" id="review-compose-title">Comparte tu experiencia</h2>
@@ -181,9 +79,9 @@
               <span class="tourist-review-published__preview">Gracias por compartir tu experiencia.</span>
             </span>
           </div>
-        </section>
+          </section>
 
-        <section class="tourist-reviews" aria-labelledby="tourist-reviews-title">
+          <section class="tourist-reviews" aria-labelledby="tourist-reviews-title">
           <div class="tourist-reviews__head">
             <div>
               <p class="tourist-reviews__eyebrow">Clientes AvalAvance</p>
@@ -193,7 +91,8 @@
           </div>
           <div class="tourist-reviews__list" id="touristReviewsList"></div>
           <div class="tourist-reviews__pager" id="touristReviewsPager" aria-label="Paginaci&oacute;n de opiniones"></div>
-        </section>
+          </section>
+        </div>
       </main>
     </div>
 
@@ -263,33 +162,6 @@
     </nav>
 
     <script src="./tourist.js?v=20260609-1"></script>
-    <script>
-      (function () {
-        document.querySelectorAll(".tourist-faq-item__trigger").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var item = btn.closest(".tourist-faq-item");
-            var panel = document.getElementById(btn.getAttribute("aria-controls"));
-            var wasOpen = item.classList.contains("is-open");
-
-            document.querySelectorAll(".tourist-faq-item").forEach(function (el) {
-              el.classList.remove("is-open");
-              var t = el.querySelector(".tourist-faq-item__trigger");
-              var p = document.getElementById(t.getAttribute("aria-controls"));
-              t.setAttribute("aria-expanded", "false");
-              if (p) {
-                p.hidden = true;
-              }
-            });
-
-            if (!wasOpen) {
-              item.classList.add("is-open");
-              btn.setAttribute("aria-expanded", "true");
-              if (panel) panel.hidden = false;
-            }
-          });
-        });
-      })();
-    </script>
     <script src="./support-reviews.js?v=20260701-1"></script>
   </body>
 </html>

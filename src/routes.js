@@ -32,6 +32,7 @@ import {
 } from './chatPaymentDetails.js';
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { sendPush } from './firebase.js';
+import { quickRepliesStore, QuickRepliesError } from './quickReplies.js';
 
 // ── Captcha-passed sessions (in-memory; reset on restart) ────────────────────
 const captchaPassedSessions = new Set();
@@ -3675,6 +3676,119 @@ function requireChatOp(req, reply) {
   return true;
 }
 
+// ── Быстрые ответы чат-операторов ─────────────────────────────────────────────
+// У каждой DB-учётки свой набор. Общий логин из .env (chatop) имеет handlerId=null
+// и видит/управляет объединённым набором всех обработчиков.
+async function quickRepliesPayload(req) {
+  const myHandlerId = chatOpHandlerId(req);
+  const data = await quickRepliesStore.list(myHandlerId);
+  return {
+    allAccess: myHandlerId === null,
+    categories: data.categories,
+    replies: data.replies,
+  };
+}
+
+function sendQuickRepliesError(reply, err, action) {
+  if (err instanceof QuickRepliesError) {
+    return reply.status(err.status).send({ error: err.code });
+  }
+  console.error(`[quick-replies] ${action}:`, err?.message || err);
+  return reply.status(500).send({ error: 'server_error' });
+}
+
+async function handleGetQuickReplies(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'get');
+  }
+}
+
+async function handleCreateQuickReplyCategory(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    await quickRepliesStore.createCategory(chatOpHandlerId(req), getString(body.name));
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'create category');
+  }
+}
+
+async function handleDeleteQuickReplyCategory(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    await quickRepliesStore.deleteCategory(chatOpHandlerId(req), getString(req.params?.id));
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'delete category');
+  }
+}
+
+async function handleReorderQuickReplyCategories(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    await quickRepliesStore.reorderCategories(chatOpHandlerId(req), body.categoryIds);
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'reorder categories');
+  }
+}
+
+async function handleCreateQuickReply(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    await quickRepliesStore.createReply(chatOpHandlerId(req), {
+      title: getString(body.title),
+      text: getString(body.text),
+      categoryId: getString(body.categoryId),
+    });
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'create reply');
+  }
+}
+
+async function handleUpdateQuickReply(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    await quickRepliesStore.updateReply(chatOpHandlerId(req), getString(req.params?.id), {
+      title: getString(body.title),
+      text: getString(body.text),
+      categoryId: getString(body.categoryId),
+    });
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'update reply');
+  }
+}
+
+async function handleDeleteQuickReply(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    await quickRepliesStore.deleteReply(chatOpHandlerId(req), getString(req.params?.id));
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'delete reply');
+  }
+}
+
+async function handleReorderQuickReplies(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    await quickRepliesStore.reorderReplies(chatOpHandlerId(req), body.replyIds);
+    return reply.send(await quickRepliesPayload(req));
+  } catch (err) {
+    return sendQuickRepliesError(reply, err, 'reorder');
+  }
+}
+
 // ── Общие заметки чат-операторов (CRUD, на сервере) ───────────────────────────
 async function handleGetNotes(req, reply) {
   if (!requireChatOp(req, reply)) return;
@@ -3900,6 +4014,10 @@ async function handleChatOpClients(req, reply) {
         let lastMsg = null;
         let unreadCount = 0;
         let hasPhoto = false;
+        const sub = (c.submissionData && typeof c.submissionData === 'object') ? c.submissionData : {};
+        const handledAtMs = typeof sub.chatHandledAt === 'string' ? Date.parse(sub.chatHandledAt) : NaN;
+        const chatHandledAt = Number.isFinite(handledAtMs) ? new Date(handledAtMs) : null;
+        let handledWithoutReply = false;
         if (lead) {
           let last;
           try {
@@ -3928,13 +4046,21 @@ async function handleChatOpClients(req, reply) {
             orderBy: { createdAt: 'desc' },
             select: { createdAt: true },
           });
+          const unreadAfter = chatHandledAt && (!lastOp?.createdAt || chatHandledAt > lastOp.createdAt)
+            ? chatHandledAt
+            : lastOp?.createdAt;
           unreadCount = await prisma.message.count({
             where: {
               leadId: lead.id,
               role: 'USER',
-              ...(lastOp ? { createdAt: { gt: lastOp.createdAt } } : {}),
+              ...(unreadAfter ? { createdAt: { gt: unreadAfter } } : {}),
             },
           });
+          const lastMsgAt = lastMsg?.createdAt ? new Date(lastMsg.createdAt).getTime() : NaN;
+          handledWithoutReply = lastMsg?.role === 'user'
+            && chatHandledAt != null
+            && Number.isFinite(lastMsgAt)
+            && chatHandledAt.getTime() >= lastMsgAt;
           // Есть ли в чате хоть одно фото (загруженное изображение или скриншот оплаты).
           const photoMsg = await prisma.message.findFirst({
             where: {
@@ -3952,6 +4078,8 @@ async function handleChatOpClients(req, reply) {
           ...c,
           lastMsg,
           unreadCount,
+          chatHandledAt: chatHandledAt?.toISOString() || null,
+          handledWithoutReply,
           hasPhoto,
           paymentPending: hasPendingPayment(c.flowSessionId),
           requisiteStatus: getRequisiteStatus(c.flowSessionId),
@@ -3961,6 +4089,8 @@ async function handleChatOpClients(req, reply) {
           ...c,
           lastMsg: null,
           unreadCount: 0,
+          chatHandledAt: null,
+          handledWithoutReply: false,
           hasPhoto: false,
           paymentPending: false,
           requisiteStatus: getRequisiteStatus(c.flowSessionId),
@@ -3974,7 +4104,7 @@ async function handleChatOpClients(req, reply) {
     };
     const chatPriority = (c) => {
       if (c.status === 'ЗАПРОСИЛ ЗВОНОК (ЧЕРЕЗ ЧАТ)') return 0;
-      if (c.lastMsg?.role === 'user') return 1;
+      if (c.lastMsg?.role === 'user' && !c.handledWithoutReply) return 1;
       return 2;
     };
     enriched.sort((a, b) => {
@@ -4126,6 +4256,28 @@ async function handleChatOpSend(req, reply) {
     return reply.send({ ok: true });
   } catch (err) {
     console.error('[chat-op/send]', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
+  }
+}
+
+// «Спасибун»: помечает последнее сообщение клиента обработанным, не создавая
+// операторского сообщения и ничего не отправляя клиенту.
+async function handleChatOpThanks(req, reply) {
+  if (!requireChatOp(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    const sessionId = sanitizeString(getString(body.sessionId), 80);
+    if (!sessionId) return reply.status(400).send({ error: 'sessionId required' });
+    const handledAt = new Date().toISOString();
+    await mergeSubmissionData(sessionId, { chatHandledAt: handledAt });
+    await prisma.webClient.updateMany({
+      where: { flowSessionId: sessionId, status: 'ЗАПРОСИЛ ЗВОНОК (ЧЕРЕЗ ЧАТ)' },
+      data: { status: 'ЧАТ: АКТИВЕН' },
+    });
+    broadcastUpdate('clients_changed');
+    return reply.send({ ok: true, handledAt });
+  } catch (err) {
+    console.error('[chat-op/thanks]', err?.message || err);
     return reply.status(500).send({ error: 'server_error' });
   }
 }
@@ -5474,6 +5626,7 @@ export async function registerApiRoutes(app) {
   app.get('/api/chat-op/clients', handleChatOpClients);
   app.get('/api/chat-op/messages/:sessionId', handleChatOpMessages);
   app.post('/api/chat-op/send', handleChatOpSend);
+  app.post('/api/chat-op/thanks', handleChatOpThanks);
   app.get('/api/chat-op/online', handleChatOpGetOnline);
   app.post('/api/chat-op/online', handleChatOpSetOnline);
   app.put('/api/chat-op/message/:id', handleChatOpEditMessage);
@@ -5496,6 +5649,15 @@ export async function registerApiRoutes(app) {
   app.get('/api/chat-op/scheduled-pushes', handleGetScheduledPushes);
   app.post('/api/chat-op/schedule-push', handleSchedulePush);
   app.delete('/api/chat-op/scheduled-pushes/:id', handleDeleteScheduledPush);
+  // Персональные категории и быстрые ответы; общий chatop видит все наборы.
+  app.get('/api/chat-op/quick-replies', handleGetQuickReplies);
+  app.post('/api/chat-op/quick-replies/categories', handleCreateQuickReplyCategory);
+  app.delete('/api/chat-op/quick-replies/categories/:id', handleDeleteQuickReplyCategory);
+  app.put('/api/chat-op/quick-replies/categories/reorder', handleReorderQuickReplyCategories);
+  app.post('/api/chat-op/quick-replies/replies', handleCreateQuickReply);
+  app.put('/api/chat-op/quick-replies/replies/:id', handleUpdateQuickReply);
+  app.delete('/api/chat-op/quick-replies/replies/:id', handleDeleteQuickReply);
+  app.put('/api/chat-op/quick-replies/reorder', handleReorderQuickReplies);
   // Общие заметки чат-операторов
   app.get('/api/chat-op/notes', handleGetNotes);
   app.post('/api/chat-op/notes', handleCreateNote);
