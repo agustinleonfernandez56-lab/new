@@ -4743,10 +4743,14 @@ async function sendSmsRemindersToStalledClients() {
       smsReminderLog.set(client.flowSessionId, { lastReminderAt: now });
 
       const text = settings.smsReminderText || 'Привет';
-      const { ok, messageId } = await sendSmsViaGateway(phone, text, settings.smsReminderSender || 'AvalAvance');
+      const sender = settings.smsReminderSender || 'AvalAvance';
+      const { ok, messageId, status, raw, json } = await sendSmsViaGateway(phone, text, sender);
       sentThisRun++;
 
-      console.log(`[SMS-reminder] flowSessionId=${client.flowSessionId} phone=${phone} ok=${ok}`);
+      // Причину отказа шлюза раньше не сохраняли — в админке был просто «Ошибка».
+      // Теперь пишем ответ шлюза и в консоль, и в лог, чтобы было видно, почему.
+      const gatewayError = ok ? null : (json.message || json.Error || json.error || `gateway_status_${status}`);
+      console.log(`[SMS-reminder] flowSessionId=${client.flowSessionId} phone=${phone} sender=${sender} ok=${ok} status=${status} raw=${raw}`);
 
       const entry = {
         sentAt: new Date().toISOString(),
@@ -4756,6 +4760,7 @@ async function sendSmsRemindersToStalledClients() {
         status: funnelStatus,
         ok,
         messageId,
+        error: gatewayError,
         type: 'auto', // Mark as automatic reminder
       };
       await logSms(entry);
