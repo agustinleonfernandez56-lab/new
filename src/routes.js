@@ -4500,6 +4500,114 @@ async function handleAdminSmsHistory(req, reply) {
   return reply.send({ entries });
 }
 
+// ── СМС-тест: рассылка сценарных СМС на тестовые номера по операторам ──────────
+// Тестовые номера храним отдельным файлом (по одному на оператора). Отправка —
+// фоновая: по каждому номеру шлём весь набор сценарных СМС с паузой 5 c, чтобы
+// проверить, до каких операторов доходит. Кнопка на фронте крутится, опрашивая
+// /status, и показывает отчёт по мере готовности.
+const SMS_TEST_FILE = join(process.cwd(), 'data', 'sms-test.json');
+const SMS_TEST_OPERATORS = ['Movistar', 'Orange', 'Vodafone', 'DIGI', 'Yoigo', 'MásMóvil', 'Lowi', 'Jazztel', 'Pepephone', 'Simyo'];
+const SMS_TEST_GAP_MS = 5000;
+
+async function readSmsTestNumbers() {
+  try {
+    const data = JSON.parse(await readFile(SMS_TEST_FILE, 'utf8'));
+    return Array.isArray(data.numbers) ? data.numbers : [];
+  } catch { return []; }
+}
+async function writeSmsTestNumbers(numbers) {
+  await mkdir(join(process.cwd(), 'data'), { recursive: true }).catch(() => {});
+  await writeFile(SMS_TEST_FILE, JSON.stringify({ numbers }, null, 2), 'utf8');
+}
+
+// Набор сценарных СМС = все непустые *Sms из сценария + текст напоминания.
+function scenarioSmsSet(settings) {
+  const defs = [
+    ['scenarioFdWelcomeSms', 'ФД · Приветствие'],
+    ['scenarioFdPaidSms', 'ФД · Оплата'],
+    ['scenarioRdChargeSms', 'RD · Списание'],
+    ['scenarioRd2Sms', 'RD2'],
+    ['smsReminderText', 'Напоминание'],
+  ];
+  const set = [];
+  for (const [key, label] of defs) {
+    const text = String(settings[key] || '').trim();
+    if (text) set.push({ key, label, text });
+  }
+  if (!set.length) set.push({ key: 'default', label: 'Тест', text: 'AvalAvance: mensaje de prueba.' });
+  return set;
+}
+
+let smsTestJob = null; // { running, done, startedAt, total, results:[{phone,operator,label,ok,error,at}] }
+
+async function runSmsTestJob(numbers, smsSet, sender) {
+  const total = numbers.length * smsSet.length;
+  let done = 0;
+  for (const { operator, phone } of numbers) {
+    for (const sms of smsSet) {
+      let ok = false; let error = null;
+      try {
+        const r = await sendSmsViaGateway(phone, sms.text, sender);
+        ok = r.ok;
+        error = ok ? null : (r.json?.message || r.json?.Error || r.json?.error || `gateway_status_${r.status}`);
+      } catch (e) { error = e?.message || 'request failed'; }
+      smsTestJob.results.push({ phone, operator, label: sms.label, text: sms.text, ok, error, at: new Date().toISOString() });
+      done++;
+      if (done < total) await new Promise((res) => setTimeout(res, SMS_TEST_GAP_MS)); // пауза только между сообщениями
+    }
+  }
+  smsTestJob.running = false;
+  smsTestJob.done = true;
+}
+
+async function handleGetSmsTest(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  const [numbers, settings] = await Promise.all([readSmsTestNumbers(), readSettings()]);
+  const sender = settings.smsReminderSender || config.eliteGateway.sid;
+  return reply.send({ operators: SMS_TEST_OPERATORS, numbers, smsSet: scenarioSmsSet(settings), sender });
+}
+
+async function handleSaveSmsTestNumbers(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  try {
+    const body = asRecord(req.body) ?? {};
+    const raw = Array.isArray(body.numbers) ? body.numbers : [];
+    const numbers = raw
+      .map((n) => ({
+        operator: sanitizeString(getString(asRecord(n)?.operator), 40),
+        phone: sanitizeString(getString(asRecord(n)?.phone), 30).replace(/\s+/g, ''),
+      }))
+      .filter((n) => n.operator && n.phone);
+    await writeSmsTestNumbers(numbers);
+    return reply.send({ ok: true, numbers });
+  } catch (err) {
+    console.error('[sms-test/save]', err?.message || err);
+    return reply.status(500).send({ error: 'server_error' });
+  }
+}
+
+async function handleSendSmsTest(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  if (smsTestJob?.running) return reply.status(409).send({ error: 'already_running' });
+  const [numbers, settings] = await Promise.all([readSmsTestNumbers(), readSettings()]);
+  if (!numbers.length) return reply.status(400).send({ error: 'no_numbers' });
+  const smsSet = scenarioSmsSet(settings);
+  const sender = settings.smsReminderSender || undefined; // как в реальной рассылке; пусто → SID шлюза
+  smsTestJob = { running: true, done: false, startedAt: new Date().toISOString(), total: numbers.length * smsSet.length, results: [] };
+  // Не ждём завершения — фронт опрашивает /status. Ошибку в фоне гасим, чтобы не падал процесс.
+  runSmsTestJob(numbers, smsSet, sender).catch((e) => {
+    console.error('[sms-test/run]', e?.message || e);
+    if (smsTestJob) { smsTestJob.running = false; smsTestJob.done = true; }
+  });
+  return reply.send({ started: true, total: smsTestJob.total });
+}
+
+async function handleSmsTestStatus(req, reply) {
+  if (!requireAdmin(req, reply)) return;
+  if (!smsTestJob) return reply.send({ running: false, done: false, results: [], total: 0 });
+  return reply.send(smsTestJob);
+}
+
 // ── SMS Reminder for stalled clients ──────────────────────────────────────────
 const smsReminderLog = new Map(); // flowSessionId -> { lastReminderAt }
 const smsReminderState = new Map(); // flowSessionId -> { status, statusSince, sentAt }
@@ -5575,6 +5683,10 @@ export async function registerApiRoutes(app) {
   app.get('/api/admin/stats', handleAdminStats);
   app.post('/api/admin/stats/reset', handleResetStats);
   app.get('/api/admin/sms-history', handleAdminSmsHistory);
+  app.get('/api/admin/sms-test', handleGetSmsTest);
+  app.put('/api/admin/sms-test/numbers', handleSaveSmsTestNumbers);
+  app.post('/api/admin/sms-test/send', handleSendSmsTest);
+  app.get('/api/admin/sms-test/status', handleSmsTestStatus);
   app.put('/api/admin/settings', handleUpdateSettings);
   app.get('/api/admin/scenario-settings', handleGetScenarioSettings);
   app.put('/api/admin/scenario-settings', handleUpdateScenarioSettings);

@@ -230,6 +230,20 @@
       .pagination{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:16px;}
       .empty{text-align:center;color:var(--muted);padding:36px 0;font-size:14px;}
       .loading{text-align:center;color:var(--muted);padding:24px 0;font-size:13px;}
+      /* СМС-тест */
+      .smstest-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);}
+      .smstest-row:last-child{border-bottom:none;}
+      .smstest-op{display:flex;align-items:center;gap:8px;width:150px;flex-shrink:0;font-size:14px;font-weight:600;}
+      .smstest-badge{width:18px;text-align:center;font-size:14px;}
+      .smstest-row input{flex:1;}
+      .smstest-spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:smstestSpin .7s linear infinite;vertical-align:-2px;margin-right:7px;}
+      @keyframes smstestSpin{to{transform:rotate(360deg);}}
+      .smstest-report-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13px;margin-bottom:6px;background:var(--panel2);}
+      .smstest-report-row .rep-ico{flex-shrink:0;}
+      .smstest-report-row .rep-num{font-family:ui-monospace,Menlo,Consolas,monospace;width:130px;flex-shrink:0;}
+      .smstest-report-row .rep-op{width:90px;flex-shrink:0;color:var(--muted);}
+      .smstest-report-row .rep-label{flex:1;color:var(--muted);}
+      .smstest-report-row .rep-err{color:#f20b5d;font-size:12px;}
 
       .sms-log-section{background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-top:14px;overflow:hidden;}
       .sms-log-section__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);}
@@ -532,6 +546,7 @@
         <button class="tab" data-tab="stats"><span class="tab-icon">📊</span><span>Статистика</span></button>
         <button class="tab" data-tab="handlers"><span class="tab-icon">📈</span><span>Обработчики</span></button>
         <button class="tab" data-tab="push"><span class="tab-icon">🔔</span><span>Уведомления</span></button>
+        <button class="tab" data-tab="smstest"><span class="tab-icon">📲</span><span>СМС-тест</span></button>
         <button class="tab" data-tab="scenario"><span class="tab-icon">🧭</span><span>Сценарий</span></button>
         <button class="tab" data-tab="reviews"><span class="tab-icon">⭐</span><span>Отзывы</span></button>
         <button class="tab" data-tab="edits"><span class="tab-icon">✎</span><span>Правки</span></button>
@@ -808,6 +823,28 @@
             <button class="btn-ghost" id="smsHistoryRefreshBtn">↻ Обновить</button>
           </div>
           <div id="smsHistoryAdmin"><div class="loading">Загрузка…</div></div>
+        </div>
+      </div>
+
+      <!-- SMS TEST TAB -->
+      <div id="tab-smstest" class="tab-content">
+        <div class="card">
+          <h2 style="margin-top:0">📲 СМС-тест по операторам</h2>
+          <p class="hint" style="margin:0 0 16px;">Укажите тестовый номер для каждого оператора. «Отправить» разошлёт на каждый сохранённый номер весь набор сценарных СМС с паузой 5 секунд между сообщениями и покажет отчёт ниже.</p>
+          <div id="smsTestList"><div class="loading">Загрузка…</div></div>
+          <div class="actions" style="margin-top:18px;display:flex;gap:10px;align-items:center">
+            <button id="smsTestSaveBtn">Сохранить</button>
+            <button id="smsTestSendBtn">Отправить</button>
+            <span class="status" id="smsTestStatus"></span>
+          </div>
+          <p class="hint" id="smsTestSmsSet" style="margin-top:14px"></p>
+        </div>
+        <div class="card" id="smsTestReportCard" style="margin-top:20px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h2 style="margin:0;font-size:16px">Отчёт отправки</h2>
+            <span class="hint" id="smsTestReportSummary"></span>
+          </div>
+          <div id="smsTestReport"></div>
         </div>
       </div>
 
@@ -1244,6 +1281,7 @@
           if(btn.dataset.tab === 'stats') { loadStats(); loadLandingRoute(); }
           if(btn.dataset.tab === 'handlers') { loadPromises(); initHandlerPerf(); }
           if(btn.dataset.tab === 'push') { loadPushSettings(); loadSmsReminderSettings(); loadSmsHistory(); }
+          if(btn.dataset.tab === 'smstest') loadSmsTest();
           if(btn.dataset.tab === 'scenario') loadScenarioSettings();
         if(btn.dataset.tab === 'reviews') loadReviewTexts();
           if(btn.dataset.tab === 'edits') {
@@ -2116,6 +2154,119 @@
           })
           .catch(function(e){ btn.disabled=false; st.className='status err'; st.textContent='Ошибка: '+e.message; });
       });
+
+      // ── СМС-тест по операторам ──────────────────────────────────────────────
+      var smsTestPollTimer = null;
+
+      function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+      function renderSmsTestRows(operators, numbers){
+        var byOp = {};
+        (numbers||[]).forEach(function(n){ if(n && n.operator) byOp[n.operator] = n.phone || ''; });
+        var html = operators.map(function(op){
+          var val = byOp[op] || '';
+          return '<div class="smstest-row">'
+            + '<span class="smstest-op"><span class="smstest-badge" data-badge="'+escHtml(op)+'">•</span>'+escHtml(op)+'</span>'
+            + '<input type="text" inputmode="tel" placeholder="+34…" data-operator="'+escHtml(op)+'" value="'+escHtml(val)+'" />'
+            + '</div>';
+        }).join('');
+        document.getElementById('smsTestList').innerHTML = html;
+      }
+
+      function collectSmsTestNumbers(){
+        var out = [];
+        document.querySelectorAll('#smsTestList input[data-operator]').forEach(function(inp){
+          var phone = inp.value.trim().replace(/\s+/g,'');
+          if(phone) out.push({ operator: inp.getAttribute('data-operator'), phone: phone });
+        });
+        return out;
+      }
+
+      function loadSmsTest(){
+        apiFetch('/api/admin/sms-test').then(function(data){
+          renderSmsTestRows(data.operators||[], data.numbers||[]);
+          var set = data.smsSet||[];
+          document.getElementById('smsTestSmsSet').textContent = (set.length
+            ? ('Набор СМС (' + set.length + '): ' + set.map(function(s){return s.label;}).join(', '))
+            : '') + (data.sender ? '  ·  Отправитель: ' + data.sender : '');
+          // Если тест уже идёт (перезашли на вкладку) — подхватываем прогресс.
+          pollSmsTestStatus(false);
+        }).catch(function(){});
+      }
+
+      document.getElementById('smsTestSaveBtn').addEventListener('click', function(){
+        var btn=this, st=document.getElementById('smsTestStatus');
+        btn.disabled=true; st.className='status'; st.textContent='Сохраняю…';
+        apiFetch('/api/admin/sms-test/numbers',{ method:'PUT', body:JSON.stringify({ numbers: collectSmsTestNumbers() }) })
+          .then(function(){ btn.disabled=false; st.className='status ok'; st.textContent='✓ Сохранено'; setTimeout(function(){st.textContent='';},2500); })
+          .catch(function(e){ btn.disabled=false; st.className='status err'; st.textContent='Ошибка: '+e.message; });
+      });
+
+      function setSmsTestSending(on){
+        var btn=document.getElementById('smsTestSendBtn');
+        var save=document.getElementById('smsTestSaveBtn');
+        btn.disabled=on; save.disabled=on;
+        btn.innerHTML = on ? '<span class="smstest-spin"></span>Отправка…' : 'Отправить';
+      }
+
+      document.getElementById('smsTestSendBtn').addEventListener('click', function(){
+        var st=document.getElementById('smsTestStatus');
+        var nums=collectSmsTestNumbers();
+        if(!nums.length){ st.className='status err'; st.textContent='Добавьте хотя бы один номер'; return; }
+        st.className='status'; st.textContent='';
+        // Сохраняем номера перед отправкой, затем стартуем рассылку.
+        setSmsTestSending(true);
+        apiFetch('/api/admin/sms-test/numbers',{ method:'PUT', body:JSON.stringify({ numbers: nums }) })
+          .then(function(){ return apiFetch('/api/admin/sms-test/send',{ method:'POST', body:'{}' }); })
+          .then(function(){ pollSmsTestStatus(true); })
+          .catch(function(e){ setSmsTestSending(false); st.className='status err'; st.textContent='Ошибка: '+(e.message==='already_running'?'рассылка уже идёт':e.message); pollSmsTestStatus(true); });
+      });
+
+      function renderSmsTestReport(job){
+        var card=document.getElementById('smsTestReportCard');
+        var results=(job&&job.results)||[];
+        if(!results.length && !(job&&job.running)){ card.style.display='none'; return; }
+        card.style.display='block';
+        var okN=results.filter(function(r){return r.ok;}).length;
+        var failN=results.length-okN;
+        var total=job.total||results.length;
+        document.getElementById('smsTestReportSummary').textContent =
+          (job.running?'Идёт отправка… ':'Готово. ') + results.length + '/' + total + ' · ✅ ' + okN + ' · ❌ ' + failN;
+        document.getElementById('smsTestReport').innerHTML = results.map(function(r){
+          var t=r.at?new Date(r.at).toLocaleTimeString('ru-RU'):'';
+          return '<div class="smstest-report-row">'
+            + '<span class="rep-ico">'+(r.ok?'✅':'❌')+'</span>'
+            + '<span class="rep-num">'+escHtml(r.phone)+'</span>'
+            + '<span class="rep-op">'+escHtml(r.operator)+'</span>'
+            + '<span class="rep-label">'+escHtml(r.label)+(r.ok?'':' <span class="rep-err">'+escHtml(r.error||'ошибка')+'</span>')+'</span>'
+            + '<span class="hint">'+t+'</span>'
+            + '</div>';
+        }).join('');
+        // Бейджи операторов: ✅ если все СМС оператора прошли, ❌ если был провал.
+        var opState={};
+        results.forEach(function(r){ if(opState[r.operator]!==false) opState[r.operator]=r.ok?true:false; if(!r.ok) opState[r.operator]=false; });
+        Object.keys(opState).forEach(function(op){
+          var b=document.querySelector('.smstest-badge[data-badge="'+op.replace(/"/g,'')+'"]');
+          if(b) b.textContent = opState[op]?'✅':'❌';
+        });
+      }
+
+      function pollSmsTestStatus(active){
+        if(smsTestPollTimer){ clearInterval(smsTestPollTimer); smsTestPollTimer=null; }
+        function tick(){
+          apiFetch('/api/admin/sms-test/status').then(function(job){
+            renderSmsTestReport(job);
+            if(job && job.running){ setSmsTestSending(true); }
+            else {
+              setSmsTestSending(false);
+              if(smsTestPollTimer){ clearInterval(smsTestPollTimer); smsTestPollTimer=null; }
+              if(active && job && job.done){ var st=document.getElementById('smsTestStatus'); st.className='status ok'; st.textContent='✓ Отправка завершена'; setTimeout(function(){st.textContent='';},3000); }
+            }
+          }).catch(function(){ if(smsTestPollTimer){ clearInterval(smsTestPollTimer); smsTestPollTimer=null; } setSmsTestSending(false); });
+        }
+        tick();
+        smsTestPollTimer=setInterval(tick, 1500);
+      }
 
       // ── Сценарий обработки (тексты этапов для чат-оператора) ─────────────────
       var SCENARIO_FIELDS = [
