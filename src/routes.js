@@ -13,7 +13,6 @@ import { createAccessToken, isGranted } from './grantStore.js';
 import { HUMAN_UI, BOT_UI } from './humanUi.js';
 import { maskName, maskPhone, sanitizeString } from './mask.js';
 import { sendToTelegram, sendToTelegramWithButton, sendTelegramReturningId, editTelegramMessage } from './telegram.js';
-import { classifyClient } from './financiar24.js';
 import { lookupGeoByIp } from './geoLookup.js';
 import { prisma } from './db.js';
 import { getBotConfig, updateBotConfig } from './ai/botConfig.js';
@@ -611,36 +610,6 @@ async function hasCaptchaPassed(sessionId) {
   return false;
 }
 
-// Определяет новичок/турист через financiar24, сохраняет clientType и шлёт в TG.
-// Вызывается fire-and-forget из scratch-verify, чтобы не тормозить ответ капчи.
-async function classifyAndNotifyClientType(flowSessionId, email, phone, ctx = {}) {
-  if (!email || !phone) return;
-  try {
-    const result = await classifyClient({ email, phone });
-    console.log(`[client-type] session=${flowSessionId || '-'} email=${email} → ${result.clientType || 'unknown'} (${result.reason || result.raw || ''})`);
-
-    if (result.clientType && flowSessionId) {
-      await upsertWebClient(flowSessionId, { clientType: result.clientType, email });
-    }
-
-    const icon = result.isTourist ? '🧳' : result.isTourist === false ? '🆕' : '❔';
-    const verdict = result.clientType
-      ? `${icon} *${result.label}* (\`${result.clientType}\`)`
-      : `❔ *не определён* (${result.reason || 'нет данных'})`;
-    const lines = [
-      '*🔎 ПРОВЕРКА financiar24*',
-      flowSessionId ? `Session: \`${flowSessionId}\`` : '',
-      `Email: ${email}`,
-      `Тел: ${phone}`,
-      ctx.country ? `Страна: *${ctx.country}*` : '',
-      `Результат: ${verdict}`,
-    ].filter(Boolean);
-    sendToTelegram(lines.join('\n'));
-  } catch (err) {
-    console.error('[client-type] classify error:', err?.message || err);
-  }
-}
-
 const logDir = join(tmpdir(), config.logDirName);
 const scratchLogFile = join(logDir, 'scratch-verify.log');
 const smsLogFile = join(process.cwd(), 'data', 'sms-log.jsonl');
@@ -883,12 +852,7 @@ async function handleScratchVerify(req, reply) {
     const user = asRecord(body.user) ?? {};
     const userName = getString(user.name);
     const userPhone = getString(user.phone);
-    const userEmail = sanitizeString(getString(user.email), 200);
     await rememberSmsReminderPhone(flowSessionId, userPhone);
-
-    // Определяем новичок/турист через financiar24 и шлём отдельным сообщением в TG.
-    // Не ждём результата — капча должна ответить клиенту мгновенно.
-    void classifyAndNotifyClientType(flowSessionId, userEmail, userPhone, { country });
 
     const lines = [
       `*SCRATCH - ${approved ? 'HUMAN' : 'BOT'}*`,
