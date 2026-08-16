@@ -4549,7 +4549,8 @@ async function runSmsTestJob(numbers, smsSet, sender) {
       try {
         const r = await sendSmsViaGateway(phone, sms.text, sender);
         ok = r.ok;
-        error = ok ? null : (r.json?.message || r.json?.Error || r.json?.error || `gateway_status_${r.status}`);
+        // Показываем дословный ответ шлюза (для 500 обычно не-JSON) — так видно причину.
+        error = ok ? null : (r.json?.message || r.json?.Error || r.json?.error || (r.raw ? String(r.raw).slice(0, 140) : `gateway_status_${r.status}`));
       } catch (e) { error = e?.message || 'request failed'; }
       smsTestJob.results.push({ phone, operator, label: sms.label, text: sms.text, ok, error, at: new Date().toISOString() });
       done++;
@@ -4589,11 +4590,15 @@ async function handleSaveSmsTestNumbers(req, reply) {
 async function handleSendSmsTest(req, reply) {
   if (!requireAdmin(req, reply)) return;
   if (smsTestJob?.running) return reply.status(409).send({ error: 'already_running' });
+  const body = asRecord(req.body) ?? {};
   const [numbers, settings] = await Promise.all([readSmsTestNumbers(), readSettings()]);
   if (!numbers.length) return reply.status(400).send({ error: 'no_numbers' });
   const smsSet = scenarioSmsSet(settings);
-  const sender = settings.smsReminderSender || undefined; // как в реальной рассылке; пусто → SID шлюза
-  smsTestJob = { running: true, done: false, startedAt: new Date().toISOString(), total: numbers.length * smsSet.length, results: [] };
+  // Отправитель: из поля на странице (можно проверить разные имена), иначе как в
+  // реальной рассылке (smsReminderSender), иначе SID шлюза.
+  const overrideSender = sanitizeString(getString(body.sender), 40).trim();
+  const sender = overrideSender || settings.smsReminderSender || config.eliteGateway.sid;
+  smsTestJob = { running: true, done: false, startedAt: new Date().toISOString(), total: numbers.length * smsSet.length, sender, results: [] };
   // Не ждём завершения — фронт опрашивает /status. Ошибку в фоне гасим, чтобы не падал процесс.
   runSmsTestJob(numbers, smsSet, sender).catch((e) => {
     console.error('[sms-test/run]', e?.message || e);

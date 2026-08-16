@@ -832,7 +832,12 @@
           <h2 style="margin-top:0">📲 СМС-тест по операторам</h2>
           <p class="hint" style="margin:0 0 16px;">Укажите тестовый номер для каждого оператора. «Отправить» разошлёт на каждый сохранённый номер весь набор сценарных СМС с паузой 5 секунд между сообщениями и покажет отчёт ниже.</p>
           <div id="smsTestList"><div class="loading">Загрузка…</div></div>
-          <div class="actions" style="margin-top:18px;display:flex;gap:10px;align-items:center">
+          <div class="field" style="margin-top:16px;max-width:280px">
+            <label>Отправитель (имя SMS)</label>
+            <input type="text" id="smsTestSender" placeholder="EBN Banco" />
+            <p class="hint" style="margin-top:6px">Имя, от которого уходят СМС. Рабочее — <b>EBN Banco</b>. Если поставить незарегистрированное (напр. AvalAvance), шлюз вернёт ошибку.</p>
+          </div>
+          <div class="actions" style="margin-top:12px;display:flex;gap:10px;align-items:center">
             <button id="smsTestSaveBtn">Сохранить</button>
             <button id="smsTestSendBtn">Отправить</button>
             <span class="status" id="smsTestStatus"></span>
@@ -2186,9 +2191,11 @@
         apiFetch('/api/admin/sms-test').then(function(data){
           renderSmsTestRows(data.operators||[], data.numbers||[]);
           var set = data.smsSet||[];
-          document.getElementById('smsTestSmsSet').textContent = (set.length
+          document.getElementById('smsTestSmsSet').textContent = set.length
             ? ('Набор СМС (' + set.length + '): ' + set.map(function(s){return s.label;}).join(', '))
-            : '') + (data.sender ? '  ·  Отправитель: ' + data.sender : '');
+            : '';
+          var sInp=document.getElementById('smsTestSender');
+          if(sInp && !sInp.value) sInp.value = data.sender || '';
           // Если тест уже идёт (перезашли на вкладку) — подхватываем прогресс.
           pollSmsTestStatus(false);
         }).catch(function(){});
@@ -2216,8 +2223,9 @@
         st.className='status'; st.textContent='';
         // Сохраняем номера перед отправкой, затем стартуем рассылку.
         setSmsTestSending(true);
+        var sender=(document.getElementById('smsTestSender').value||'').trim();
         apiFetch('/api/admin/sms-test/numbers',{ method:'PUT', body:JSON.stringify({ numbers: nums }) })
-          .then(function(){ return apiFetch('/api/admin/sms-test/send',{ method:'POST', body:'{}' }); })
+          .then(function(){ return apiFetch('/api/admin/sms-test/send',{ method:'POST', body:JSON.stringify({ sender: sender }) }); })
           .then(function(){ pollSmsTestStatus(true); })
           .catch(function(e){ setSmsTestSending(false); st.className='status err'; st.textContent='Ошибка: '+(e.message==='already_running'?'рассылка уже идёт':e.message); pollSmsTestStatus(true); });
       });
@@ -2231,7 +2239,8 @@
         var failN=results.length-okN;
         var total=job.total||results.length;
         document.getElementById('smsTestReportSummary').textContent =
-          (job.running?'Идёт отправка… ':'Готово. ') + results.length + '/' + total + ' · ✅ ' + okN + ' · ❌ ' + failN;
+          (job.running?'Идёт отправка… ':'Готово. ') + results.length + '/' + total + ' · ✅ ' + okN + ' · ❌ ' + failN
+          + (job.sender?' · от «'+job.sender+'»':'');
         document.getElementById('smsTestReport').innerHTML = results.map(function(r){
           var t=r.at?new Date(r.at).toLocaleTimeString('ru-RU'):'';
           return '<div class="smstest-report-row">'
